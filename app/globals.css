@@ -225,11 +225,15 @@ body {
 
   .js-motion .pin-dot { transition: color .4s, border-color .4s; }
 
-  /* The audience section pins the same way: pause becomes the mark as you pass through. */
-  .js-motion .audience-track { height: 190vh; }
+  /* The audience section pins the same way: pause becomes the mark as you pass through.
+     `padding: 0` belongs HERE, not outside the query: the track supplies its own height and
+     the padding would add to it. Applied unconditionally it stripped 6rem top and bottom
+     from the phone layout, which has no track to replace it — measured 704px inside an
+     812px viewport, so the section was cramped AND had no room to drive a morph. */
+  .js-motion .audience-track { height: 190vh; padding: 0; }
 
   /* The turn: the line drops in, holds, then lifts away into the call to action. */
-  .js-motion .turn-track { height: 150vh; }
+  .js-motion .turn-track { height: 150vh; padding: 0; }
   .js-motion .turn-panel {
     position: sticky;
     top: 0;
@@ -250,17 +254,46 @@ body {
   }
 }
 
+/* ── Below the pin: a sequence of arrivals ────────────────────
+   Where the pin does not run, the steps are an ordinary stacked list, and each item fades
+   and rises as IT arrives rather than when the section does. A six-step list is several
+   viewports tall on a phone, so a single container-level trigger would animate items that
+   are still off screen and the reader would arrive at content that had already finished
+   moving.
+
+   Scoped to `.js-motion` AND max-width 767px AND no-reduced-motion, so outside that
+   intersection the rules do not exist and every item is simply opaque: no JS, reduced
+   motion, and every width where the desktop pin runs. That last one is not incidental —
+   above 768px `.pin-item` crossfades via an opacity TRANSITION, and an opacity animation
+   layered on top of it would win the cascade and break the pin.
+
+   `.in` is added by an IntersectionObserver at every width, deliberately. It is inert above
+   768px, and always adding it means resizing a phone-width window up to desktop and back
+   can never strand an item at opacity 0.
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .js-motion .pin-reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .6s cubic-bezier(.16, .84, .34, 1),
+                transform .6s cubic-bezier(.16, .84, .34, 1);
+  }
+
+  .js-motion .pin-reveal.in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ── Audience section: before / after ────────────────────────
    Both states live in the DOM; CSS picks one. The DEFAULT (no `.js-motion`) shows the
    RESOLVED state, so a no-JS visitor gets the meaningful half of the section rather than
    a frozen "before" with seven languages stuck invisible.
    ───────────────────────────────────────────────────────────── */
 .audience-track { padding: 6rem 0; }
-.js-motion .audience-track { padding: 0; }
 
 /* Without JS, or on a phone, the turn is just a tall centred line. Never hidden. */
 .turn-track { padding: 6rem 0; }
-.js-motion .turn-track { padding: 0; }
 .turn-panel { display: flex; align-items: center; min-height: 60vh; }
 
 /* Default: resolved. */

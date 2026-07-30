@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { trackProgress } from '@/lib/scroll-progress'
 
 export type Claim = { h: string; p: string }
 
@@ -12,9 +13,15 @@ export type Claim = { h: string; p: string }
  * intersection every claim is rendered in normal flow and `data-active` is ignored,
  * so a phone or a no-JS visitor gets a plain readable list and can never be trapped
  * in a tall empty track.
+ *
+ * Below the breakpoint each claim fades up as it arrives. There is no sticky progress strip
+ * here, unlike PinnedStepper: this section has no eyebrow, and a floating bar of four dashes
+ * with nothing to label it is a worse cue than none. Adding one means adding visitor-facing
+ * copy, which is not this component's decision to make.
  */
 export function PinnedClaims({ claims }: { claims: Claim[] }) {
   const trackRef = useRef<HTMLDivElement>(null)
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([])
   const [active, setActive] = useState(0)
   const [pinned, setPinned] = useState(false)
 
@@ -31,14 +38,13 @@ export function PinnedClaims({ claims }: { claims: Claim[] }) {
 
     const measure = () => {
       const rect = track.getBoundingClientRect()
-      const scrollable = rect.height - window.innerHeight
-      if (scrollable <= 0) {
+      const vh = window.innerHeight
+      if (rect.height <= vh) {
         setActive(0)
       } else {
-        const progress = Math.min(1, Math.max(0, -rect.top / scrollable))
         // Bias slightly so the last claim gets real dwell time at the end of the track.
-        const i = Math.min(claims.length - 1, Math.floor(progress * claims.length * 0.999))
-        setActive(i)
+        const p = trackProgress(rect, vh)
+        setActive(Math.min(claims.length - 1, Math.floor(p * claims.length * 0.999)))
       }
       raf = onScreen ? requestAnimationFrame(measure) : 0
     }
@@ -68,6 +74,31 @@ export function PinnedClaims({ claims }: { claims: Claim[] }) {
       io.disconnect()
       if (raf) cancelAnimationFrame(raf)
     }
+  }, [claims.length])
+
+  /**
+   * One observer per claim, so a claim animates when IT arrives rather than when the section
+   * does. Observed at every width on purpose: `.pin-reveal` has no rules above 767px, so
+   * `.in` is inert there, and adding it unconditionally means resizing from phone width up
+   * to desktop and back can never leave a claim stranded at opacity 0.
+   */
+  useEffect(() => {
+    const els = itemRefs.current.filter((el): el is HTMLLIElement => el !== null)
+    if (!els.length) return
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          entry.target.classList.add('in')
+          io.unobserve(entry.target)
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px' },
+    )
+    els.forEach((el) => io.observe(el))
+
+    return () => io.disconnect()
   }, [claims.length])
 
   return (
@@ -100,7 +131,10 @@ export function PinnedClaims({ claims }: { claims: Claim[] }) {
             {claims.map((c, i) => (
               <li
                 key={c.h}
-                className="pin-item"
+                ref={(el) => {
+                  itemRefs.current[i] = el
+                }}
+                className="pin-item pin-reveal"
                 data-active={pinned ? i === active : undefined}
               >
                 <span className="font-mono text-xs tracking-[0.18em] text-indigo">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { entryProgress, trackProgress } from '@/lib/scroll-progress'
 
 /**
  * The turn. One line, its own screen, scroll-driven.
@@ -22,14 +23,26 @@ export default function S09bNow() {
     const line = lineRef.current
     if (!track || !line) return
 
-    const mq = window.matchMedia(
-      '(min-width: 768px) and (prefers-reduced-motion: no-preference)',
-    )
-    if (!mq.matches) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       line.style.opacity = '1'
       line.style.transform = 'none'
       return
     }
+
+    /**
+     * The arrival runs at every width. It is keyed to the section entering the viewport,
+     * which needs no sticky track, so a phone gets the same drop-in that desktop does.
+     *
+     * The departure does not. `drift` lifts the line away as the pinned panel releases, and
+     * below 768px nothing pins, so there is nothing to lift away from — the section simply
+     * scrolls off. Applying it there would just be a constant offset.
+     */
+    const wideMq = window.matchMedia('(min-width: 768px)')
+    let wide = wideMq.matches
+    const syncWide = () => {
+      wide = wideMq.matches
+    }
+    wideMq.addEventListener('change', syncWide)
 
     let raf = 0
     let onScreen = false
@@ -48,13 +61,11 @@ export default function S09bNow() {
        * line at opacity 0. Keying off entry means the line has already arrived by the
        * time the panel sticks.
        */
-      const entry = Math.min(1, Math.max(0, (vh - rect.top) / (vh * 0.75)))
+      const entry = entryProgress(rect, vh, 0.75)
 
       // Once it has arrived it HOLDS. No fade-out: the panel scrolling away under the
       // next section is the transition, and fading here would blank the screen again.
-      const scrollable = rect.height - vh
-      const p = scrollable > 0 ? Math.min(1, Math.max(0, -rect.top / scrollable)) : 1
-      const drift = Math.max(0, (p - 0.7) / 0.3) * 14
+      const drift = wide ? Math.max(0, (trackProgress(rect, vh) - 0.7) / 0.3) * 14 : 0
 
       line.style.opacity = String(entry)
       line.style.transform = `translate3d(0, ${((1 - entry) * 40 - drift).toFixed(1)}px, 0)`
@@ -73,6 +84,7 @@ export default function S09bNow() {
     io.observe(track)
 
     return () => {
+      wideMq.removeEventListener('change', syncWide)
       io.disconnect()
       if (raf) cancelAnimationFrame(raf)
     }

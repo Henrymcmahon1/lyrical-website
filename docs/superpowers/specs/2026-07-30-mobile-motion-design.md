@@ -265,6 +265,53 @@ applies.
 
 ---
 
+## 5.5 What was actually built, and where it departed from the above
+
+Recorded after implementation. Everything in §3 shipped. Four things changed once real numbers
+were available, and two extra defects were fixed on the way.
+
+| # | Designed | Built | Why |
+|---|---|---|---|
+| B | Entry progress measured on the **section**, span 0.85 | Entry progress measured on the **mark**, span 0.7 | The mark sits ~176px inside the section, so keying to the section meant it did not cross the bottom edge until progress was already 0.26. The first 43% of the rotation happened off screen. Measured: the reader never saw the pause bars at all |
+| D | S04 Fidelity's rail renders **dots alone** | S04 gets **no rail** | A floating bar of four dashes with nothing labelling it is a worse cue than none, and giving it a label means writing visitor-facing copy, which is Jordan's and Henry's call. S04 still gets the per-item reveals |
+| D | Rail's active index from **track progress** | From the **reading line** (last item whose top has crossed 40% of the viewport) | Same class of bug as the morph, found by screenshot. In normal flow the track is 1414px inside an 812px viewport, so `height - vh` is 602px and track progress saturates at 1 after 602px of scrolling while 1414px of content remains. The dots sat on the last step from step 2 onward |
+| — | not designed | `padding: 0` on `.audience-track` and `.turn-track` moved **into** the >=768px query | Both rules sat outside it, so with JS on a phone both sections lost 6rem top and bottom and gained no track in exchange. The audience section measured 704px where it should have been ~896px |
+| — | not designed | `audit-responsive.mjs` tap-target check now measures the **effective** target | It measured the `<input>` in the visually-hidden-input-inside-a-sized-label pattern, so it reported nine false positives and could never pass. A permanently red gate is not a gate |
+| — | not designed | `scripts/audit-motion.mjs` added | `audit-responsive.mjs` proves nothing is blank; nothing proved anything *moves*. 22 assertions across mobile, reduced motion, JS-disabled and a desktop regression check. Delete it if it is not wanted |
+
+### Measured results
+
+| Gate | Result |
+|---|---|
+| `npm test` | 78 passed, up from 61 |
+| `npx eslint .` | silent |
+| `npx tsc --noEmit` | silent |
+| `npm run build` | clean |
+| `scripts/audit-responsive.mjs`, 3 routes x 5 viewports | **PASS**: no overflow, no blank screens, no small tap targets |
+| `scripts/audit-motion.mjs` | **22/22 pass** |
+
+Morph at 375x812, measured: rotation `-90 -> -65 -> -36 -> -8` with the mark on screen
+throughout (`markTop` 812, 740, 660, 580), then four distinct outline frames while rotation
+holds at 0. Returning to a scroll position restores its exact state, so it scrubs both ways.
+
+Desktop is unchanged and asserted so: audience track 1.90vh, turn track 1.50vh, pin tracks
+[2.04, 2.30, 2.04], panels `sticky`, audience padding 0, rails not rendered. Page length at
+1280x800 is 14.4 screens before and after.
+
+**Mobile page length grew**, which is the one cost: home went 12.9 -> 13.7 screens at 375x667,
+10.0 -> 10.6 at 393x852, 9.3 -> 9.8 at 412x915. That is entirely the restored 6rem padding on
+two sections. It buys breathing room the phone layout was missing, but the handover already
+flags ~13 screens as long for a B2B page, so it is a lever worth knowing about.
+
+### Guards added
+
+Three CSS structure tests, each verified to fail on a deliberate mutation and pass when
+restored: hoisting `.pin-reveal` out of its `max-width: 767px` query, unscoping it from
+`.js-motion`, and dropping `prefers-reduced-motion: no-preference` from the query. Plus
+`tests/scroll-progress.test.ts`, 14 cases, written before the implementation existed.
+
+---
+
 ## 6. Out of scope
 
 Named so they do not creep in:

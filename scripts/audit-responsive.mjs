@@ -72,12 +72,32 @@ for (const vp of VIEWPORTS) {
           const r = el.getBoundingClientRect()
           if (r.width === 0 || r.height === 0) return
           if (getComputedStyle(el).display === 'none') return
-          if (r.height < 40) {
+
+          /**
+           * Measure what the FINGER hits, not the control.
+           *
+           * The visually-hidden-input-inside-a-sized-label pattern is the correct way to
+           * build a custom checkbox: the input is 1x1 and `sr-only`, and the label carries
+           * the 44px target. Measuring the input reported nine false positives and made this
+           * check permanently red, which is worse than not having it.
+           */
+          const target = el.closest('label') ?? el
+          const tr = target.getBoundingClientRect()
+
+          // Not reachable by keyboard or touch at all: spam honeypots live here.
+          if (el.tabIndex < 0) return
+
+          // Hidden until focused, e.g. a skip-to-content link. Its size when visible is
+          // what matters, and that only exists on focus.
+          if (/focus:not-sr-only/.test(String(el.className || ''))) return
+
+          if (tr.height < 40) {
             out.push({
               tag: el.tagName,
-              text: (el.textContent || '').trim().slice(0, 30),
-              h: Math.round(r.height),
-              w: Math.round(r.width),
+              measured: target === el ? 'self' : 'label',
+              text: (target.textContent || '').trim().slice(0, 30),
+              h: Math.round(tr.height),
+              w: Math.round(tr.width),
             })
           }
         })
@@ -89,6 +109,43 @@ for (const vp of VIEWPORTS) {
     // 3. Blank screens: walk the page and measure visible, non-transparent text.
     const blanks = await page.evaluate(async () => {
       const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+
+      /**
+       * Wait for the scroll position to actually stop.
+       *
+       * Lenis eases scroll, so `scrollTo` returns long before `scrollY` arrives. A fixed
+       * timeout here sampled mid-flight and produced false readings twice on this project.
+       * Poll until scrollY is unchanged across consecutive frames instead.
+       *
+       * The frame wait races rAF against a timer: rAF is throttled or paused entirely in a
+       * backgrounded or hidden page, and without the timer this loop would hang there.
+       */
+      const frame = () =>
+        new Promise((r) => {
+          const id = setTimeout(r, 50)
+          requestAnimationFrame(() => {
+            clearTimeout(id)
+            r()
+          })
+        })
+
+      const settle = async (cap = 1500) => {
+        const t0 = Date.now()
+        let last = NaN
+        let same = 0
+        while (Date.now() - t0 < cap) {
+          await frame()
+          const y = Math.round(window.scrollY)
+          if (y === last) {
+            if (++same >= 2) return true
+          } else {
+            same = 0
+            last = y
+          }
+        }
+        return false
+      }
+
       const ink = () => {
         let c = 0
         const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
@@ -116,11 +173,23 @@ for (const vp of VIEWPORTS) {
       const H = document.documentElement.scrollHeight
       for (let y = 0; y < Math.max(1, H - window.innerHeight); y += Math.floor(window.innerHeight * 0.3)) {
         window.scrollTo(0, y)
-        await wait(260)
+        const settled = await settle()
+
+        /**
+         * Then wait out the longest reveal.
+         *
+         * Reveals run 0.75s and the mobile per-item reveals 0.6s, so measuring the instant
+         * scrolling stops catches items legitimately mid-fade and reports them as blank.
+         * A permanent blank is still permanent after this wait, so erring long only removes
+         * false positives.
+         */
+        await wait(900)
+
         const i = ink()
-        if (i < 25) out.push({ y: Math.round(window.scrollY), ink: i })
+        if (i < 25) out.push({ y: Math.round(window.scrollY), ink: i, settled })
       }
       window.scrollTo(0, 0)
+      await settle()
       return out
     })
     if (blanks.length) note(route, vp.name, 'blank-screens', blanks)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { trackProgress } from '@/lib/scroll-progress'
 
 export type Step = { h: string; p: string }
 
@@ -11,6 +12,12 @@ export type Step = { h: string; p: string }
  * AND >=768px AND no-reduced-motion. Outside that intersection the steps render as an
  * ordinary list, so a phone or a no-JS visitor reads all of them normally and can never
  * be trapped in a tall empty track.
+ *
+ * Below the breakpoint the list is not left static. Each step fades up as it arrives, and a
+ * compact strip carrying the eyebrow and the progress dots sticks under the nav so the
+ * reader keeps a sense of where they are in the sequence. The strip is deliberately not the
+ * whole heading block: eyebrow, a `text-4xl` title and the intro come to roughly 40% of a
+ * 375px screen, which leaves too little room for the content it is meant to be a cue for.
  */
 export function PinnedStepper({
   eyebrow,
@@ -29,6 +36,7 @@ export function PinnedStepper({
   startAt?: number
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([])
   const [active, setActive] = useState(0)
   const [pinned, setPinned] = useState(false)
 
@@ -45,11 +53,36 @@ export function PinnedStepper({
 
     const measure = () => {
       const rect = track.getBoundingClientRect()
-      const scrollable = rect.height - window.innerHeight
-      if (scrollable > 0) {
-        const p = Math.min(1, Math.max(0, -rect.top / scrollable))
+      const vh = window.innerHeight
+
+      if (mq.matches) {
+        // Pinned. The track is 100vh of panel plus travel per step, and progress through
+        // that travel IS the step index by construction.
+        const p = trackProgress(rect, vh)
         setActive(Math.min(steps.length - 1, Math.floor(p * steps.length * 0.999)))
+      } else {
+        /**
+         * Unpinned, and track progress is the wrong clock — the same mistake that broke the
+         * morph, in a different costume.
+         *
+         * In normal flow the track is the height of the stacked list: measured 1414px inside
+         * an 812px viewport, so `height - vh` is 602px and progress saturates at 1 after
+         * 602px of scrolling, while the reader still has 1414px of content to get through.
+         * The dots raced to the last step and sat there from step 2 onward, which is worse
+         * than showing nothing.
+         *
+         * The honest cue here is positional: the current step is the last one whose top has
+         * crossed the reading line.
+         */
+        const line = vh * 0.4
+        let index = 0
+        for (let i = 0; i < itemRefs.current.length; i++) {
+          const el = itemRefs.current[i]
+          if (el && el.getBoundingClientRect().top <= line) index = i
+        }
+        setActive(index)
       }
+
       raf = onScreen ? requestAnimationFrame(measure) : 0
     }
 
@@ -62,10 +95,9 @@ export function PinnedStepper({
       }
     })
 
-    const sync = () => {
-      setPinned(mq.matches)
-      if (!mq.matches) setActive(0)
-    }
+    // `pinned` gates `data-active`, which drives the desktop crossfade. `active` itself is
+    // NOT reset here: below the breakpoint the sticky strip reads it.
+    const sync = () => setPinned(mq.matches)
     sync()
     mq.addEventListener('change', sync)
     io.observe(track)
@@ -77,13 +109,64 @@ export function PinnedStepper({
     }
   }, [steps.length])
 
+  /**
+   * One observer per step, so a step animates when IT arrives rather than when the section
+   * does. Observed at every width on purpose: `.pin-reveal` has no rules above 767px, so
+   * `.in` is inert there, and adding it unconditionally means resizing from phone width up
+   * to desktop and back can never leave a step stranded at opacity 0.
+   */
+  useEffect(() => {
+    const els = itemRefs.current.filter((el): el is HTMLLIElement => el !== null)
+    if (!els.length) return
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          entry.target.classList.add('in')
+          io.unobserve(entry.target)
+        }
+      },
+      // Commit slightly after the item crosses the bottom edge rather than exactly on it.
+      { rootMargin: '0px 0px -8% 0px' },
+    )
+    els.forEach((el) => io.observe(el))
+
+    return () => io.disconnect()
+  }, [steps.length])
+
   return (
     <div ref={trackRef} className="pin-track" style={{ '--steps': steps.length } as React.CSSProperties}>
       <div className="pin-panel">
+        {/*
+          Mobile only. `md:hidden` is display:none, so above the breakpoint this is not a
+          flex item and the pinned panel's centring is untouched. `top-15` is 3.75rem, which
+          clears the sticky nav: a 44px tap target plus py-2 top and bottom.
+        */}
+        {eyebrow && (
+          <div className="sticky top-15 z-10 mb-10 border-b border-graphite/10 bg-cream/85 backdrop-blur-sm md:hidden">
+            <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/45">
+                {eyebrow}
+              </p>
+              <ol className="ml-auto flex gap-2" aria-hidden="true">
+                {steps.map((s, i) => (
+                  <li
+                    key={s.h}
+                    className={`h-px w-7 transition-colors duration-300 ${
+                      i === active ? 'bg-indigo' : 'bg-graphite/20'
+                    }`}
+                  />
+                ))}
+              </ol>
+            </div>
+          </div>
+        )}
+
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 md:grid-cols-[minmax(0,22rem)_1fr] md:gap-20">
           <div>
             {eyebrow && (
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/45">
+              <p className="hidden font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/45 md:block">
                 {eyebrow}
               </p>
             )}
@@ -108,7 +191,10 @@ export function PinnedStepper({
             {steps.map((s, i) => (
               <li
                 key={s.h}
-                className="pin-item"
+                ref={(el) => {
+                  itemRefs.current[i] = el
+                }}
+                className="pin-item pin-reveal"
                 data-active={pinned ? i === active : undefined}
               >
                 {numbered && (

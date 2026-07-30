@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { lerpOutline, toPath } from '@/lib/mark'
 import { APPROX, EQUAL } from '@/lib/mark-states'
 import { LANGUAGES } from '@/lib/languages'
+import { entryProgress, trackProgress } from '@/lib/scroll-progress'
 import { Mark } from '../Mark'
 
 const FRAMES = 30
@@ -33,6 +34,7 @@ const OTHERS = LANGUAGES.filter((l) => l.code !== 'EN')
  */
 export default function S02bAudience() {
   const trackRef = useRef<HTMLDivElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
   const groupRef = useRef<SVGGElement>(null)
   const topRef = useRef<SVGPathElement>(null)
   const botRef = useRef<SVGPathElement>(null)
@@ -57,14 +59,47 @@ export default function S02bAudience() {
       return
     }
 
+    /**
+     * The driver depends on whether the section has a sticky track to measure.
+     *
+     * Above 768px `.audience-track` is 190vh and the panel pins, so progress through that
+     * track is the right clock. Below it there is no track: the section is its own content
+     * height, which measured 704px inside an 812px viewport, so `rect.height - innerHeight`
+     * is NEGATIVE and track progress is forced to 1 at every scroll position. The morph
+     * therefore landed on its final frame the instant the section came into view and never
+     * animated.
+     *
+     * Below the breakpoint the clock is entry progress measured on the MARK, not on the
+     * section. The mark sits about 176px inside the section, so keying to the section top
+     * meant the mark did not cross the bottom edge until progress was already 0.26 — the
+     * first 43% of the rotation happened off screen and the reader never saw the pause bars
+     * at all. Measuring the mark itself puts the whole morph on screen, and it stays correct
+     * if the section's padding ever changes.
+     */
+    const MOBILE_SPAN = 0.7
+    const wideMq = window.matchMedia('(min-width: 768px)')
+    let wide = wideMq.matches
+    const syncWide = () => {
+      wide = wideMq.matches
+    }
+    wideMq.addEventListener('change', syncWide)
+
     let raf = 0
     let onScreen = false
     let lastFrame = -1
 
     const measure = () => {
       const rect = track.getBoundingClientRect()
-      const scrollable = rect.height - window.innerHeight
-      const p = scrollable > 0 ? Math.min(1, Math.max(0, -rect.top / scrollable)) : 1
+      const vh = window.innerHeight
+      let p: number
+      if (wide) {
+        p = trackProgress(rect, vh)
+      } else {
+        // Fall back to the track if the mark has no box yet (pre-layout first frame).
+        const markRect = svgRef.current?.getBoundingClientRect()
+        const from = markRect && markRect.height > 0 ? markRect : rect
+        p = entryProgress(from, vh, MOBILE_SPAN)
+      }
 
       // First 45% rotates the pause upright; the rest bends it into the mark.
       const rot = -90 + 90 * Math.min(1, p / 0.45)
@@ -93,6 +128,7 @@ export default function S02bAudience() {
     io.observe(track)
 
     return () => {
+      wideMq.removeEventListener('change', syncWide)
       io.disconnect()
       if (raf) cancelAnimationFrame(raf)
     }
@@ -111,6 +147,7 @@ export default function S02bAudience() {
             <div className="mt-10 flex justify-center text-indigo">
               {/* Animated mark: only shown once JS has opted in. */}
               <svg
+                ref={svgRef}
                 viewBox="0 0 64 64"
                 width={132}
                 height={132}

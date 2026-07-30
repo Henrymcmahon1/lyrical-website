@@ -13,6 +13,58 @@ export function withoutMasks(source: string): string {
     .join('\n')
 }
 
+/** Drop comments, so prose about a decision never satisfies or trips an assertion. */
+function withoutComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '')
+}
+
+/** Drop `@keyframes` bodies: their `opacity: 0` is a start frame, not a resting state. */
+function withoutKeyframes(source: string): string {
+  let out = ''
+  let i = 0
+  while (i < source.length) {
+    const at = source.indexOf('@keyframes', i)
+    if (at === -1) return out + source.slice(i)
+    out += source.slice(i, at)
+    let depth = 1
+    let j = source.indexOf('{', at) + 1
+    while (j < source.length && depth > 0) {
+      if (source[j] === '{') depth++
+      else if (source[j] === '}') depth--
+      j++
+    }
+    i = j
+  }
+  return out
+}
+
+/** Top-level `@media` blocks as `{ condition, body }`, matched by brace depth. */
+function mediaBlocks(source: string): { condition: string; body: string }[] {
+  const out: { condition: string; body: string }[] = []
+  const open = /@media([^{]+)\{/g
+  let match: RegExpExecArray | null
+  while ((match = open.exec(source))) {
+    let depth = 1
+    let i = open.lastIndex
+    while (i < source.length && depth > 0) {
+      if (source[i] === '{') depth++
+      else if (source[i] === '}') depth--
+      i++
+    }
+    out.push({ condition: match[1].trim(), body: source.slice(open.lastIndex, i - 1) })
+    open.lastIndex = i
+  }
+  return out
+}
+
+/** Every `selector { … }` rule, flat. Nested at-rule bodies are walked into. */
+function rules(source: string): { selector: string; body: string }[] {
+  return [...source.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+    selector: m[1].trim(),
+    body: m[2],
+  }))
+}
+
 /** Relative luminance, WCAG 2.1. */
 function lum(hex: string): number {
   const ch = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
@@ -107,6 +159,47 @@ describe('reveal animations must never strand content invisible', () => {
     // Comments are stripped so prose about the decision doesn't trip the assertion.
     const declarations = css.replace(/\/\*[\s\S]*?\*\//g, '')
     expect(declarations).not.toMatch(/animation-timeline\s*:/)
+  })
+
+  it('never leaves an element at rest opacity 0 outside .js-motion', () => {
+    // The general form of the reveal rule above. Any resting `opacity: 0` that JavaScript
+    // has not opted into is a section a no-JS visitor cannot read. Keyframe start frames
+    // are excluded: they are not resting states, and the reduced-motion duration collapse
+    // lands `both`-filled animations on their end frame.
+    const source = withoutKeyframes(withoutComments(css))
+    const zeroed = rules(source).filter((r) => /(^|[^-\w])opacity:\s*0\s*(;|$)/.test(r.body))
+
+    expect(zeroed.length).toBeGreaterThan(0)
+    for (const rule of zeroed) {
+      expect(rule.selector, `unscoped opacity: 0 — "${rule.selector}"`).toContain('.js-motion')
+    }
+  })
+
+  it('confines the mobile per-item reveal to below the pinning breakpoint', () => {
+    // `.pin-item` crossfades via an opacity TRANSITION when the desktop pin is running. An
+    // opacity animation on the same element wins the cascade and breaks the pin, so every
+    // `.pin-reveal` rule has to sit inside a max-width query. Counting occurrences rather
+    // than spot-checking means a rule added outside any query still fails.
+    const source = withoutComments(css)
+    const total = (source.match(/\.pin-reveal/g) ?? []).length
+    const scoped = mediaBlocks(source)
+      .filter((block) => /max-width:\s*767px/.test(block.condition))
+      .reduce((n, block) => n + (block.body.match(/\.pin-reveal/g) ?? []).length, 0)
+
+    expect(total).toBeGreaterThan(0)
+    expect(scoped, 'a .pin-reveal rule escaped the max-width: 767px query').toBe(total)
+  })
+
+  it('keeps the mobile reveal out of the way of reduced motion', () => {
+    const mobileReveal = mediaBlocks(withoutComments(css)).filter((block) =>
+      block.body.includes('.pin-reveal'),
+    )
+    expect(mobileReveal.length).toBeGreaterThan(0)
+    for (const block of mobileReveal) {
+      expect(block.condition, `.pin-reveal ignores motion preference: ${block.condition}`).toMatch(
+        /prefers-reduced-motion:\s*no-preference/,
+      )
+    }
   })
 
   it('keeps reduced-motion durations collapsed rather than removed', () => {

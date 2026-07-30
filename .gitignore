@@ -43,6 +43,8 @@ next-env.d.ts
 
 # Playwright browsers / audit output
 .audit/
+.audit-*.txt
+.shots/
 
 # Temp deploy bundle
 .deploy-payload.json
