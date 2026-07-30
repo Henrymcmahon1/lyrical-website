@@ -18,9 +18,26 @@ npm run build
 
 ## What you need to set up
 
-The site runs right now without any accounts — the form will simply fail to save. To make
-enquiries actually arrive, do these four things. **They all have free tiers; none of this
-costs money.**
+**Check where you are first:**
+
+```bash
+node scripts/preflight-enquiry.mjs
+```
+
+It lists which variables exist on Vercel, tells you what a visitor currently gets when they
+submit, and prints the exact commands for whatever is missing. Add `--smoke` once you think
+you are done and it will send one labelled test enquiry end to end.
+
+`ENQUIRY_TO_EMAIL`, `ENQUIRY_FROM_EMAIL` and `GATE_SECRET` are **already set** on Vercel
+across all three environments. Only three remain, and all three need an account only you can
+create: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`.
+
+Until `RESEND_API_KEY` exists the route returns **503** and the form offers the visitor a
+prefilled email instead, so nothing typed is thrown away. That is a safety net, not a
+substitute: it costs the visitor a second step.
+
+The site runs right now without any accounts. To make enquiries actually arrive, do these
+four things. **They all have free tiers; none of this costs money.**
 
 ### 1. Supabase (the database)
 

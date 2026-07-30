@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { enquiryEmailSubject, enquiryEmailText } from '@/lib/enquiry-email'
 import { EnquirySchema, MIN_ELAPSED_MS } from '@/lib/enquiry-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { GATE_COOKIE, signGate } from '@/lib/gate'
@@ -109,20 +110,11 @@ export async function POST(request: Request) {
         from: process.env.ENQUIRY_FROM_EMAIL!,
         to: process.env.ENQUIRY_TO_EMAIL!,
         replyTo: d.email,
-        subject: `Lyrical enquiry: ${d.name} (${d.role})`,
-        text: [
-          `Name:      ${d.name}`,
-          `Email:     ${d.email}`,
-          `Role:      ${d.role}`,
-          `Company:   ${d.company || '-'}`,
-          `Songs:     ${d.catalogue_size || '-'}`,
-          `Languages: ${d.target_languages?.join(', ') || '-'}`,
-          `Source:    ${d.source}`,
-          `Unlocked:  ${d.unlocked_audio}`,
-          '',
-          'Message:',
-          d.message || '(none)',
-        ].join('\n'),
+        // Shared with the client's mailto fallback, so both routes to the inbox look
+        // identical and one inbox rule catches either. No length cap here: only the
+        // mailto path has a URL limit to respect.
+        subject: enquiryEmailSubject(d),
+        text: enquiryEmailText(d),
       })
       mailSent = true
     } else {

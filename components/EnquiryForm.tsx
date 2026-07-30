@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { CONTACT_EMAIL, enquiryMailto } from '@/lib/enquiry-email'
 import { ROLES } from '@/lib/enquiry-schema'
 import { LANGUAGES } from '@/lib/languages'
 
@@ -36,10 +37,21 @@ export function EnquiryForm({
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [error, setError] = useState('')
 
+  /**
+   * A prefilled mailto carrying everything they just typed.
+   *
+   * Set only when the enquiry could not be delivered and therefore was not recorded: a 5xx,
+   * or the request never reaching the server. In those cases telling somebody to "email us
+   * instead" while discarding what they wrote is how a lead is lost, so the way out has to
+   * carry the answers with it. A 400 is a field they can fix, and gets no fallback.
+   */
+  const [fallbackHref, setFallbackHref] = useState('')
+
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setState('sending')
     setError('')
+    setFallbackHref('')
 
     const fd = new FormData(e.currentTarget)
     const body = {
@@ -69,10 +81,12 @@ export function EnquiryForm({
         return
       }
       const j = (await res.json().catch(() => ({}))) as { error?: string }
-      setError(j.error ?? 'Something went wrong. Please email henry.jamcmahon@gmail.com.')
+      setError(j.error ?? 'Something went wrong.')
+      if (res.status >= 500) setFallbackHref(enquiryMailto(body, CONTACT_EMAIL))
       setState('error')
     } catch {
-      setError('We couldn’t reach the server. Please email henry.jamcmahon@gmail.com.')
+      setError('We couldn’t reach the server.')
+      setFallbackHref(enquiryMailto(body, CONTACT_EMAIL))
       setState('error')
     }
   }
@@ -90,7 +104,7 @@ export function EnquiryForm({
           Thank you. We&rsquo;ll be in touch shortly.
         </p>
         <p className={`mt-3 text-sm ${muted}`}>
-          If it&rsquo;s urgent, reach us directly at henry.jamcmahon@gmail.com.
+          If it&rsquo;s urgent, reach us directly at {CONTACT_EMAIL}.
         </p>
       </div>
     )
@@ -184,9 +198,23 @@ export function EnquiryForm({
       </label>
 
       {state === 'error' && (
-        <p role="alert" className="text-sm text-ember">
-          {error}
-        </p>
+        <div role="alert" className="flex flex-col gap-3">
+          <p className="text-sm text-ember">{error}</p>
+          {fallbackHref && (
+            <div className="flex flex-col gap-2">
+              <a
+                href={fallbackHref}
+                className="nudge inline-flex min-h-11 items-center self-start rounded-card border border-indigo px-5 text-indigo transition-colors hover:bg-indigo hover:text-cream"
+              >
+                Send it as an email instead <span className="shift-arrow">&rarr;</span>
+              </a>
+              <p className={`text-sm ${muted}`}>
+                Opens your mail app with everything you just typed already filled in. Nothing
+                you wrote is lost.
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       <button
