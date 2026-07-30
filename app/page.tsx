@@ -20,13 +20,13 @@ import S10Enquire from '@/components/sections/S10Enquire'
 export default async function Home() {
   // `cookies()` is async-only as of Next.js 16.
   const jar = await cookies()
-  const unlocked = verifyGateSafe(jar.get(GATE_COOKIE)?.value)
+  const requested = verifyGateSafe(jar.get(GATE_COOKIE)?.value)
 
   return (
     <>
       <S01Hero />
       <S02bAudience />
-      <HomeInteractive initiallyUnlocked={unlocked} />
+      <HomeInteractive initiallyRequested={requested} />
       <S04Fidelity />
       <S05How />
       <S06Receive />

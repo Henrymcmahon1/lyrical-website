@@ -18,12 +18,15 @@ export function PinnedStepper({
   intro,
   steps,
   numbered = true,
+  startAt = 1,
 }: {
   eyebrow?: string
   title: string
   intro?: string
   steps: Step[]
   numbered?: boolean
+  /** 0 lets a precondition sit at step 00 rather than renumbering the real sequence. */
+  startAt?: number
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
@@ -110,7 +113,7 @@ export function PinnedStepper({
               >
                 {numbered && (
                   <span className="font-mono text-xs tracking-[0.18em] text-indigo tabular-nums">
-                    {String(i + 1).padStart(2, '0')}
+                    {String(i + startAt).padStart(2, '0')}
                   </span>
                 )}
                 <h3 className="mt-3 font-brand text-3xl leading-tight tracking-tight md:text-4xl">

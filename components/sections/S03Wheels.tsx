@@ -1,39 +1,25 @@
 'use client'
 
-import { useMemo, useState } from 'react'
 import { DriftingPairs } from '../DriftingPairs'
-import { AbPlayer, type Demo } from '../AbPlayer'
-import { LANGUAGES } from '@/lib/languages'
-import raw from '@/content/demos.json'
 
 /**
- * Audio file convention, drop files in and flip `hasAudio` in content/demos.json:
- *   public/audio/{source}-{target}/{slug}.original.mp3
- *   public/audio/{source}-{target}/{slug}.translated.mp3
- * The pair folder is lowercase, e.g. public/audio/en-es/my-track.original.mp3
+ * The listening section.
+ *
+ * There is deliberately no player and no pair picker here. No demo audio is published
+ * yet, so a button promising playback would collect somebody's details and then deliver
+ * nothing, which is a worse first impression than not asking. Instead this captures the
+ * request and promises a personal send, which is true today and starts a conversation
+ * rather than a download.
+ *
+ * Audio drop-in is still wired: see content/demos.json and components/AbPlayer.tsx.
  */
-const demos = raw as Demo[]
-
-/** Only pairs we can actually play are offered as choices. */
-const PLAYABLE = demos.filter((d) => d.hasAudio)
-
 export default function S03Wheels({
-  unlocked,
-  onLocked,
+  requested,
+  onRequest,
 }: {
-  unlocked: boolean
-  onLocked: () => void
+  requested: boolean
+  onRequest: () => void
 }) {
-  const options = PLAYABLE.length ? PLAYABLE : demos
-  const [slug, setSlug] = useState(options[0]?.slug ?? '')
-  const demo = useMemo(() => options.find((d) => d.slug === slug), [options, slug])
-
-  const label = (d: Demo) => {
-    const s = LANGUAGES.find((l) => l.code === d.source)?.endonym ?? d.source
-    const t = LANGUAGES.find((l) => l.code === d.target)?.endonym ?? d.target
-    return `${s} ≈ ${t}`
-  }
-
   return (
     <section id="hear" className="bg-dark-ground py-24 text-dark-ink sm:py-28">
       <div className="mx-auto flex max-w-4xl flex-col items-center px-6 text-center">
@@ -54,37 +40,29 @@ export default function S03Wheels({
           <DriftingPairs />
         </div>
 
-        {/* The player is its own control now, sitting below the ambient reels. */}
-        {options.length > 1 && (
-          <div
-            className="mt-12 flex flex-wrap justify-center gap-2"
-            role="group"
-            aria-label="Choose a language pair"
-          >
-            {options.map((d) => (
-              <button
-                key={d.slug}
-                type="button"
-                onClick={() => setSlug(d.slug)}
-                aria-pressed={d.slug === slug}
-                className={`nudge rounded-card border px-4 py-2 text-sm transition-colors ${
-                  d.slug === slug
-                    ? 'border-dark-accent text-dark-accent'
-                    : 'border-dark-ink/25 text-dark-ink/65 hover:text-dark-ink'
-                }`}
-              >
-                {label(d)}
-              </button>
-            ))}
+        {requested ? (
+          <div className="mt-14 max-w-md">
+            <p className="font-brand text-2xl leading-snug">Thank you.</p>
+            <p className="mt-3 text-sm leading-relaxed text-dark-ink/65">
+              We&rsquo;ll send examples through shortly, chosen for the languages you told
+              us about.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-14 flex flex-col items-center">
+            <button
+              type="button"
+              onClick={onRequest}
+              className="nudge rounded-card bg-dark-accent px-8 py-4 text-dark-ground"
+            >
+              Send me before and afters <span className="shift-arrow">&rarr;</span>
+            </button>
+            <p className="mt-5 max-w-sm text-xs leading-relaxed text-dark-ink/50">
+              Tell us who you are and which languages matter to you, and we&rsquo;ll send
+              examples across. No newsletter, and we don&rsquo;t pass your details on.
+            </p>
           </div>
         )}
-
-        <AbPlayer
-          key={slug}
-          demo={demo}
-          unlocked={unlocked}
-          onLocked={onLocked}
-        />
       </div>
     </section>
   )

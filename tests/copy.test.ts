@@ -59,7 +59,7 @@ describe('language claims', () => {
   })
 
   it('only references approved language codes in the demo manifest', () => {
-    const codes = new Set(LANGUAGES.map((l) => l.code))
+    const codes = new Set<string>(LANGUAGES.map((l) => l.code))
     for (const d of demos as { source: string; target: string }[]) {
       expect(codes.has(d.source)).toBe(true)
       expect(codes.has(d.target)).toBe(true)

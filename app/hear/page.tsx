@@ -11,7 +11,7 @@ export const metadata = {
 
 export default async function Hear() {
   const jar = await cookies()
-  const unlocked = verifyGateSafe(jar.get(GATE_COOKIE)?.value)
+  const requested = verifyGateSafe(jar.get(GATE_COOKIE)?.value)
 
   return (
     <>
@@ -27,7 +27,7 @@ export default async function Hear() {
       </section>
 
       <div className="mt-12">
-        <HomeInteractive initiallyUnlocked={unlocked} />
+        <HomeInteractive initiallyRequested={requested} />
       </div>
 
       <S10Enquire />

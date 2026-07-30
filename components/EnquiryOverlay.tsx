@@ -56,7 +56,7 @@ export function EnquiryOverlay({
             id="gate-title"
             className="font-brand text-2xl leading-tight tracking-tight text-balance"
           >
-            Tell us who you are, and the demos open up.
+            Tell us who you are, and we&rsquo;ll send examples across.
           </h2>
           <button
             type="button"
@@ -69,8 +69,9 @@ export function EnquiryOverlay({
         </div>
 
         <p className="mt-3 text-sm leading-relaxed text-graphite/70">
-          One email unlocks every before-and-after on the site. We don&rsquo;t send
-          newsletters, and we don&rsquo;t pass your details on.
+          Pick the languages that matter to you and we&rsquo;ll send before-and-afters
+          chosen for them. A real person sends these, so tell us anything useful. We
+          don&rsquo;t send newsletters and we don&rsquo;t pass your details on.
         </p>
 
         <div className="mt-6">

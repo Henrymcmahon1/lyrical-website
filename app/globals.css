@@ -222,6 +222,20 @@ body {
 
   /* The audience section pins the same way: pause becomes the mark as you pass through. */
   .js-motion .audience-track { height: 190vh; }
+
+  /* The turn: the line drops in, holds, then lifts away into the call to action. */
+  .js-motion .turn-track { height: 150vh; }
+  .js-motion .turn-panel {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+  }
+  .js-motion .turn-line {
+    opacity: 0;
+    will-change: transform, opacity;
+  }
   .js-motion .audience-panel {
     position: sticky;
     top: 0;
@@ -238,6 +252,11 @@ body {
    ───────────────────────────────────────────────────────────── */
 .audience-track { padding: 6rem 0; }
 .js-motion .audience-track { padding: 0; }
+
+/* Without JS, or on a phone, the turn is just a tall centred line. Never hidden. */
+.turn-track { padding: 6rem 0; }
+.js-motion .turn-track { padding: 0; }
+.turn-panel { display: flex; align-items: center; min-height: 60vh; }
 
 /* Default: resolved. */
 .a-before { display: none; }
