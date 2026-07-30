@@ -14,12 +14,12 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: 'Lyrical | One song. Any language. Same soul.',
+    default: 'Lyrical | Every song. Any language. Same soul.',
     template: '%s | Lyrical',
   },
   description: DESCRIPTION,
   openGraph: {
-    title: 'Lyrical | One song. Any language. Same soul.',
+    title: 'Lyrical | Every song. Any language. Same soul.',
     description: DESCRIPTION,
     type: 'website',
     url: SITE,

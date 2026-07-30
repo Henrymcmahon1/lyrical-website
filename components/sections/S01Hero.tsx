@@ -11,7 +11,7 @@ export default function S01Hero() {
       </Parallax>
 
       <h1 className="mt-10 font-brand text-5xl leading-[1.02] tracking-tight text-balance sm:text-6xl lg:text-7xl">
-        One song. Any language.
+        Every song. Any language.
         <br />
         Same soul.
       </h1>

@@ -157,6 +157,16 @@ export default function S02bAudience() {
                 voice.
               </span>
             </p>
+
+            {/*
+              The one surviving line of the old problem section. Without it nothing on the
+              page explains why this has not simply been done already, which is what
+              justifies the price.
+            */}
+            <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-graphite/55">
+              Until now that meant re-recording: the artist, a studio, a translator and an
+              engineer, weeks per song. So it only ever happened for the biggest releases.
+            </p>
           </div>
         </div>
       </div>

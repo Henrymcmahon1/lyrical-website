@@ -9,7 +9,7 @@ export function Footer() {
         <Mark size={44} className="text-indigo" />
         <span className="font-brand text-3xl tracking-tight">lyrical</span>
         <p className="font-brand text-lg text-graphite/70">
-          One song. Any language. Same soul.
+          Every song. Any language. Same soul.
         </p>
 
         <nav

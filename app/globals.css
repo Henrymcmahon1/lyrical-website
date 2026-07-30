@@ -184,7 +184,10 @@ body {
    stacked list — no tall empty track, and no way to trap a phone user mid-section.
    ───────────────────────────────────────────────────────────── */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  .js-motion .pin-track { height: 250vh; }
+  /* 100vh of sticky panel plus 26vh of travel per step. Tight on purpose: with several
+     pinned sections on one page, generous travel stops reading as considered and starts
+     reading as slow. */
+  .js-motion .pin-track { height: calc(100vh + (var(--steps, 4) * 26vh)); }
 
   .js-motion .pin-panel {
     position: sticky;
