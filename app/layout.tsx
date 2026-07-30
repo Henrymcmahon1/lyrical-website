@@ -35,7 +35,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${bodoni.variable} ${archivo.variable} h-full`}>
+    // suppressHydrationWarning: the inline script below adds `js-motion` to this element
+    // before React hydrates, so the server and client class attributes legitimately differ.
+    // It applies to this element's own attributes only, not to any children.
+    <html
+      lang="en"
+      className={`${bodoni.variable} ${archivo.variable} h-full`}
+      suppressHydrationWarning
+    >
       <head>
         {/*
           Opt in to reveal animations before first paint. If JS is disabled this never
