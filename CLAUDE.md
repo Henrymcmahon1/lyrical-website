@@ -32,3 +32,9 @@ geometry. If you change the geometry, regenerate the icon.
 
 ## Verify before claiming done
 npm test && npm run build
+
+## The mark has no counter
+Do NOT build aperture, punch-out or clip-through effects from the mark. It is two open
+strokes with no enclosed area; its middle is the GAP between the waves, so centred content
+sits in the opaque part and the screen renders blank. Use overlapping transform+opacity
+layers instead. See components/ZoomThroughMark.tsx.

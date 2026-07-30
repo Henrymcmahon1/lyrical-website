@@ -177,7 +177,17 @@ the rule between sections.
 | **Staggered pop-in** | How it works, What you receive, Two doors, Team | `<Stagger>` — children get incrementing delays, capped at 8 |
 | **Parallax** | Hero mark | `<Parallax>` writes `--py`; CSS turns it into `translate3d`. Fine pointers only |
 | **Hover micro-interactions** | Cards, buttons, chips | `.lift` / `.nudge` / `.shift-arrow`, gated on `(hover: hover)` so a tap doesn't stick |
-| **Pinned section** | What changes is the language | `<PinnedClaims>` — a 320vh track with a sticky panel; claims cross-fade as it advances |
+| **Pinned section** | What changes is the language | `<PinnedClaims>` — a 250vh track with a sticky panel; claims cross-fade as it advances |
+| **Fly through the mark** | Hero into the statement | `<ZoomThroughMark>` — the mark scales up and dissolves while the statement resolves behind it |
+| **Audience morph** | Your audience today / with Lyrical | `<S02bAudience>` — the pause rotates and bends into the mark on scroll |
+
+**Do not rebuild the fly-through as a punch-out.** The obvious version is a full-bleed veil
+with the mark cut out, scaled until the hole swallows the screen. It cannot work with this
+mark: the approximation sign is two open strokes with **no enclosed counter**, so its middle
+is the gap between the waves. Centred content sits exactly in that gap, which is the opaque
+part, so the viewport renders blank cream until the scale is very large. Measured on a
+2560×1215 viewport, the gap covered the middle ~48% of the screen at scale 1. Two overlapping
+layers animated with transform and opacity give the same feeling and can never blank out.
 
 **The pin is deliberately narrow in scope.** It exists only at ≥768 px, only with `.js-motion`,
 and only under `prefers-reduced-motion: no-preference`. Outside that intersection the CSS rules

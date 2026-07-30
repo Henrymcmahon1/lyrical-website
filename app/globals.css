@@ -292,29 +292,41 @@ body {
   .drift-up, .drift-down { animation: none; transform: translateY(-25%); }
 }
 
-/* ── Zoom through the mark ────────────────────────────────────
-   Default: no track, no veil. The wrapped section is just a section. The flourish only
-   exists with JS, on a real pointer-sized screen, and with motion allowed.
+/* ── Fly through the mark ─────────────────────────────────────
+   Default: no track, no mark layer. The wrapped section is just a section, so a phone or
+   a no-JS visitor reads the statement normally. The flourish only exists with JS, on a
+   pointer-sized screen, with motion allowed.
    ───────────────────────────────────────────────────────────── */
-.zoom-veil { display: none; }
+.zoom-mark { display: none; }
 
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   .js-motion .zoom-track { height: 165vh; }
+
   .js-motion .zoom-stage {
     position: sticky;
     top: 0;
     height: 100vh;
     overflow: hidden;
+    display: grid;
   }
-  .js-motion .zoom-content { height: 100vh; overflow: hidden; }
-  .js-motion .zoom-veil {
-    display: block;
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: var(--veil, 1);
+
+  /* Both layers occupy the same grid cell so they overlap without absolute positioning. */
+  .js-motion .zoom-mark,
+  .js-motion .zoom-content {
+    grid-area: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .js-motion .zoom-mark {
+    color: var(--color-indigo);
     pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  .js-motion .zoom-content {
+    will-change: transform, opacity;
   }
 }
 
