@@ -1,0 +1,643 @@
+<title>Lyrical &#8212; Brand Identity v2</title>
+
+<style>
+  :root{
+    --cream:#F7EFE1;--graphite:#1C1A19;--ember:#EE4E22;--prussian:#123A5C;
+    --page:#F7EFE1;--panel:#FCF7EE;--ink:#1C1A19;
+    --muted:#5F5B57;--faint:#948E86;--rule:#E0D5C2;
+    --serif:"Hoefler Text",Constantia,Cambria,Georgia,"Times New Roman",serif;
+    --sans:"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono","Cascadia Code",Consolas,"SF Mono",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--page:#161513;--panel:#1E1C1A;--ink:#F2EBDE;--muted:#9C958C;--faint:#6C665F;--rule:#302C28;--prussian:#7FA8C9;}
+  }
+  :root[data-theme="light"]{--page:#F7EFE1;--panel:#FCF7EE;--ink:#1C1A19;--muted:#5F5B57;--faint:#948E86;--rule:#E0D5C2;--prussian:#123A5C;}
+  :root[data-theme="dark"]{--page:#161513;--panel:#1E1C1A;--ink:#F2EBDE;--muted:#9C958C;--faint:#6C665F;--rule:#302C28;--prussian:#7FA8C9;}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 32px 130px}
+  .label{font-family:var(--mono);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--faint)}
+  h2,h3,h4{text-wrap:balance}
+
+  /* cover */
+  .cover{padding:80px 0 0}
+  .cover h1{margin:32px 0 0;font-family:var(--serif);font-weight:400;font-size:clamp(36px,6.4vw,70px);letter-spacing:-0.028em;line-height:1.0;max-width:16ch}
+  .cover .sub{margin:26px 0 0;max-width:60ch;font-size:19px;color:var(--muted)}
+  .cover .sub strong{color:var(--ink);font-weight:600}
+  .tagline{margin-top:34px;font-family:var(--serif);font-size:clamp(21px,3.4vw,31px);letter-spacing:-0.02em;line-height:1.3;color:var(--prussian)}
+
+  .meta{margin-top:38px;display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));border:1px solid var(--rule)}
+  .meta div{padding:16px 18px 18px;border-left:1px solid var(--rule)}
+  .meta div:first-child{border-left:none}
+  @media(max-width:720px){.meta div{border-left:none;border-top:1px solid var(--rule)}.meta div:first-child{border-top:none}}
+  .meta b{display:block;font-size:15px;font-weight:600;margin-top:5px}
+
+  section{margin-top:92px}
+  section > h2{margin:14px 0 0;font-family:var(--serif);font-weight:400;font-size:clamp(26px,4.2vw,42px);letter-spacing:-0.025em;line-height:1.06}
+  section > .intro{margin:18px 0 0;max-width:64ch;color:var(--muted);font-size:16.5px}
+  section > .intro strong{color:var(--ink);font-weight:600}
+
+  /* ledger */
+  .ledger{margin-top:34px;border:1px solid var(--rule)}
+  .lg{display:grid;grid-template-columns:112px 1fr;gap:22px;padding:22px 26px;border-top:1px solid var(--rule)}
+  .lg:first-child{border-top:none}
+  @media(max-width:660px){.lg{grid-template-columns:1fr;gap:8px}}
+  .lg .st{font-family:var(--mono);font-size:9.5px;letter-spacing:0.13em;text-transform:uppercase;padding-top:4px}
+  .keep .st{color:#1F7A4C}.flag .st{color:#C4361C}.adj .st{color:#B8761A}
+  .lg h3{margin:0 0 5px;font-size:16px;font-weight:600}
+  .lg p{margin:0;font-size:14.8px;color:var(--muted)}
+  .lg p b{color:var(--ink);font-weight:600}
+
+  /* two-up compare */
+  .duo{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rule)}
+  @media(max-width:720px){.duo{grid-template-columns:1fr}}
+  .duo > div{border-left:1px solid var(--rule)}
+  .duo > div:first-child{border-left:none}
+  @media(max-width:720px){.duo>div{border-left:none;border-top:1px solid var(--rule)}.duo>div:first-child{border-top:none}}
+  .duo .art{min-height:264px;display:grid;place-items:center;background:var(--panel);padding:30px}
+  .duo .txt{padding:26px 28px 30px}
+  .duo .txt .label{margin-bottom:9px}
+  .duo .txt h3{margin:0 0 8px;font-size:18px;font-weight:600}
+  .duo .txt p{margin:0;font-size:14.8px;color:var(--muted)}
+  .duo .txt p b{color:var(--ink);font-weight:600}
+
+  /* range */
+  .range{margin-top:34px;display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));border:1px solid var(--rule);border-right:none;border-bottom:none}
+  .rg{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:22px 18px 20px;text-align:center;background:var(--panel)}
+  .rg .code{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--faint)}
+  .rg .art{margin:14px 0 6px;color:var(--prussian)}
+  .rg .nm{font-size:14px;font-weight:600;margin-top:8px}
+  .rg .dv{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:3px;font-variant-numeric:tabular-nums}
+  .rg .nt{margin-top:7px;font-size:12.5px;color:var(--muted);line-height:1.45}
+  .rg.pick{background:var(--page);box-shadow:inset 0 0 0 2px var(--prussian)}
+  .rg .tiny{margin-top:12px;padding-top:11px;border-top:1px solid var(--rule);display:flex;justify-content:center;gap:11px;align-items:flex-end;color:var(--prussian)}
+
+  /* colour */
+  .jobs{margin-top:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(212px,1fr));border:1px solid var(--rule);border-right:none;border-bottom:none}
+  .job{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  .job .sw{height:82px;display:flex;align-items:flex-end;padding:9px 12px}
+  .job .sw code{font-family:var(--mono);font-size:10px}
+  .job .bd{padding:16px 18px 20px;background:var(--panel)}
+  .job h4{margin:0 0 5px;font-size:15px;font-weight:600}
+  .job p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+
+  .cands{margin-top:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:18px}
+  .cand{border:1px solid var(--rule);overflow:hidden}
+  .cand.pick{border-color:var(--prussian);border-width:2px}
+  .cand .well{padding:26px 18px 22px;display:flex;flex-direction:column;align-items:center;gap:13px;background:#F7EFE1}
+  .cand .wm{font-family:var(--serif);font-size:23px;letter-spacing:-0.015em;line-height:1;color:#1C1A19}
+  .cand .btn{font-size:10.5px;padding:7px 12px;letter-spacing:0.04em}
+  .cand .bd{padding:14px 16px 17px;background:var(--panel);border-top:1px solid var(--rule)}
+  .cand h4{margin:0;font-size:14.5px;font-weight:600;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .cand h4 em{font-style:normal;font-family:var(--mono);font-size:9px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .cand p{margin:6px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+
+  /* table */
+  .tblwrap{margin-top:26px;overflow-x:auto;border:1px solid var(--rule)}
+  table{border-collapse:collapse;width:100%;min-width:540px;font-size:14px}
+  th,td{text-align:left;padding:12px 16px;border-top:1px solid var(--rule)}
+  thead th{border-top:none;font-family:var(--mono);font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);font-weight:400;background:var(--panel)}
+  td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px}
+  .pass{color:#1F7A4C;font-weight:600}.fail{color:#C4361C;font-weight:600}
+  .chipc{display:inline-block;width:11px;height:11px;vertical-align:-1px;margin-right:8px;border:1px solid rgba(128,128,128,.35)}
+
+  /* type */
+  .pairs{margin-top:32px;display:grid;gap:18px}
+  .tp{border:1px solid var(--rule);display:grid;grid-template-columns:1.35fr 1fr}
+  .tp.pick{border-color:var(--prussian);border-width:2px}
+  @media(max-width:760px){.tp{grid-template-columns:1fr}}
+  .tp .demo{padding:32px 30px;background:var(--panel)}
+  .tp .demo .h{font-size:clamp(25px,3.6vw,38px);line-height:1.08;letter-spacing:-0.025em}
+  .tp .demo .b{margin-top:16px;font-size:14.5px;color:var(--muted);max-width:44ch}
+  .tp .side{padding:26px 26px 28px;border-left:1px solid var(--rule)}
+  @media(max-width:760px){.tp .side{border-left:none;border-top:1px solid var(--rule)}}
+  .tp .side h4{margin:9px 0 6px;font-size:16px;font-weight:600}
+  .tp .side p{margin:0 0 10px;font-size:13.8px;color:var(--muted)}
+  .tp .side p b{color:var(--ink);font-weight:600}
+  .fserif{font-family:var(--serif);font-weight:400}
+  .fthin{font-family:var(--sans);font-weight:300;letter-spacing:-0.02em}
+
+  /* lockup */
+  .lockrow{margin-top:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));border:1px solid var(--rule);border-right:none;border-bottom:none}
+  .lk{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:26px 22px 22px;background:var(--panel)}
+  .lk .stg{min-height:120px;display:flex;align-items:center;justify-content:center;color:var(--prussian)}
+  .lk .nm{margin-top:16px;font-size:14.5px;font-weight:600}
+  .lk .nt{margin-top:5px;font-size:12.8px;color:var(--muted);line-height:1.45}
+  .wmk{font-family:var(--serif);letter-spacing:-0.015em;line-height:1;color:var(--ink)}
+
+  /* never */
+  .never{margin-top:34px;display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));border:1px solid var(--rule);border-right:none;border-bottom:none}
+  .nv{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:20px 20px 22px}
+  .nv h4{margin:0 0 6px;font-size:14.5px;font-weight:600}
+  .nv h4::before{content:"&#10005;";color:#C4361C;margin-right:9px;font-weight:400}
+  .nv p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+  .nv.src{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint)}
+
+  /* decision */
+  .decision{margin-top:92px;border:2px solid var(--prussian);padding:38px 36px}
+  .decision .label{color:var(--prussian)}
+  .decision h2{margin:12px 0 0;font-family:var(--serif);font-weight:400;font-size:clamp(26px,4vw,40px);letter-spacing:-0.025em}
+  .decision > p{margin:16px 0 0;max-width:62ch;color:var(--muted);font-size:16.5px}
+  .dq{margin-top:30px;border-top:1px solid var(--rule);padding-top:8px}
+  .dq .q{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:18px 0;border-top:1px solid var(--rule)}
+  .dq .q:first-child{border-top:none}
+  .dq .q .n{font-family:var(--mono);font-size:11px;color:var(--faint);padding-top:3px}
+  .dq .q h4{margin:0 0 5px;font-size:16px;font-weight:600}
+  .dq .q p{margin:0;font-size:14.5px;color:var(--muted)}
+  .dq .q p em{font-style:normal;color:var(--prussian);font-weight:600}
+
+  .foot{margin-top:70px;padding-top:24px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint)}
+
+  @media(max-width:620px){.wrap{padding:0 20px 90px}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs></defs></svg>
+
+<div class="wrap">
+
+  <!-- &#9552;&#9552; COVER &#9552;&#9552; -->
+  <header class="cover">
+    <div class="label">Lyrical &#183; Brand identity v2 &#183; Reconciled with Brand Bible v1.2</div>
+    <div id="cover-mark" style="margin-top:30px;color:var(--prussian)"></div>
+    <h1>The mark survived independent review. Now let's finish it.</h1>
+    <p class="sub">
+      Two people arrived at &#8776; separately. That's the strongest possible signal it's right.
+      This document keeps <strong>most of Brand Bible v1.2 intact</strong> &#8212; the positioning, the
+      tagline, the four-jobs colour structure, the voice &#8212; and resolves the four places where it
+      needs work. <strong>Three of those are matters of taste. One is a factual conflict with our
+      own strategy document.</strong>
+    </p>
+
+    <div class="tagline">One song. Any language. Same soul.</div>
+
+    <div class="meta">
+      <div><div class="label">Adopted from v1.2</div><b>Tagline &#183; positioning &#183; colour logic &#183; voice</b></div>
+      <div><div class="label">Open</div><b>Identity colour</b></div>
+      <div><div class="label">Open</div><b>Stroke &amp; symmetry</b></div>
+      <div><div class="label">Open</div><b>Typefaces</b></div>
+      <div><div class="label">Must change</div><b>The 6.4&#215; metric</b></div>
+    </div>
+  </header>
+
+  <!-- &#9552;&#9552; 01 LEDGER &#9552;&#9552; -->
+  <section>
+    <div class="label">01 &#183; Reconciliation</div>
+    <h2>What we keep, what we adjust, what has to go.</h2>
+    <p class="intro">
+      Stated plainly so nobody has to guess which parts of v1.2 are being questioned.
+      <strong>Six of the ten items below are adopted unchanged.</strong>
+    </p>
+
+    <div class="ledger">
+      <div class="lg keep"><div class="st">Keep</div><div>
+        <h3>"One song. Any language. Same soul."</h3>
+        <p>Better than anything in v1 of this document. It's short, it's true, and <b>"same soul"
+        is doing the exact work the product needs</b> &#8212; it claims fidelity without claiming
+        identity.</p>
+      </div></div>
+
+      <div class="lg keep"><div class="st">Keep</div><div>
+        <h3>Four colours, four jobs &#8212; "not a palette, a division of labour"</h3>
+        <p>This is the best idea in v1.2. Identity, action, space, typography. <b>It's a system
+        rather than a mood</b>, which means it survives contact with a real website.</p>
+      </div></div>
+
+      <div class="lg keep"><div class="st">Keep</div><div>
+        <h3>Rights-holder infrastructure, not a consumer product</h3>
+        <p>Correct, and it should govern every page. Our own strategy says authorization &#8212; not
+        production capability &#8212; is the binding constraint.</p>
+      </div></div>
+
+      <div class="lg keep"><div class="st">Keep</div><div>
+        <h3>Brand voice vs product voice, split across two faces</h3>
+        <p>Genuinely useful principle: <b>if it's the brand talking, one face; if it's the
+        product talking, the other.</b> We keep the rule and question only the two faces chosen.</p>
+      </div></div>
+
+      <div class="lg keep"><div class="st">Keep</div><div>
+        <h3>Cream as the ground &#183; Ember owns action &#183; solid mark only</h3>
+        <p>Cream confirms a light-ground site, which is our biggest free differentiator. Ember at
+        <b>#EE4E22</b> is almost exactly the signal orange arrived at independently. And "no
+        recoloured or two-tone mark" rules out gradients &#8212; agreed, permanently.</p>
+      </div></div>
+
+      <div class="lg adj"><div class="st">Adjust</div><div>
+        <h3>Indigo #4433D6 as the identity colour</h3>
+        <p>The problem isn't contrast &#8212; it measures 6.8:1 on cream, which passes. <b>The problem
+        is category.</b> Blue-violet in this exact register is the default colour of AI products.
+        Section 04 proposes four alternatives that keep the structure and lose the association.</p>
+      </div></div>
+
+      <div class="lg adj"><div class="st">Adjust</div><div>
+        <h3>"Two parallel curved strokes"</h3>
+        <p>Parallel and identical means the mark reads as <b>=</b>, not <b>&#8776;</b>. Our own client
+        material is careful to say <em>transcreation</em>. Section 03 shows the full range so the
+        call can be made on evidence rather than instinct.</p>
+      </div></div>
+
+      <div class="lg adj"><div class="st">Adjust</div><div>
+        <h3>Sora + Inter</h3>
+        <p>Inter is the single most-used interface font on the web and reads as a default. Sora
+        200 at text sizes also fails legibility. <b>We keep the two-voice principle and change
+        both faces</b> &#8212; see section 05 for why the display face in particular should relate to
+        the mark's own drawing.</p>
+      </div></div>
+
+      <div class="lg adj"><div class="st">Adjust</div><div>
+        <h3>Stacked lockup as the only sanctioned arrangement</h3>
+        <p>Stacked is the right <em>primary</em> &#8212; it's more ceremonial and it suits a cover.
+        But it's too tall for a navigation bar, an email signature or a contract header. <b>We
+        need a sanctioned horizontal utility variant</b>, or people will improvise one badly.</p>
+      </div></div>
+
+      <div class="lg flag"><div class="st">Must go</div><div>
+        <h3>The 6.4&#215; metric on the applications page</h3>
+        <p><b>This is not a design objection.</b> Our Monetization Strategy states that
+        native-speaker population figures are "an internal prioritization heuristic" and
+        "should never be presented to an investor as a multiplier on catalog value." Publishing
+        6.4&#215; as a headline metric contradicts our own written position. Section 07 proposes
+        defensible replacements.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- &#9552;&#9552; 02 ELEGANCE &#9552;&#9552; -->
+  <section>
+    <div class="label">02 &#183; The elegance question</div>
+    <h2>"Like a kid drew it" is a stroke problem, not a shape problem.</h2>
+    <p class="intro">
+      The objection is fair and it has a precise cause. <strong>A uniform-width stroke with round
+      ends is a felt-tip pen.</strong> No amount of adjusting the curve will make a monoline
+      squiggle look sophisticated. What creates elegance is <strong>modulation</strong> &#8212; the
+      stroke swelling at its belly and tapering to a point at each tip, the way a broad-nib pen
+      or a high-contrast serif draws a curve.
+    </p>
+
+    <div class="duo">
+      <div>
+        <div class="art" id="art-mono"></div>
+        <div class="txt">
+          <div class="label">v1.2 as specified</div>
+          <h3>Monoline</h3>
+          <p>Uniform 6.4 units, round caps. Friendly, contemporary, and &#8212; the criticism is
+          correct &#8212; <b>a little like a marker pen.</b> It also has no relationship to any
+          typeface, so the mark always sits slightly apart from the wordmark.</p>
+        </div>
+      </div>
+      <div>
+        <div class="art" id="art-mod"></div>
+        <div class="txt">
+          <div class="label">Proposed</div>
+          <h3>Modulated</h3>
+          <p>Same centreline, same geometry, same proportions. The stroke now <b>thickens through
+          the curve and comes to a point.</b> It reads as drawn rather than typed &#8212; organic and
+          sophisticated at once, which is precisely the disagreement resolved.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="intro" style="margin-top:30px">
+      &#128269; <strong>The consequence is bigger than it looks.</strong> A modulated stroke is what a
+      high-contrast serif is made of. Choose that kind of typeface and <strong>the mark stops
+      being a logo placed near some type and becomes a character in the same alphabet</strong> &#8212;
+      the same hand drew both. That's the argument for the typography in section 05, and it's
+      also what makes a subtle asymmetry read as craft instead of error.
+    </p>
+  </section>
+
+  <!-- &#9552;&#9552; 03 SYMMETRY &#9552;&#9552; -->
+  <section>
+    <div class="label">03 &#183; Symmetry</div>
+    <h2>Five marks, from perfectly parallel to clearly uneven.</h2>
+    <p class="intro">
+      All five are modulated and drawn from identical geometry &#8212; <strong>the only variable is how
+      much the lower wave departs from the upper</strong>, given as a percentage. The question
+      isn't which looks nicest large; it's <strong>where refinement tips over into looking like a
+      mistake.</strong> My read is that it happens between M04 and M05.
+    </p>
+    <div class="range" id="range"></div>
+
+    <p class="intro" style="margin-top:28px">
+      <strong>Recommendation: M03 at 6%.</strong> At a glance it reads as two matching strokes &#8212;
+      so it satisfies the "clean and elegant" requirement completely. Look properly and the
+      lower wave is doing something slightly different, which is the honest claim: <em>same
+      envelope, different signal.</em> M01 is defensible but it means <b>=</b>, and that's the
+      one thing we've been careful never to say.
+    </p>
+  </section>
+
+  <!-- &#9552;&#9552; 04 COLOUR &#9552;&#9552; -->
+  <section>
+    <div class="label">04 &#183; Colour</div>
+    <h2>His structure, kept exactly. One value replaced.</h2>
+    <p class="intro">
+      The four-jobs division is adopted without change. <strong>Cream, Ember and Graphite are all
+      correct and stay as specified.</strong> The only open value is the one that owns identity.
+    </p>
+
+    <div class="jobs">
+      <div class="job">
+        <div class="sw" style="background:#F7EFE1"><code style="color:#1C1A19">#F7EFE1</code></div>
+        <div class="bd"><h4>Cream owns space</h4><p>The field everything sits on. Room to breathe, not decoration. <b>Adopted.</b></p></div>
+      </div>
+      <div class="job">
+        <div class="sw" style="background:#1C1A19"><code style="color:#F7EFE1">#1C1A19</code></div>
+        <div class="bd"><h4>Graphite owns typography</h4><p>All text, always. Never a decorative field. <b>Adopted.</b></p></div>
+      </div>
+      <div class="job">
+        <div class="sw" style="background:#EE4E22"><code style="color:#F7EFE1">#EE4E22</code></div>
+        <div class="bd"><h4>Ember owns action</h4><p>Calls to action, live states, where something is happening. <b>Adopted.</b></p></div>
+      </div>
+      <div class="job" style="box-shadow:inset 0 0 0 2px var(--prussian)">
+        <div class="sw" style="background:linear-gradient(90deg,#123A5C 0 25%,#1B2A4A 25% 50%,#16382C 50% 75%,#4433D6 75% 100%)"><code style="color:#F7EFE1">Open</code></div>
+        <div class="bd"><h4>? owns identity</h4><p>The mark, primary actions, anywhere the brand itself speaks. <b>Four candidates below.</b></p></div>
+      </div>
+    </div>
+
+    <div class="cands" id="cands"></div>
+
+    <div class="label" style="margin-top:34px">Measured on cream #F7EFE1</div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Colour</th><th>Contrast</th><th>Body text</th><th>Large &amp; UI</th><th>Category risk</th></tr></thead>
+        <tbody>
+          <tr><td><span class="chipc" style="background:#1C1A19"></span>Graphite</td><td class="n">15.8 : 1</td><td class="pass">Pass</td><td class="pass">Pass</td><td>None</td></tr>
+          <tr><td><span class="chipc" style="background:#1B2A4A"></span>Ink Navy</td><td class="n">12.5 : 1</td><td class="pass">Pass</td><td class="pass">Pass</td><td>None</td></tr>
+          <tr><td><span class="chipc" style="background:#16382C"></span>Bottle Green</td><td class="n">11.2 : 1</td><td class="pass">Pass</td><td class="pass">Pass</td><td>None</td></tr>
+          <tr><td><span class="chipc" style="background:#123A5C"></span>Prussian</td><td class="n">10.3 : 1</td><td class="pass">Pass</td><td class="pass">Pass</td><td>None</td></tr>
+          <tr><td><span class="chipc" style="background:#4433D6"></span>Indigo (v1.2)</td><td class="n">6.8 : 1</td><td class="pass">Pass</td><td class="pass">Pass</td><td class="fail">High &#8212; AI default</td></tr>
+          <tr><td><span class="chipc" style="background:#EE4E22"></span>Ember</td><td class="n">3.2 : 1</td><td class="fail">Fail</td><td class="pass">Pass</td><td>None</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="intro" style="margin-top:16px">
+      One rule falls out of the numbers and it confirms v1.2's own logic: <strong>Ember can never
+      carry body text on cream.</strong> It works as a fill with graphite or cream on top, which
+      is exactly "Ember owns action" &#8212; buttons, not paragraphs. Indigo's issue is the opposite:
+      it passes every technical test and fails the only one that matters commercially.
+    </p>
+  </section>
+
+  <!-- &#9552;&#9552; 05 TYPE &#9552;&#9552; -->
+  <section>
+    <div class="label">05 &#183; Typography</div>
+    <h2>Keep the two voices. Change both faces.</h2>
+    <p class="intro">
+      The principle from v1.2 stands: <strong>if it's the brand talking, one face; if it's the
+      product talking, the other.</strong> But the display face should share the mark's
+      construction &#8212; that's what makes an identity feel drawn by one hand rather than assembled.
+      All faces below are open source, so <strong>no licence cost and no legal exposure</strong>
+      on assets that will appear in contracts.
+    </p>
+
+    <div class="pairs" id="pairs"></div>
+
+    <p class="intro" style="margin-top:30px">
+      <strong>Recommendation: Bodoni Moda + Archivo.</strong> A Didone is literally a modulated
+      stroke &#8212; thick belly, hairline tips &#8212; so it is <em>the same drawing as the mark</em>. That
+      single decision does more for "elegant and sophisticated" than any other choice in this
+      document, and it answers the original objection at the root: nothing set in Bodoni has ever
+      been accused of looking like a child drew it.
+    </p>
+  </section>
+
+  <!-- &#9552;&#9552; 06 LOCKUP &#9552;&#9552; -->
+  <section>
+    <div class="label">06 &#183; Lockup</div>
+    <h2>Stacked stays primary. One utility variant is added.</h2>
+    <p class="intro">
+      v1.2 is right that stacked is the better arrangement and should be the sanctioned one.
+      But <strong>a stacked lockup cannot fit a 64 px navigation bar or a letterhead rule</strong>,
+      and an unsanctioned variant will get invented in a hurry by whoever needs one first. Better
+      to draw it now.
+    </p>
+    <div class="lockrow" id="locks"></div>
+  </section>
+
+  <!-- &#9552;&#9552; 07 METRICS &#9552;&#9552; -->
+  <section>
+    <div class="label">07 &#183; Metrics</div>
+    <h2>Replacing 6.4&#215; with numbers we can defend.</h2>
+    <p class="intro">
+      The metrics layout in v1.2 is good and should stay. Only the figure inside it changes.
+      Each replacement below is something <strong>we can produce evidence for on request</strong>
+      &#8212; which is the test any number on a website has to pass.
+    </p>
+
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Instead of</th><th>Use</th><th>Why it's safe</th></tr></thead>
+        <tbody>
+          <tr><td class="n">6.4&#215; reach</td><td class="n">48.0 kHz / 24-bit</td><td>A verifiable technical fact about what we deliver.</td></tr>
+          <tr><td class="n">2.38B speakers</td><td class="n">08 languages</td><td>A statement about our capability, not the market's size.</td></tr>
+          <tr><td class="n">+133% vs English</td><td class="n">Melody preserved, note for note</td><td>The actual differentiator, and the one competitors can't match.</td></tr>
+          <tr><td class="n">Population multipliers</td><td class="n">Original instrumental, untouched</td><td>Concrete, checkable by ear, and reassuring to a rights holder.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="intro" style="margin-top:16px">
+      &#9888;&#65039; Worth stating once, clearly: <strong>a rights holder's lawyer will read the website.</strong>
+      A number we can't defend is a liability on a page whose entire job is to make that person
+      comfortable.
+    </p>
+  </section>
+
+  <!-- &#9552;&#9552; 08 GUARDRAILS &#9552;&#9552; -->
+  <section>
+    <div class="label">08 &#183; Guardrails</div>
+    <h2>Merged from both documents.</h2>
+    <div class="never">
+      <div class="nv"><h4>Recoloured or two-tone mark</h4><p>One solid colour, always. No gradients, ever. <span class="src">From v1.2</span></p></div>
+      <div class="nv"><h4>Redrawing the mark</h4><p>No re-weighting, re-spacing, outlining, rotating, or adding a container. <span class="src">From v1.2</span></p></div>
+      <div class="nv"><h4>Anything entering the clear space</h4><p>Clear space equals the height of the mark. <span class="src">From v1.2</span></p></div>
+      <div class="nv"><h4>Graphite as a decorative field</h4><p>It owns typography. Dark grounds are for listening sections only. <span class="src">From v1.2</span></p></div>
+      <div class="nv"><h4>Ember as body text</h4><p>Measured at 3.2 : 1 on cream. Fills and large type only. <span class="src">Added</span></p></div>
+      <div class="nv"><h4>Population multipliers</h4><p>No 6.4&#215;, no 2.38B. Contradicts our own strategy document. <span class="src">Added</span></p></div>
+      <div class="nv"><h4>The phrase "AI-generated"</h4><p>We say recreated, re-sung, performed. Our client material already does. <span class="src">Added</span></p></div>
+      <div class="nv"><h4>Robot or circuit imagery</h4><p>Our promise is that it sounds genuinely like the artist. <span class="src">Added</span></p></div>
+      <div class="nv"><h4>Enterprise filler words</h4><p>No "Solutions". v1.2 says plain language always &#8212; the nav should obey it. <span class="src">Added</span></p></div>
+    </div>
+  </section>
+
+  <!-- &#9552;&#9552; DECISION &#9552;&#9552; -->
+  <div class="decision">
+    <div class="label">Decision required</div>
+    <h2>Five calls, then the website starts.</h2>
+    <p>
+      Reply against the numbers. Everything in section 01 marked <em>Keep</em> is treated as
+      settled unless someone objects.
+    </p>
+
+    <div class="dq">
+      <div class="q"><div class="n">01</div><div>
+        <h4>Monoline or modulated stroke?</h4>
+        <p>Section 02. <em>Modulated</em> is the recommendation, and it's the direct answer to the
+        "looks like a kid drew it" note.</p>
+      </div></div>
+      <div class="q"><div class="n">02</div><div>
+        <h4>How much asymmetry?</h4>
+        <p>Section 03. <em>M03 at 6%</em> &#8212; reads clean at a glance, honest on inspection. M01 is
+        the parallel version from v1.2.</p>
+      </div></div>
+      <div class="q"><div class="n">03</div><div>
+        <h4>Which colour owns identity?</h4>
+        <p>Section 04. <em>Prussian #123A5C</em> is the recommendation. Indigo #4433D6 stays on
+        the table but carries the AI-category risk.</p>
+      </div></div>
+      <div class="q"><div class="n">04</div><div>
+        <h4>Which typeface pairing?</h4>
+        <p>Section 05. <em>Bodoni Moda + Archivo</em> &#8212; the Didone shares the mark's construction.
+        Sora + Inter shown for comparison.</p>
+      </div></div>
+      <div class="q"><div class="n">05</div><div>
+        <h4>Do we agree 6.4&#215; comes off the site?</h4>
+        <p>Section 07. This one isn't a preference &#8212; it's our own written strategy. Replacements
+        proposed.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Lyrical &#183; Brand identity v2 &#183; Reconciled with Brand Bible v1.2</span>
+    <span>July 2026</span>
+    <span>Confidential</span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  var host=document.createElementNS(NS,'svg');
+  host.setAttribute('width','0');host.setAttribute('height','0');
+  host.style.position='absolute';host.style.visibility='hidden';
+  document.body.appendChild(host);
+
+  // Build a tapered (modulated) outline from a centreline path.
+  function tapered(d, wmax, power, samples){
+    var p=document.createElementNS(NS,'path');
+    p.setAttribute('d',d); host.appendChild(p);
+    var L=p.getTotalLength();
+    if(!L){ host.removeChild(p); return ''; }
+    var up=[],dn=[],eps=L/(samples*3);
+    for(var i=0;i<=samples;i++){
+      var t=i/samples, s=t*L;
+      var pt=p.getPointAtLength(s);
+      var a=p.getPointAtLength(Math.max(0,s-eps));
+      var b=p.getPointAtLength(Math.min(L,s+eps));
+      var dx=b.x-a.x, dy=b.y-a.y, m=Math.sqrt(dx*dx+dy*dy)||1;
+      var nx=-dy/m, ny=dx/m;
+      var w=wmax*Math.pow(Math.sin(Math.PI*t),power);
+      up.push([pt.x+nx*w,pt.y+ny*w]);
+      dn.push([pt.x-nx*w,pt.y-ny*w]);
+    }
+    host.removeChild(p);
+    var s2='M '+up[0][0].toFixed(2)+' '+up[0][1].toFixed(2);
+    for(var j=1;j<up.length;j++) s2+=' L '+up[j][0].toFixed(2)+' '+up[j][1].toFixed(2);
+    for(var k=dn.length-1;k>=0;k--) s2+=' L '+dn[k][0].toFixed(2)+' '+dn[k][1].toFixed(2);
+    return s2+' Z';
+  }
+
+  var TOP='M 7 20 C 14 8, 22 8, 32 20 C 42 32, 50 32, 57 20';
+
+  // Lower wave, generated at a given divergence (0 = identical to upper).
+  function lower(dv){
+    var y=44, a=8-dv*16, b=dv*22;
+    return 'M 7 '+y+' C '+(14-dv*18).toFixed(1)+' '+(y-12+a*0+(dv*4)).toFixed(1)+', '+
+           (22+dv*26).toFixed(1)+' '+(y-12-dv*12).toFixed(1)+', 32 '+y+
+           ' C '+(42-dv*10).toFixed(1)+' '+(y+12+b*0.5).toFixed(1)+', '+
+           (50+dv*14).toFixed(1)+' '+(y+12-dv*18).toFixed(1)+', 57 '+(y-dv*18).toFixed(1);
+  }
+
+  function svgMod(size,dv,color,extra){
+    var t=tapered(TOP,4.6,0.62,58);
+    var b=tapered(lower(dv),4.6,0.62,58);
+    return '<svg viewBox="0 0 64 64" width="'+size+'" height="'+size+'" aria-hidden="true" '+(extra||'')+'>'+
+      '<path d="'+t+'" fill="'+(color||'currentColor')+'"/>'+
+      '<path d="'+b+'" fill="'+(color||'currentColor')+'"/></svg>';
+  }
+  function svgMono(size,dv,color){
+    return '<svg viewBox="0 0 64 64" width="'+size+'" height="'+size+'" aria-hidden="true">'+
+      '<path d="'+TOP+'" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="6.4" stroke-linecap="round"/>'+
+      '<path d="'+lower(dv)+'" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="6.4" stroke-linecap="round"/></svg>';
+  }
+
+  document.getElementById('cover-mark').innerHTML = svgMod(96,0.06);
+  document.getElementById('art-mono').innerHTML   = '<span style="color:var(--prussian)">'+svgMono(188,0)+'</span>';
+  document.getElementById('art-mod').innerHTML    = '<span style="color:var(--prussian)">'+svgMod(188,0)+'</span>';
+
+  // \u2500\u2500 symmetry range
+  var RANGE=[
+    {c:'M01',n:'Parallel',dv:0,    pct:'0%',  nt:'Brand Bible v1.2 as written. Immaculate \u2014 and it means \u201cequals\u201d.'},
+    {c:'M02',n:'Whisper', dv:0.03, pct:'3%',  nt:'Difference visible only side by side. Safest way to keep the meaning.'},
+    {c:'M03',n:'Refined', dv:0.06, pct:'6%',  nt:'Reads clean at a glance, honest on inspection. Recommended.', pick:1},
+    {c:'M04',n:'Evident', dv:0.11, pct:'11%', nt:'You notice it immediately. Most expressive version that still looks intentional.'},
+    {c:'M05',n:'Loose',   dv:0.19, pct:'19%', nt:'Past the line. This is where it starts to look unresolved rather than drawn.'}
+  ];
+  document.getElementById('range').innerHTML = RANGE.map(function(r){
+    return '<div class="rg'+(r.pick?' pick':'')+'">'+
+      '<div class="code">'+r.c+'</div>'+
+      '<div class="art">'+svgMod(102,r.dv)+'</div>'+
+      '<div class="nm">'+r.n+'</div>'+
+      '<div class="dv">Divergence '+r.pct+'</div>'+
+      '<div class="nt">'+r.nt+'</div>'+
+      '<div class="tiny">'+svgMod(16,r.dv)+svgMod(24,r.dv)+svgMod(32,r.dv)+'</div>'+
+      '</div>';
+  }).join('');
+
+  // \u2500\u2500 identity colour candidates
+  var CANDS=[
+    {c:'#123A5C',n:'Prussian',ct:'10.3',pick:1,nt:'The pigment of maps and technical drawing. Keeps blue, loses the violet entirely. Reads engineered, not generated.'},
+    {c:'#1B2A4A',n:'Ink Navy',ct:'12.5',nt:'Almost black-blue. The most institutional option \u2014 closest to how a publisher or PRO would present itself.'},
+    {c:'#16382C',n:'Bottle Green',ct:'11.2',nt:'Complementary to Ember, so the division of labour is unmistakable. Rarest of the four in this sector.'},
+    {c:'#262B7A',n:'Deep Indigo',ct:'10.8',nt:'v1.2\u2019s indigo pushed darker and less violet. The compromise \u2014 keeps his intent, drops most of the association.'},
+    {c:'#4433D6',n:'Indigo v1.2',ct:'6.8',nt:'Shown for comparison. Technically fine, commercially the risk: this is the default colour of AI products.'}
+  ];
+  document.getElementById('cands').innerHTML = CANDS.map(function(k){
+    return '<div class="cand'+(k.pick?' pick':'')+'">'+
+      '<div class="well">'+svgMod(46,0.06,k.c)+
+        '<div class="wm">lyrical</div>'+
+        '<div class="btn" style="background:'+k.c+';color:#F7EFE1">Get started</div>'+
+      '</div>'+
+      '<div class="bd"><h4>'+k.n+'<em>'+k.ct+':1</em></h4><p>'+k.nt+'</p></div>'+
+      '</div>';
+  }).join('');
+
+  // \u2500\u2500 type pairings
+  var PAIRS=[
+    {pick:1,dn:'Bodoni Moda',bn:'Archivo',cls:'fserif',
+     tag:'Recommended',
+     why:'<p><b>A Didone is a modulated stroke</b> \u2014 thick belly, hairline tips. It is the same drawing as the mark, so logo and headline share one hand.</p><p>Archivo carries body, labels and legal copy: a real grotesque with width and weight axes, and considerably more character than Inter.</p><p>Both open source. <b>Answers \u201celegant and sophisticated\u201d at the root.</b></p>'},
+    {dn:'Instrument Serif',bn:'Instrument Sans',cls:'fserif',
+     tag:'Contemporary',
+     why:'<p>Designed as a family, so the pairing is guaranteed. Moderate contrast \u2014 <b>less dramatic than Bodoni, easier to live with</b> at small sizes.</p><p>Reads editorial and current rather than classical. Take this if Bodoni feels too formal for an artist-facing page.</p>'},
+    {dn:'Sora 200',bn:'Inter',cls:'fthin',
+     tag:'v1.2 as specified',
+     why:'<p>Shown honestly for comparison. Sora at 200 gives the thin, airy elegance intended \u2014 but <b>hairline weights fail legibility below display size</b> and get thrown away by print.</p><p>Inter is the most-used interface font on the web. Paired with indigo it is the exact stack a generated site would use.</p>'}
+  ];
+  document.getElementById('pairs').innerHTML = PAIRS.map(function(p){
+    return '<div class="tp'+(p.pick?' pick':'')+'">'+
+      '<div class="demo"><div class="h '+p.cls+'">One song. Any language.<br>Same soul.</div>'+
+      '<div class="b">A finished record, re-sung in a new language, in the artist\'s own voice \u2014 over the untouched original backing. Delivered as a finished mix and a dry vocal stem.</div></div>'+
+      '<div class="side"><div class="label">'+p.tag+'</div><h4>'+p.dn+' + '+p.bn+'</h4>'+p.why+'</div>'+
+      '</div>';
+  }).join('');
+
+  // \u2500\u2500 lockups
+  var LK=[
+    {n:'Stacked \u2014 primary',nt:'The sanctioned lockup, per v1.2. Covers, decks, title cards, the footer.',
+     h:'<span style="display:flex;flex-direction:column;align-items:center;gap:11px">'+svgMod(50,0.06)+'<span class="wmk" style="font-size:27px">lyrical</span></span>'},
+    {n:'Horizontal \u2014 utility',nt:'Added. For navigation bars, email signatures, letterheads and contract headers only.',
+     h:'<span style="display:flex;align-items:center;gap:12px">'+svgMod(34,0.06)+'<span class="wmk" style="font-size:29px">lyrical</span></span>'},
+    {n:'Mark alone',nt:'Favicon, avatar, and the stamp on a delivered asset. Must survive at 16 px.',
+     h:'<span style="display:flex;align-items:center;gap:16px">'+svgMod(48,0.06)+svgMod(26,0.06)+svgMod(16,0.06)+'</span>'},
+    {n:'As punctuation',nt:'The mark inside a sentence. Names every language pair we publish.',
+     h:'<span class="wmk" style="font-size:23px">english <span style="color:var(--prussian)">\u2248</span> espa\u00f1ol</span>'}
+  ];
+  document.getElementById('locks').innerHTML = LK.map(function(l){
+    return '<div class="lk"><div class="stg">'+l.h+'</div><div class="nm">'+l.n+'</div><div class="nt">'+l.nt+'</div></div>';
+  }).join('');
+})();
+</script>

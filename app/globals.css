@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   Brand tokens — LOCKED. Four colours, four jobs.
+   Do not add a fifth colour. Do not introduce a gradient.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  --color-cream:       #F7EFE1; /* owns space    */
+  --color-graphite:    #1C1A19; /* owns type     */
+  --color-indigo:      #4433D6; /* owns identity */
+  --color-ember:       #EE4E22; /* owns action   */
+
+  /* Dark treatment — listening sections only. Indigo is never used here. */
+  --color-dark-ground: #1B1D1F;
+  --color-dark-ink:    #EDEBE4;
+  --color-dark-accent: #FF6B2C;
+
+  --font-brand:   var(--font-brand-src), Georgia, "Times New Roman", serif;
+  --font-product: var(--font-product-src), system-ui, -apple-system, sans-serif;
+  --font-mono:    ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+}
+
+/* NOTE: `scroll-behavior: smooth` is deliberately NOT set.
+   Lenis owns smooth scrolling when JS is on, and as of Next.js 16 the framework
+   no longer overrides a global smooth setting during route transitions — the two
+   together make navigation feel sluggish. With JS off, anchors jump instantly. */
+
+body {
+  background: var(--color-cream);
+  color: var(--color-graphite);
+  font-family: var(--font-product);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ember measures 3.2:1 on cream — it is a fill, never body text.
+   Asserted in tests/tokens.test.ts. */
+
+::selection {
+  background: var(--color-indigo);
+  color: var(--color-cream);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-indigo);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Motion. Transform and opacity only — never layout properties.
+   ───────────────────────────────────────────────────────────── */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes sway {
+  from { transform: translateX(-1.5%) scaleY(0.97); }
+  to   { transform: translateX(1.5%)  scaleY(1.03); }
+}
+
+@keyframes draw {
+  from { stroke-dashoffset: 320; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* ── Scroll reveal ────────────────────────────────────────────
+   Progressive enhancement, and the default MUST be visible.
+
+   Content is opaque unless JS has explicitly opted in by putting `.js-motion` on <html>
+   (an inline script in the layout, so it lands before first paint). With JS disabled the
+   class never appears and every section is simply visible — which is the requirement.
+
+   IntersectionObserver drives this, NOT a native scroll-driven view timeline. The native
+   approach was observed pinning elements at negative timeline progress (so permanently
+   opacity 0) alongside Lenis. Invisible body copy is far worse than a slightly less
+   fashionable implementation, so this is deliberate. See tests/tokens.test.ts.
+   ───────────────────────────────────────────────────────────── */
+
+.js-motion .reveal {
+  animation: rise 0.75s cubic-bezier(.16, .84, .34, 1) both;
+  animation-play-state: paused;
+}
+
+.js-motion .reveal.in {
+  animation-play-state: running;
+}
+
+.stroke-draw {
+  stroke-dasharray: 320;
+  animation: draw 1.6s cubic-bezier(.4, 0, .2, 1) both;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Reduced motion. Durations COLLAPSE rather than being removed,
+   so `both`-filled animations still land on their END state and
+   nothing is stranded at opacity 0.
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .js-motion .reveal { animation-play-state: running !important; }
+}

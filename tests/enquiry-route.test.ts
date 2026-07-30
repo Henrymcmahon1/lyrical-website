@@ -1,0 +1,134 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+const insert = vi.fn()
+vi.mock('@/lib/supabase-admin', () => ({
+  supabaseAdmin: () => ({ from: () => ({ insert: (...a: unknown[]) => insert(...a) }) }),
+}))
+
+const send = vi.fn()
+vi.mock('resend', () => ({
+  Resend: class {
+    emails = { send: (...a: unknown[]) => send(...a) }
+  },
+}))
+
+process.env.GATE_SECRET = 'test-secret'
+process.env.ENQUIRY_TO_EMAIL = 'henry.jamcmahon@gmail.com'
+process.env.ENQUIRY_FROM_EMAIL = 'onboarding@resend.dev'
+process.env.RESEND_API_KEY = 'test-key'
+
+const { POST } = await import('@/app/api/enquiry/route')
+
+const valid = {
+  name: 'Jordan Brock',
+  email: 'Jordan@Example.com',
+  role: 'label',
+  source: 'hero',
+  elapsed_ms: 5000,
+  unlocked_audio: true,
+}
+
+const req = (body: unknown) =>
+  new Request('http://localhost:3000/api/enquiry', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+beforeEach(() => {
+  insert.mockReset()
+  send.mockReset()
+  insert.mockResolvedValue({ error: null })
+  send.mockResolvedValue({})
+})
+
+describe('POST /api/enquiry', () => {
+  it('stores a valid enquiry and returns 200', async () => {
+    const res = await POST(req(valid))
+    expect(res.status).toBe(200)
+    expect(insert).toHaveBeenCalledOnce()
+  })
+
+  it('normalises the email to lowercase before storing', async () => {
+    await POST(req(valid))
+    expect(insert.mock.calls[0][0]).toMatchObject({ email: 'jordan@example.com' })
+  })
+
+  it('emails the founder, with reply-to set to the enquirer', async () => {
+    await POST(req(valid))
+    expect(send.mock.calls[0][0]).toMatchObject({
+      to: 'henry.jamcmahon@gmail.com',
+      replyTo: 'jordan@example.com',
+    })
+  })
+
+  it('sets the unlock cookie when the submission came from the gate', async () => {
+    const res = await POST(req(valid))
+    expect(res.headers.get('set-cookie') ?? '').toContain('lyr_unlocked=')
+  })
+
+  it('marks the cookie HttpOnly so script cannot read it', async () => {
+    const res = await POST(req(valid))
+    expect(res.headers.get('set-cookie') ?? '').toContain('HttpOnly')
+  })
+
+  it('does not set a cookie for an ordinary enquiry', async () => {
+    const res = await POST(req({ ...valid, unlocked_audio: false }))
+    expect(res.headers.get('set-cookie')).toBeNull()
+  })
+
+  it('rejects a malformed email with 400 and writes nothing', async () => {
+    const res = await POST(req({ ...valid, email: 'nope' }))
+    expect(res.status).toBe(400)
+    expect(insert).not.toHaveBeenCalled()
+  })
+
+  it('rejects an unknown role', async () => {
+    const res = await POST(req({ ...valid, role: 'ceo' }))
+    expect(res.status).toBe(400)
+  })
+
+  it('rejects an unknown language code', async () => {
+    const res = await POST(req({ ...valid, target_languages: ['XX'] }))
+    expect(res.status).toBe(400)
+  })
+
+  it('silently drops a filled honeypot without writing', async () => {
+    const res = await POST(req({ ...valid, website: 'http://spam.example' }))
+    expect(res.status).toBe(400) // z.literal('') rejects a non-empty value
+    expect(insert).not.toHaveBeenCalled()
+  })
+
+  it('drops a submission filled faster than two seconds', async () => {
+    const res = await POST(req({ ...valid, elapsed_ms: 300 }))
+    expect(res.status).toBe(200)
+    expect(insert).not.toHaveBeenCalled()
+  })
+
+  it('STILL RETURNS 200 WHEN THE EMAIL FAILS — never lose the lead', async () => {
+    send.mockRejectedValue(new Error('resend is down'))
+    const res = await POST(req(valid))
+    expect(res.status).toBe(200)
+    expect(insert).toHaveBeenCalledOnce()
+  })
+
+  it('returns 500 when the database write fails', async () => {
+    insert.mockResolvedValue({ error: { message: 'db down' } })
+    const res = await POST(req(valid))
+    expect(res.status).toBe(500)
+  })
+
+  it('accepts a native form post and redirects (the no-JS path)', async () => {
+    const fd = new FormData()
+    fd.set('name', 'Henry McMahon')
+    fd.set('email', 'henry@example.com')
+    fd.set('role', 'artist')
+    fd.set('source', 'footer')
+    fd.set('elapsed_ms', '9000')
+    const res = await POST(
+      new Request('http://localhost:3000/api/enquiry', { method: 'POST', body: fd }),
+    )
+    expect(res.status).toBe(303)
+    expect(insert).toHaveBeenCalledOnce()
+  })
+})
