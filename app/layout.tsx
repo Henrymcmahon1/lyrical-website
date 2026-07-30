@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Analytics } from '@vercel/analytics/next'
 import { fraunces, archivo } from '@/lib/fonts'
 import { Nav } from '@/components/Nav'
 import { Footer } from '@/components/Footer'
@@ -68,6 +69,12 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        {/*
+          Vercel Web Analytics. Cookieless and IP-anonymising, so it needs no consent banner,
+          which matters on a page whose whole argument is that it handles other people's
+          property carefully. It records nothing in development.
+        */}
+        <Analytics />
       </body>
     </html>
   )

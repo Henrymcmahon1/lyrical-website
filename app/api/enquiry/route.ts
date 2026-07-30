@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
-import { enquiryEmailSubject, enquiryEmailText } from '@/lib/enquiry-email'
-import { EnquirySchema, MIN_ELAPSED_MS } from '@/lib/enquiry-schema'
+import { enquiryEmailHtml, enquiryEmailSubject, enquiryEmailText } from '@/lib/enquiry-email'
+import { EnquirySchema, MIN_ELAPSED_MS, resolveName } from '@/lib/enquiry-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { GATE_COOKIE, signGate } from '@/lib/gate'
 
@@ -37,6 +37,13 @@ export async function POST(request: Request) {
     return json({ error: message }, 400)
   }
   const d = parsed.data
+
+  /**
+   * The examples gate does not ask for a name, but the column is NOT NULL and an email
+   * addressed to nobody reads badly. One resolved value, used for the row and the email,
+   * so the two can never disagree about who this was.
+   */
+  const record = { ...d, name: resolveName(d) }
 
   // Anti-spam: look successful to the bot, write nothing.
   if (d.website || d.elapsed_ms < MIN_ELAPSED_MS) {
@@ -75,7 +82,7 @@ export async function POST(request: Request) {
     ? await supabaseAdmin()
         .from('enquiries')
         .insert({
-          name: d.name,
+          name: record.name,
           email: d.email,
           role: d.role,
           company: d.company || null,
@@ -113,8 +120,9 @@ export async function POST(request: Request) {
         // Shared with the client's mailto fallback, so both routes to the inbox look
         // identical and one inbox rule catches either. No length cap here: only the
         // mailto path has a URL limit to respect.
-        subject: enquiryEmailSubject(d),
-        text: enquiryEmailText(d),
+        subject: enquiryEmailSubject(record),
+        text: enquiryEmailText(record),
+        html: enquiryEmailHtml(record),
       })
       mailSent = true
     } else {

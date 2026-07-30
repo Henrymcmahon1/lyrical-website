@@ -75,7 +75,7 @@ export function EnquiryOverlay({
         </p>
 
         <div className="mt-6">
-          <EnquiryForm source="gate" onSuccess={onSuccess} />
+          <EnquiryForm source="gate" compact onSuccess={onSuccess} />
         </div>
       </div>
     </div>

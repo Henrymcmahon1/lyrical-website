@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { CarouselDots } from './CarouselDots'
 import { trackProgress } from '@/lib/scroll-progress'
 
 export type Step = { h: string; p: string }
@@ -26,6 +27,7 @@ export function PinnedStepper({
   steps,
   numbered = true,
   startAt = 1,
+  carousel = false,
 }: {
   eyebrow?: string
   title: string
@@ -34,9 +36,17 @@ export function PinnedStepper({
   numbered?: boolean
   /** 0 lets a precondition sit at step 00 rather than renumbering the real sequence. */
   startAt?: number
+  /**
+   * Below 768px, lay the items out as a swipeable scroll-snap row instead of a tall stack.
+   *
+   * Only appropriate where the items are peers rather than a sequence: a carousel makes it
+   * easy to miss that something is step 00. The desktop pin is untouched either way.
+   */
+  carousel?: boolean
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLLIElement | null)[]>([])
+  const scrollerRef = useRef<HTMLUListElement>(null)
   const [active, setActive] = useState(0)
   const [pinned, setPinned] = useState(false)
 
@@ -149,16 +159,20 @@ export function PinnedStepper({
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/45">
                 {eyebrow}
               </p>
-              <ol className="ml-auto flex gap-2" aria-hidden="true">
-                {steps.map((s, i) => (
-                  <li
-                    key={s.h}
-                    className={`h-px w-7 transition-colors duration-300 ${
-                      i === active ? 'bg-indigo' : 'bg-graphite/20'
-                    }`}
-                  />
-                ))}
-              </ol>
+              {carousel ? (
+                <CarouselDots scrollerRef={scrollerRef} count={steps.length} className="ml-auto" />
+              ) : (
+                <ol className="ml-auto flex gap-2" aria-hidden="true">
+                  {steps.map((s, i) => (
+                    <li
+                      key={s.h}
+                      className={`h-px w-7 transition-colors duration-300 ${
+                        i === active ? 'bg-indigo' : 'bg-graphite/20'
+                      }`}
+                    />
+                  ))}
+                </ol>
+              )}
             </div>
           </div>
         )}
@@ -187,14 +201,17 @@ export function PinnedStepper({
             </ol>
           </div>
 
-          <ul className="pin-stack flex flex-col gap-12 md:gap-0">
+          <ul
+            ref={scrollerRef}
+            className={`pin-stack flex flex-col gap-12 md:gap-0 ${carousel ? 'max-md:snap-x max-md:snap-mandatory max-md:flex-row max-md:gap-4 max-md:overflow-x-auto max-md:pb-1' : ''}`}
+          >
             {steps.map((s, i) => (
               <li
                 key={s.h}
                 ref={(el) => {
                   itemRefs.current[i] = el
                 }}
-                className="pin-item pin-reveal"
+                className={`pin-item ${carousel ? 'max-md:w-[80%] max-md:shrink-0 max-md:snap-start' : 'pin-reveal'}`}
                 data-active={pinned ? i === active : undefined}
               >
                 {numbered && (

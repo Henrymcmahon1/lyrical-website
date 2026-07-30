@@ -16,6 +16,7 @@ export default function S06Receive() {
         intro="You keep creative and mixing control. We hand over stems, not a locked file."
         steps={ITEMS}
         numbered={false}
+        carousel
       />
       <div className="mx-auto max-w-6xl px-6 pb-16">
         <div className="flex flex-wrap gap-x-10 gap-y-3 font-mono text-xs tracking-[0.14em] text-graphite/50 tabular-nums">

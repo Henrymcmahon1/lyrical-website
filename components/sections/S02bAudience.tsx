@@ -77,6 +77,21 @@ export default function S02bAudience() {
      * if the section's padding ever changes.
      */
     const MOBILE_SPAN = 0.7
+
+    /**
+     * On a phone the shape and the words resolve on two different clocks, deliberately.
+     *
+     * The mark morphs as it crosses the screen, which is the only window where it is actually
+     * visible. Measured at 375x812: the section is 896px inside an 812px viewport, so it can
+     * never be fully on screen at once, and by the moment its bottom reaches the fold the mark
+     * has already travelled to -111px. Driving the morph from that point put the entire bend
+     * phase off screen.
+     *
+     * The copy and the language bloom wait. They hold on "Everyone who happens to speak the
+     * language" until the bottom of the section has cleared the fold, so the original line has
+     * been read in full before it is replaced, and a little further scrolling commits it.
+     */
+    const RESOLVE_MARGIN = 48
     const wideMq = window.matchMedia('(min-width: 768px)')
     let wide = wideMq.matches
     const syncWide = () => {
@@ -92,13 +107,16 @@ export default function S02bAudience() {
       const rect = track.getBoundingClientRect()
       const vh = window.innerHeight
       let p: number
+      let resolved: boolean
       if (wide) {
         p = trackProgress(rect, vh)
+        resolved = p > 0.62
       } else {
         // Fall back to the track if the mark has no box yet (pre-layout first frame).
         const markRect = svgRef.current?.getBoundingClientRect()
         const from = markRect && markRect.height > 0 ? markRect : rect
         p = entryProgress(from, vh, MOBILE_SPAN)
+        resolved = rect.bottom <= vh - RESOLVE_MARGIN
       }
 
       // First 45% rotates the pause upright; the rest bends it into the mark.
@@ -112,7 +130,7 @@ export default function S02bAudience() {
         top.setAttribute('d', TOP[frame])
         bot.setAttribute('d', BOTTOM[frame])
       }
-      setAfter(p > 0.62)
+      setAfter(resolved)
 
       raf = onScreen ? requestAnimationFrame(measure) : 0
     }

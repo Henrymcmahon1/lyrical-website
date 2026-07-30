@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { entryProgress, trackProgress } from '@/lib/scroll-progress'
+import { entryProgress } from '@/lib/scroll-progress'
 
 /**
  * The turn. One line, its own screen, scroll-driven.
  *
- * It does not simply scroll past: the line drops and fades in as you enter, holds while
- * the section is pinned, then lifts away as you leave, handing off to the call to action.
+ * It does not simply scroll past: the line drops and fades in as you enter, holds while the
+ * section is on screen, then lifts and fades away as it leaves, handing off to the call to
+ * action. Both halves run at every width.
  *
  * Framed as the cost of inaction stated as fact, not as pressure. No figure is quoted:
  * quantifying what a catalogue is "missing" walks back into the population-multiplier
@@ -29,21 +30,6 @@ export default function S09bNow() {
       return
     }
 
-    /**
-     * The arrival runs at every width. It is keyed to the section entering the viewport,
-     * which needs no sticky track, so a phone gets the same drop-in that desktop does.
-     *
-     * The departure does not. `drift` lifts the line away as the pinned panel releases, and
-     * below 768px nothing pins, so there is nothing to lift away from — the section simply
-     * scrolls off. Applying it there would just be a constant offset.
-     */
-    const wideMq = window.matchMedia('(min-width: 768px)')
-    let wide = wideMq.matches
-    const syncWide = () => {
-      wide = wideMq.matches
-    }
-    wideMq.addEventListener('change', syncWide)
-
     let raf = 0
     let onScreen = false
 
@@ -63,12 +49,22 @@ export default function S09bNow() {
        */
       const entry = entryProgress(rect, vh, 0.75)
 
-      // Once it has arrived it HOLDS. No fade-out: the panel scrolling away under the
-      // next section is the transition, and fading here would blank the screen again.
-      const drift = wide ? Math.max(0, (trackProgress(rect, vh) - 0.7) / 0.3) * 14 : 0
+      /**
+       * The departure, keyed to the section's BOTTOM edge crossing the lower half of the
+       * screen rather than to progress through the pinned track.
+       *
+       * This is the distinction that matters. Track progress is 0 at the moment the panel
+       * sticks, when it still fills the whole screen, so fading against it produced a
+       * genuinely blank screen. By the time the section's bottom edge has risen into the
+       * lower half, the next section already occupies the space underneath, so there is
+       * always something on screen to fade against. Safe at both breakpoints, which is why
+       * this replaced the desktop-only drift.
+       */
+      const exitSpan = vh * 0.5
+      const exit = exitSpan > 0 ? Math.min(1, Math.max(0, 1 - rect.bottom / exitSpan)) : 0
 
-      line.style.opacity = String(entry)
-      line.style.transform = `translate3d(0, ${((1 - entry) * 40 - drift).toFixed(1)}px, 0)`
+      line.style.opacity = (entry * (1 - exit)).toFixed(3)
+      line.style.transform = `translate3d(0, ${((1 - entry) * 40 - exit * 34).toFixed(1)}px, 0)`
 
       raf = onScreen ? requestAnimationFrame(measure) : 0
     }
@@ -84,7 +80,6 @@ export default function S09bNow() {
     io.observe(track)
 
     return () => {
-      wideMq.removeEventListener('change', syncWide)
       io.disconnect()
       if (raf) cancelAnimationFrame(raf)
     }

@@ -22,10 +22,19 @@ export function EnquiryForm({
   source,
   onSuccess,
   tone = 'light',
+  compact = false,
 }: {
   source: string
   onSuccess?: () => void
   tone?: 'light' | 'dark'
+  /**
+   * Two fields: email, and the languages. Used by the "send me examples" overlay.
+   *
+   * Somebody asking to hear a sample is browsing, not buying. Published form research puts a
+   * seven-field form near 11% against roughly 23% at three, and the five fields dropped here
+   * are all questions the reply can ask instead. The full form keeps them.
+   */
+  compact?: boolean
 }) {
   // Set in an effect, not during render: Date.now() is impure and would give the server
   // and the client different values, risking a hydration mismatch.
@@ -119,6 +128,8 @@ export function EnquiryForm({
     >
       <input type="hidden" name="source" value={source} />
       <input type="hidden" name="elapsed_ms" value={9999} />
+      {/* Not asked for in compact mode, but the column and the schema both want a value. */}
+      {compact && <input type="hidden" name="role" value="other" />}
 
       {/* Honeypot: kept in the layout but visually hidden, so bots still fill it. */}
       <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden opacity-0">
@@ -128,10 +139,12 @@ export function EnquiryForm({
         </label>
       </div>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm">Your name</span>
-        <input name="name" required minLength={2} autoComplete="name" className={field} />
-      </label>
+      {!compact && (
+        <label className="flex flex-col gap-2">
+          <span className="text-sm">Your name</span>
+          <input name="name" required minLength={2} autoComplete="name" className={field} />
+        </label>
+      )}
 
       <label className="flex flex-col gap-2">
         <span className="text-sm">Email</span>
@@ -144,34 +157,38 @@ export function EnquiryForm({
         />
       </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm">You are</span>
-        <select name="role" required defaultValue="artist" className={field}>
-          {ROLES.map((r) => (
-            <option key={r} value={r} className="text-graphite">
-              {ROLE_LABELS[r]}
-            </option>
-          ))}
-        </select>
-      </label>
+      {!compact && (
+        <>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm">You are</span>
+            <select name="role" required defaultValue="artist" className={field}>
+              {ROLES.map((r) => (
+                <option key={r} value={r} className="text-graphite">
+                  {ROLE_LABELS[r]}
+                </option>
+              ))}
+            </select>
+          </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm">
-          Company <span className={muted}>(optional)</span>
-        </span>
-        <input name="company" autoComplete="organization" className={field} />
-      </label>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm">
+              Company <span className={muted}>(optional)</span>
+            </span>
+            <input name="company" autoComplete="organization" className={field} />
+          </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm">How many songs?</span>
-        <select name="catalogue_size" defaultValue="unsure" className={field}>
-          <option value="1" className="text-graphite">One song</option>
-          <option value="2-10" className="text-graphite">2&ndash;10</option>
-          <option value="11-100" className="text-graphite">11&ndash;100</option>
-          <option value="100+" className="text-graphite">100+</option>
-          <option value="unsure" className="text-graphite">Not sure yet</option>
-        </select>
-      </label>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm">How many songs?</span>
+            <select name="catalogue_size" defaultValue="unsure" className={field}>
+              <option value="1" className="text-graphite">One song</option>
+              <option value="2-10" className="text-graphite">2&ndash;10</option>
+              <option value="11-100" className="text-graphite">11&ndash;100</option>
+              <option value="100+" className="text-graphite">100+</option>
+              <option value="unsure" className="text-graphite">Not sure yet</option>
+            </select>
+          </label>
+        </>
+      )}
 
       <fieldset className="flex flex-col gap-3">
         <legend className="text-sm">Languages you&rsquo;re interested in</legend>
@@ -190,12 +207,14 @@ export function EnquiryForm({
         </div>
       </fieldset>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm">
-          Anything else <span className={muted}>(optional)</span>
-        </span>
-        <textarea name="message" rows={4} className={field} />
-      </label>
+      {!compact && (
+        <label className="flex flex-col gap-2">
+          <span className="text-sm">
+            Anything else <span className={muted}>(optional)</span>
+          </span>
+          <textarea name="message" rows={4} className={field} />
+        </label>
+      )}
 
       {state === 'error' && (
         <div role="alert" className="flex flex-col gap-3">
@@ -222,7 +241,7 @@ export function EnquiryForm({
         disabled={state === 'sending'}
         className="nudge self-start rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
       >
-        {state === 'sending' ? 'Sending…' : 'Send enquiry'}
+        {state === 'sending' ? 'Sending…' : compact ? 'Send me examples' : 'Send enquiry'}
       </button>
     </form>
   )

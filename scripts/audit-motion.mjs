@@ -88,6 +88,15 @@ const READ_MORPH = `(svg) => {
 
 const READ_MORPH_DESKTOP = `(el) => (${READ_MORPH})(el.querySelector('svg.a-anim'))`
 
+/** Reads only the resolution state, anchored on the section rather than the mark. */
+const READ_RESOLVE = `(track) => ({
+  sectionBottom: Math.round(track.getBoundingClientRect().bottom),
+  vh: window.innerHeight,
+  after: track.dataset.after,
+  beforeLineVisible: !!track.querySelector('h2 .a-before')?.offsetParent,
+  afterLineVisible: !!track.querySelector('h2 .a-after')?.offsetParent,
+})`
+
 const READ_TURN = `(el) => {
   const line = el.querySelector('.turn-line');
   return { opacity: +(+getComputedStyle(line).opacity).toFixed(2), transform: getComputedStyle(line).transform };
@@ -140,7 +149,38 @@ const READ_TURN = `(el) => {
   )
   const shapes = new Set(bendPhase.map((s) => s.dHead))
   check('phase 2: the outline interpolates through distinct frames', shapes.size >= 3, `${shapes.size} distinct`)
-  check('the language bloom resolves by the end', bendPhase.at(-1).after === 'true')
+  /**
+   * The shape and the words resolve on two different clocks, deliberately: the mark morphs
+   * where it is visible, and the copy waits until the whole section has been on screen so the
+   * original line is read in full before it is replaced. So the bloom must still be held here,
+   * with the mark already fully formed.
+   */
+  check(
+    'the copy is still HELD while the mark finishes morphing',
+    bendPhase.at(-1).after === 'false',
+    `after=${bendPhase.at(-1).after}`,
+  )
+
+  const resolve = await sample(page, '.audience-track', [-300, 0, 260], READ_RESOLVE)
+  console.log(JSON.stringify(resolve.map((r) => ({ off: r.off, bottom: r.sectionBottom, after: r.after }))))
+  check(
+    'the copy is held while any of the section is still below the fold',
+    resolve[0].after === 'false' && resolve[0].sectionBottom > resolve[0].vh,
+    `bottom ${resolve[0].sectionBottom} vs vh ${resolve[0].vh}, after=${resolve[0].after}`,
+  )
+  check(
+    'the copy resolves once the whole section has cleared the fold',
+    resolve.at(-1).after === 'true' && resolve.at(-1).sectionBottom < resolve.at(-1).vh,
+    `bottom ${resolve.at(-1).sectionBottom}, after=${resolve.at(-1).after}`,
+  )
+  check(
+    'the original line is the one shown before resolving',
+    resolve[0].beforeLineVisible && !resolve[0].afterLineVisible,
+  )
+  check(
+    'the resolved line replaces it afterwards',
+    resolve.at(-1).afterLineVisible && !resolve.at(-1).beforeLineVisible,
+  )
 
   /**
    * Bidirectionality, stated as the property that actually matters: the same scroll position
@@ -153,8 +193,12 @@ const READ_TURN = `(el) => {
     start.rotate === back.rotate && start.dHead === back.dHead && start.dHead !== middle.dHead,
     `rotate ${start.rotate} -> ${middle.rotate} -> ${back.rotate}, dLen ${start.dHash} -> ${middle.dHash} -> ${back.dHash}`,
   )
-  check('the bloom un-resolves on the way back up', start.after === 'false' && back.after === 'false',
-    `after: ${start.after} -> ${middle.after} -> ${back.after}`)
+  const round2 = await sample(page, '.audience-track', [260, -300, 260], READ_RESOLVE)
+  check(
+    'the copy un-resolves scrolling back up, and re-resolves coming down',
+    round2[0].after === 'true' && round2[1].after === 'false' && round2[2].after === 'true',
+    `after: ${round2.map((r) => r.after).join(' -> ')}`,
+  )
 
   const turn = await sample(page, '.turn-track', [-800, -500, -250, 0], READ_TURN)
   console.log(JSON.stringify(turn.map((t) => ({ off: t.off, opacity: t.opacity }))))

@@ -22,7 +22,7 @@ const CLAIMS: Claim[] = [
 export default function S04Fidelity() {
   return (
     <section className="py-24 md:py-0">
-      <PinnedClaims claims={CLAIMS} />
+      <PinnedClaims claims={CLAIMS} carousel />
     </section>
   )
 }

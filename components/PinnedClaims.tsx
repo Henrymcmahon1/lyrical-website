@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { CarouselDots } from './CarouselDots'
 import { trackProgress } from '@/lib/scroll-progress'
 
 export type Claim = { h: string; p: string }
@@ -19,9 +20,17 @@ export type Claim = { h: string; p: string }
  * with nothing to label it is a worse cue than none. Adding one means adding visitor-facing
  * copy, which is not this component's decision to make.
  */
-export function PinnedClaims({ claims }: { claims: Claim[] }) {
+export function PinnedClaims({
+  claims,
+  carousel = false,
+}: {
+  claims: Claim[]
+  /** Below 768px, a swipeable scroll-snap row rather than a tall stack. */
+  carousel?: boolean
+}) {
   const trackRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLLIElement | null)[]>([])
+  const scrollerRef = useRef<HTMLUListElement>(null)
   const [active, setActive] = useState(0)
   const [pinned, setPinned] = useState(false)
 
@@ -115,6 +124,10 @@ export function PinnedClaims({ claims }: { claims: Claim[] }) {
             </p>
 
             {/* Progress dots double as a "you are here" cue while the section is pinned. */}
+            {carousel && (
+              <CarouselDots scrollerRef={scrollerRef} count={claims.length} className="mt-8" />
+            )}
+
             <ol className="mt-10 hidden gap-3 md:flex" aria-hidden="true">
               {claims.map((c, i) => (
                 <li
@@ -127,14 +140,17 @@ export function PinnedClaims({ claims }: { claims: Claim[] }) {
             </ol>
           </div>
 
-          <ul className="pin-stack flex flex-col gap-12 md:gap-0">
+          <ul
+            ref={scrollerRef}
+            className={`pin-stack flex flex-col gap-12 md:gap-0 ${carousel ? 'max-md:snap-x max-md:snap-mandatory max-md:flex-row max-md:gap-4 max-md:overflow-x-auto max-md:pb-1' : ''}`}
+          >
             {claims.map((c, i) => (
               <li
                 key={c.h}
                 ref={(el) => {
                   itemRefs.current[i] = el
                 }}
-                className="pin-item pin-reveal"
+                className={`pin-item ${carousel ? 'max-md:w-[80%] max-md:shrink-0 max-md:snap-start' : 'pin-reveal'}`}
                 data-active={pinned ? i === active : undefined}
               >
                 <span className="font-mono text-xs tracking-[0.18em] text-indigo">
