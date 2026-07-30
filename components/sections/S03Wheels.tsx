@@ -46,7 +46,14 @@ export default function S03Wheels({
           <Wheels onPair={(source, target) => setPair({ source, target })} />
         </div>
 
-        <AbPlayer demo={demo} unlocked={unlocked} onLocked={onLocked} />
+        {/* key on the pair: remounting tears down the old <audio>, so changing language
+            can never leave a previous track playing underneath. */}
+        <AbPlayer
+          key={`${pair.source}-${pair.target}`}
+          demo={demo}
+          unlocked={unlocked}
+          onLocked={onLocked}
+        />
       </div>
     </section>
   )

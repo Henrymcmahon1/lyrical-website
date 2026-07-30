@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ROLES } from '@/lib/enquiry-schema'
 import { LANGUAGES } from '@/lib/languages'
 
@@ -26,7 +26,13 @@ export function EnquiryForm({
   onSuccess?: () => void
   tone?: 'light' | 'dark'
 }) {
-  const mountedAt = useRef(Date.now())
+  // Set in an effect, not during render: Date.now() is impure and would give the server
+  // and the client different values, risking a hydration mismatch.
+  const mountedAt = useRef(0)
+  useEffect(() => {
+    mountedAt.current = Date.now()
+  }, [])
+
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [error, setError] = useState('')
 
@@ -47,7 +53,8 @@ export function EnquiryForm({
       source,
       unlocked_audio: source === 'gate',
       website: String(fd.get('website') ?? ''),
-      elapsed_ms: Date.now() - mountedAt.current,
+      // If the ref somehow never initialised, don't let a real person be treated as a bot.
+      elapsed_ms: mountedAt.current ? Date.now() - mountedAt.current : 10_000,
     }
 
     try {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 export type Demo = {
   source: string
@@ -33,12 +33,19 @@ export function AbPlayer({
   const originalRef = useRef<HTMLAudioElement>(null)
   const translatedRef = useRef<HTMLAudioElement>(null)
 
-  // Switching pair or side stops playback rather than leaving a stray stream running.
-  useEffect(() => {
+  /**
+   * Switching side stops playback here in the handler rather than in an effect — calling
+   * setState synchronously in an effect body causes a cascading render. Switching PAIR is
+   * handled by the parent giving this component a `key`, so it remounts with fresh state
+   * and the old <audio> elements are torn down (which stops them).
+   */
+  const chooseSide = (next: 'original' | 'translated') => {
+    if (next === side) return
     originalRef.current?.pause()
     translatedRef.current?.pause()
     setPlaying(false)
-  }, [demo?.slug, side])
+    setSide(next)
+  }
 
   if (!demo || !demo.hasAudio) {
     return (
@@ -92,7 +99,7 @@ export function AbPlayer({
           <button
             key={s}
             type="button"
-            onClick={() => setSide(s)}
+            onClick={() => chooseSide(s)}
             aria-pressed={side === s}
             className={`px-5 py-2 text-sm transition-colors ${
               side === s
