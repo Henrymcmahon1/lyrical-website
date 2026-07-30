@@ -80,8 +80,8 @@ export function EnquiryForm({
   const dark = tone === 'dark'
   const border = dark ? 'border-cream/30' : 'border-graphite/25'
   const muted = dark ? 'text-cream/60' : 'text-graphite/55'
-  const field = `w-full border ${border} bg-transparent px-4 py-3 outline-none transition-colors focus-visible:border-indigo`
-  const chip = `cursor-pointer border ${border} px-3 py-2 text-sm transition-colors has-checked:border-ember has-checked:text-ember`
+  const field = `w-full rounded-card border ${border} bg-transparent px-4 py-3 outline-none transition-colors focus-visible:border-indigo`
+  const chip = `nudge cursor-pointer rounded-card border ${border} px-3 py-2 text-sm transition-colors has-checked:border-ember has-checked:text-ember`
 
   if (state === 'done') {
     return (
@@ -192,7 +192,7 @@ export function EnquiryForm({
       <button
         type="submit"
         disabled={state === 'sending'}
-        className="self-start bg-ember px-7 py-4 text-cream transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="nudge self-start rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
       >
         {state === 'sending' ? 'Sending…' : 'Send enquiry'}
       </button>

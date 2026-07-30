@@ -1,3 +1,5 @@
+import { Stagger } from '../Stagger'
+
 const DOORS = [
   {
     k: 'For artists and managers',
@@ -16,9 +18,12 @@ const DOORS = [
 export default function S07Doors() {
   return (
     <section className="mx-auto max-w-6xl px-6 py-24">
-      <div className="grid gap-px border border-graphite/15 bg-graphite/15 md:grid-cols-2">
+      <Stagger className="grid gap-4 md:grid-cols-2">
         {DOORS.map((d) => (
-          <div key={d.h} className="flex flex-col bg-cream p-8 sm:p-10">
+          <div
+            key={d.h}
+            className="lift flex flex-col rounded-card border border-graphite/15 bg-cream p-8 sm:p-10"
+          >
             <span className="font-mono text-xs tracking-[0.16em] text-graphite/45">
               {d.k}
             </span>
@@ -26,13 +31,13 @@ export default function S07Doors() {
             <p className="mt-4 leading-relaxed text-graphite/75">{d.p}</p>
             <a
               href="#enquire"
-              className="mt-8 self-start border border-indigo px-5 py-3 text-sm text-indigo transition-colors hover:bg-indigo hover:text-cream"
+              className="mt-8 self-start rounded-card border border-indigo px-5 py-3 text-sm text-indigo transition-colors hover:bg-indigo hover:text-cream"
             >
-              {d.cta}
+              {d.cta} <span className="shift-arrow">&rarr;</span>
             </a>
           </div>
         ))}
-      </div>
+      </Stagger>
     </section>
   )
 }

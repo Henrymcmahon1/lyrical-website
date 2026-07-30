@@ -1,4 +1,4 @@
-import { Reveal } from '../Reveal'
+import { Stagger } from '../Stagger'
 
 const ITEMS = [
   { h: 'Finished full mix', p: 'Matched to the original record’s vocal balance.' },
@@ -14,16 +14,17 @@ export default function S06Receive() {
         What you receive
       </h2>
 
-      <div className="mt-14 grid gap-px border border-graphite/15 bg-graphite/15 sm:grid-cols-2">
-        {ITEMS.map((it, i) => (
-          <div key={it.h} className="bg-cream p-8">
-            <Reveal delay={i * 70}>
-              <h3 className="font-brand text-2xl tracking-tight">{it.h}</h3>
-              <p className="mt-3 leading-relaxed text-graphite/75">{it.p}</p>
-            </Reveal>
+      <Stagger className="mt-14 grid gap-4 sm:grid-cols-2">
+        {ITEMS.map((it) => (
+          <div
+            key={it.h}
+            className="lift rounded-card border border-graphite/15 bg-cream p-8"
+          >
+            <h3 className="font-brand text-2xl tracking-tight">{it.h}</h3>
+            <p className="mt-3 leading-relaxed text-graphite/75">{it.p}</p>
           </div>
         ))}
-      </div>
+      </Stagger>
 
       <div className="mt-10 flex flex-wrap gap-x-10 gap-y-3 font-mono text-xs tracking-[0.14em] text-graphite/50 tabular-nums">
         <span>48.0 kHz</span>

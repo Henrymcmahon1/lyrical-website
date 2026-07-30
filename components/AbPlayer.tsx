@@ -49,13 +49,13 @@ export function AbPlayer({
 
   if (!demo || !demo.hasAudio) {
     return (
-      <div className="mt-12 border border-dark-ink/15 px-6 py-8">
+      <div className="mt-12 rounded-card border border-dark-ink/15 px-6 py-8">
         <p className="text-sm text-dark-ink/65">
           A before-and-after for this pair isn&rsquo;t published yet.
         </p>
         <a
           href="#enquire"
-          className="mt-4 inline-block border border-dark-accent px-5 py-3 text-sm text-dark-accent transition-colors hover:bg-dark-accent hover:text-dark-ground"
+          className="nudge mt-4 inline-block rounded-card border border-dark-accent px-5 py-3 text-sm text-dark-accent transition-colors hover:bg-dark-accent hover:text-dark-ground"
         >
           Ask to hear this pair
         </a>
@@ -91,7 +91,7 @@ export function AbPlayer({
       </p>
 
       <div
-        className="flex gap-px bg-dark-ink/20"
+        className="flex gap-px overflow-hidden rounded-card bg-dark-ink/20"
         role="group"
         aria-label="Choose which version to hear"
       >
@@ -116,7 +116,7 @@ export function AbPlayer({
       <button
         type="button"
         onClick={toggle}
-        className="bg-dark-accent px-7 py-4 text-dark-ground transition-opacity hover:opacity-90"
+        className="nudge rounded-card bg-dark-accent px-7 py-4 text-dark-ground"
       >
         {unlocked ? (playing ? 'Pause' : 'Play') : 'Unlock to listen'}
       </button>

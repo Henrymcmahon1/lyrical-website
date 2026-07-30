@@ -30,7 +30,7 @@ A single enquiry form serves both, with a "who are you" field routing the conver
 ## 2. Brand — locked
 
 Derived from `Brand Bible v1.2` (partner-authored) reconciled through Brand Identity v2.
-Approved decisions: modulated stroke, 6% asymmetry, Indigo v1.2 retained, Bodoni Moda +
+Approved decisions: modulated stroke, 6% asymmetry, Indigo v1.2 retained, Fraunces +
 Archivo, 6.4× removed.
 
 ### 2.1 Colour — four colours, four jobs
@@ -87,12 +87,21 @@ in contracts.
 
 | Role | Face | Rule |
 |---|---|---|
-| Brand voice — display | **Bodoni Moda** | Headlines, wordmark, taglines. A Didone is a modulated stroke, so it shares the mark's construction. |
+| Brand voice — display | **Fraunces** | Headlines, wordmark, taglines. Variable, with an **optical-size axis**. |
 | Product voice — text & data | **Archivo** | Body, labels, forms, legal copy, tabular figures. |
 
-Rule inherited from v1.2: *if the brand is talking, Bodoni; if the product is talking, Archivo.*
+Rule inherited from v1.2: *if the brand is talking, Fraunces; if the product is talking, Archivo.*
 
-Self-host both via `next/font/local` — do not use a font CDN.
+**Why Fraunces replaced Bodoni Moda (2026-07-30).** Bodoni was chosen because a Didone's
+modulated stroke mirrors the mark's construction. In use that argument lost to legibility: a
+Didone's hairlines thin out badly below ~32 px, and one drawing was being scaled across a 3×
+size range. Fraunces has an optical-size axis, so the hero and the small print are *drawn*
+differently rather than scaled — which fixes the cause, not the symptom. Headings are set at
+weight **600**; Tailwind's preflight resets headings to inherit, which had left every headline
+at 400 and compounded the problem.
+
+Both faces are subset to Latin + Latin-Ext-A + punctuation + `U+2248` and served as woff2
+(820 KB of TTF → 242 KB). Self-host via `next/font/local` — never a font CDN.
 
 ### 2.4 The ≈ system
 
@@ -161,13 +170,31 @@ The mark breathes where it is a subject, never where it is an identifier. This k
 The two waves stroke themselves on via `stroke-dasharray` as each section enters view, acting as
 the rule between sections.
 
-### 3.5 Implementation rules
+### 3.5 Staggered pop-in, parallax, hover, pinning
 
-- Native `animation-timeline: view()` / `scroll()` behind `@supports (animation-timeline: view())`,
-  with an IntersectionObserver fallback. Support is ~84% (Chrome/Edge 115+, Firefox 132+, Safari 18+).
+| Behaviour | Where | Implementation |
+|---|---|---|
+| **Staggered pop-in** | How it works, What you receive, Two doors, Team | `<Stagger>` — children get incrementing delays, capped at 8 |
+| **Parallax** | Hero mark | `<Parallax>` writes `--py`; CSS turns it into `translate3d`. Fine pointers only |
+| **Hover micro-interactions** | Cards, buttons, chips | `.lift` / `.nudge` / `.shift-arrow`, gated on `(hover: hover)` so a tap doesn't stick |
+| **Pinned section** | What changes is the language | `<PinnedClaims>` — a 320vh track with a sticky panel; claims cross-fade as it advances |
+
+**The pin is deliberately narrow in scope.** It exists only at ≥768 px, only with `.js-motion`,
+and only under `prefers-reduced-motion: no-preference`. Outside that intersection the CSS rules
+do not exist and the markup falls back to a plain stacked list — no tall empty track, and no way
+to trap a phone user mid-section.
+
+### 3.6 Implementation rules
+
+- **Do not use `animation-timeline: view()`.** It was observed pinning reveals at negative
+  timeline progress, leaving them permanently at `opacity: 0`. IntersectionObserver only.
+- Reveal and stagger animations must stay scoped to `.js-motion`, a class an inline script adds
+  before first paint. Unscoped, they render every wrapped section invisible with JS disabled.
 - Animate **only** `transform` and `opacity`. Never width, height, margin or top/left.
-- Smooth scroll via Lenis.
-- Everything disabled under `prefers-reduced-motion: reduce`.
+- Smooth scroll via Lenis. `scroll-behavior: smooth` is deliberately not set — as of Next.js 16
+  the framework no longer overrides it during route transitions, and the two together feel sluggish.
+- Everything disabled under `prefers-reduced-motion: reduce`, with durations collapsed rather
+  than removed so `both`-filled animations still land on their end state.
 - The site must be fully readable and the form fully submittable with JavaScript disabled.
 
 ---

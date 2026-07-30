@@ -25,7 +25,7 @@ export function Nav() {
           </Link>
           <Link
             href="/#enquire"
-            className="bg-indigo px-4 py-2 text-cream transition-colors hover:bg-graphite"
+            className="rounded-card bg-indigo px-4 py-2 text-cream transition-colors hover:bg-graphite"
           >
             Start a conversation
           </Link>

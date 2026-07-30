@@ -1,4 +1,4 @@
-import { Reveal } from '../Reveal'
+import { Stagger } from '../Stagger'
 
 /** Numbering is legitimate here: this is a real sequence, not decoration. */
 const STEPS = [
@@ -26,19 +26,18 @@ export default function S05How() {
       <h2 className="font-brand text-4xl leading-tight tracking-tight sm:text-5xl">
         How it works
       </h2>
-      <ol className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+
+      <Stagger as="ol" className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         {STEPS.map((s, i) => (
-          <li key={s.h}>
-            <Reveal delay={i * 80}>
-              <span className="font-mono text-xs tracking-[0.18em] text-indigo">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <h3 className="mt-3 font-brand text-2xl leading-snug tracking-tight">{s.h}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-graphite/75">{s.p}</p>
-            </Reveal>
+          <li key={s.h} className="nudge">
+            <span className="font-mono text-xs tracking-[0.18em] text-indigo">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <h3 className="mt-3 font-brand text-2xl leading-snug tracking-tight">{s.h}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-graphite/75">{s.p}</p>
           </li>
         ))}
-      </ol>
+      </Stagger>
     </section>
   )
 }

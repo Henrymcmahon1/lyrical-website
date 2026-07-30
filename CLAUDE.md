@@ -17,7 +17,7 @@ Dark sections only: ground #1B1D1F · ink #EDEBE4 · accent #FF6B2C
 - Ember never carries body text (3.2:1 on cream). Fills and large type only.
 - Indigo is never used on the dark ground (2.7:1).
 - Animate transform and opacity only. Never width/height/margin/top/left.
-- Fonts: Bodoni Moda (brand voice) + Archivo (product voice), self-hosted. Never a CDN.
+- Fonts: Fraunces (brand voice) + Archivo (product voice), self-hosted. Never a CDN.
 - Banned copy: "AI-generated", "6.4x", "2.38B", "Solutions".
   Say: recreated, re-sung, performed, transcreation.
 - All motion off under prefers-reduced-motion.

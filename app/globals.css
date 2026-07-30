@@ -18,6 +18,22 @@
   --font-brand:   var(--font-brand-src), Georgia, "Times New Roman", serif;
   --font-product: var(--font-product-src), system-ui, -apple-system, sans-serif;
   --font-mono:    ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+
+  /* Corners: 4px. Enough to soften the edge, not enough to read as a SaaS template. */
+  --radius-card: 4px;
+}
+
+/* Tailwind's preflight resets headings to inherit font-weight, which left every headline
+   at 400 — the lightest end of the range, and half the reason the type looked thin.
+   Fraunces carries display sizes properly at 600. */
+h1, h2, h3, h4 {
+  font-family: var(--font-brand);
+  font-weight: 600;
+}
+
+/* Let the optical-size axis do its job: Fraunces is drawn differently at 16px and 72px. */
+.font-brand {
+  font-optical-sizing: auto;
 }
 
 /* NOTE: `scroll-behavior: smooth` is deliberately NOT set.
@@ -104,6 +120,98 @@ body {
   animation: draw 1.6s cubic-bezier(.4, 0, .2, 1) both;
 }
 
+/* ── Staggered pop-in ─────────────────────────────────────────
+   A Reveal marked `data-stagger` gives each direct child an increasing delay, so a row
+   of cards arrives one after another instead of all at once. Indices are capped at 8 so
+   a long list never leaves the reader waiting.
+   ───────────────────────────────────────────────────────────── */
+.js-motion .stagger > * {
+  animation: rise 0.7s cubic-bezier(.16, .84, .34, 1) both;
+  animation-play-state: paused;
+}
+.js-motion .stagger.in > * { animation-play-state: running; }
+.js-motion .stagger > *:nth-child(1) { animation-delay: 0ms; }
+.js-motion .stagger > *:nth-child(2) { animation-delay: 90ms; }
+.js-motion .stagger > *:nth-child(3) { animation-delay: 180ms; }
+.js-motion .stagger > *:nth-child(4) { animation-delay: 270ms; }
+.js-motion .stagger > *:nth-child(5) { animation-delay: 360ms; }
+.js-motion .stagger > *:nth-child(6) { animation-delay: 450ms; }
+.js-motion .stagger > *:nth-child(7) { animation-delay: 540ms; }
+.js-motion .stagger > *:nth-child(n+8) { animation-delay: 630ms; }
+
+/* ── Hover micro-interactions ─────────────────────────────────
+   Transform and box-shadow only. Disabled on touch, where :hover sticks after a tap.
+   ───────────────────────────────────────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  .lift {
+    transition: transform .35s cubic-bezier(.16, .84, .34, 1),
+                box-shadow .35s cubic-bezier(.16, .84, .34, 1);
+  }
+  .lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px -14px rgb(28 26 25 / 0.28);
+  }
+
+  .nudge { transition: transform .3s cubic-bezier(.16, .84, .34, 1); }
+  .nudge:hover { transform: translateY(-2px); }
+
+  .shift-arrow { display: inline-block; transition: transform .3s cubic-bezier(.16,.84,.34,1); }
+  .nudge:hover .shift-arrow,
+  .lift:hover .shift-arrow { transform: translateX(4px); }
+}
+
+/* ── Parallax ─────────────────────────────────────────────────
+   The Y offset is written to --py by a rAF loop in components/Parallax.tsx.
+   Kept as a transform so it stays on the compositor.
+   ───────────────────────────────────────────────────────────── */
+.parallax { transform: translate3d(0, var(--py, 0px), 0); will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  .parallax { transform: none !important; }
+}
+
+/* ── Pinned section ───────────────────────────────────────────
+   The section holds still while its claims advance.
+
+   Deliberately scoped to `.js-motion` AND >=768px AND not-reduced-motion. Outside that
+   intersection none of these rules exist, so the markup falls back to an ordinary
+   stacked list — no tall empty track, and no way to trap a phone user mid-section.
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .js-motion .pin-track { height: 320vh; }
+
+  .js-motion .pin-panel {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .js-motion .pin-stack {
+    position: relative;
+    min-height: 15rem;
+  }
+
+  .js-motion .pin-item {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .5s cubic-bezier(.16,.84,.34,1),
+                transform .5s cubic-bezier(.16,.84,.34,1);
+    pointer-events: none;
+  }
+
+  .js-motion .pin-item[data-active='true'] {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .js-motion .pin-dot { transition: color .4s, border-color .4s; }
+}
+
 /* ─────────────────────────────────────────────────────────────
    Reduced motion. Durations COLLAPSE rather than being removed,
    so `both`-filled animations still land on their END state and
@@ -118,4 +226,5 @@ body {
     scroll-behavior: auto !important;
   }
   .js-motion .reveal { animation-play-state: running !important; }
+  .js-motion .stagger > * { animation-play-state: running !important; animation-delay: 0ms !important; }
 }

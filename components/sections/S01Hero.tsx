@@ -1,11 +1,14 @@
 import { MarkUnlock } from '../MarkUnlock'
+import { Parallax } from '../Parallax'
 
 export default function S01Hero() {
   return (
     <section className="mx-auto flex min-h-[84vh] max-w-6xl flex-col items-center justify-center px-6 py-20 text-center">
-      <div className="text-indigo">
-        <MarkUnlock size={156} />
-      </div>
+      <Parallax speed={0.06}>
+        <div className="text-indigo">
+          <MarkUnlock size={156} />
+        </div>
+      </Parallax>
 
       <h1 className="mt-10 font-brand text-5xl leading-[1.02] tracking-tight text-balance sm:text-6xl lg:text-7xl">
         One song. Any language.
@@ -22,13 +25,13 @@ export default function S01Hero() {
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
         <a
           href="#hear"
-          className="bg-ember px-7 py-4 text-cream transition-opacity hover:opacity-90"
+          className="nudge rounded-card bg-ember px-7 py-4 text-cream"
         >
-          Hear a before and after
+          Hear a before and after <span className="shift-arrow">&rarr;</span>
         </a>
         <a
           href="#enquire"
-          className="border border-graphite/30 px-7 py-4 transition-colors hover:border-indigo hover:text-indigo"
+          className="nudge rounded-card border border-graphite/30 px-7 py-4 transition-colors hover:border-indigo hover:text-indigo"
         >
           Start a conversation
         </a>

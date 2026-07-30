@@ -1,5 +1,5 @@
 import team from '@/content/team.json'
-import { Reveal } from '../Reveal'
+import { Stagger } from '../Stagger'
 
 /** Initials in a circle rather than photos — nothing reads as unfinished. */
 export default function S09Team() {
@@ -12,10 +12,9 @@ export default function S09Team() {
         A small team, which means the people who make the work are the people you talk to.
       </p>
 
-      <div className="mt-14 grid gap-12 sm:grid-cols-2">
-        {team.map((m, i) => (
-          <Reveal key={m.name} delay={i * 80}>
-            <div className="flex items-start gap-5">
+      <Stagger className="mt-14 grid gap-12 sm:grid-cols-2">
+        {team.map((m) => (
+          <div key={m.name} className="nudge flex items-start gap-5">
               <span
                 aria-hidden="true"
                 className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-indigo font-mono text-sm text-indigo"
@@ -29,10 +28,9 @@ export default function S09Team() {
                 </p>
                 <p className="mt-3 leading-relaxed text-graphite/75">{m.bio}</p>
               </div>
-            </div>
-          </Reveal>
+          </div>
         ))}
-      </div>
+      </Stagger>
     </section>
   )
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { bodoni, archivo } from '@/lib/fonts'
+import { fraunces, archivo } from '@/lib/fonts'
 import { Nav } from '@/components/Nav'
 import { Footer } from '@/components/Footer'
 import { SmoothScroll } from '@/components/SmoothScroll'
@@ -40,7 +40,7 @@ export default function RootLayout({
     // It applies to this element's own attributes only, not to any children.
     <html
       lang="en"
-      className={`${bodoni.variable} ${archivo.variable} h-full`}
+      className={`${fraunces.variable} ${archivo.variable} h-full`}
       suppressHydrationWarning
     >
       <head>

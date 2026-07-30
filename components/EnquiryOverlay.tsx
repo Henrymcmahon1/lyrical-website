@@ -49,7 +49,7 @@ export function EnquiryOverlay({
         role="dialog"
         aria-modal="true"
         aria-labelledby="gate-title"
-        className="my-8 w-full max-w-lg bg-cream p-6 sm:p-8"
+        className="my-8 w-full max-w-lg rounded-card bg-cream p-6 sm:p-8"
       >
         <div className="flex items-start justify-between gap-6">
           <h2

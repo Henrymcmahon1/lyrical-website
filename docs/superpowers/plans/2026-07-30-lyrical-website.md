@@ -16,7 +16,7 @@
 - **No gradients anywhere, on any element.** Solid fills only.
 - **The mark is never redrawn, rotated, outlined, recoloured two-tone, or given a container** — except the Unlock animation, which is the single sanctioned exception and returns to canonical form.
 - Mark clear space ≥ 1 wave height. Minimum size 16 px.
-- Typefaces: **Bodoni Moda** (brand voice — headlines, wordmark, tagline) and **Archivo** (product voice — body, labels, forms, data). Self-hosted via `next/font/local`. **Never a font CDN.**
+- Typefaces: **Fraunces** (brand voice — headlines, wordmark, tagline) and **Archivo** (product voice — body, labels, forms, data). Self-hosted via `next/font/local`. **Never a font CDN.**
 - Animate **only** `transform` and `opacity`. Never width, height, margin, top or left.
 - All motion disabled under `prefers-reduced-motion: reduce`.
 - The site must be readable and the form submittable with **JavaScript disabled**.
@@ -285,7 +285,7 @@ Dark sections only: ground #1B1D1F · ink #EDEBE4 · accent #FF6B2C
 - Ember never carries body text (3.2:1 on cream). Fills and large type only.
 - Indigo is never used on the dark ground.
 - Animate transform and opacity only.
-- Fonts: Bodoni Moda (brand voice) + Archivo (product voice), self-hosted. Never a CDN.
+- Fonts: Fraunces (brand voice) + Archivo (product voice), self-hosted. Never a CDN.
 - Banned copy: "AI-generated", "6.4x", "2.38B", "Solutions".
   Say: recreated, re-sung, performed, transcreation.
 - All motion off under prefers-reduced-motion.
