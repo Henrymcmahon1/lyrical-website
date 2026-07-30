@@ -181,30 +181,49 @@ body {
   .parallax { transform: none !important; }
 }
 
-/* ── Pinned section ───────────────────────────────────────────
-   The section holds still while its claims advance.
+/* ── Pinned sections ──────────────────────────────────────────
+   The section holds still while its claims advance, at EVERY width.
 
-   Deliberately scoped to `.js-motion` AND >=768px AND not-reduced-motion. Outside that
-   intersection none of these rules exist, so the markup falls back to an ordinary
-   stacked list — no tall empty track, and no way to trap a phone user mid-section.
+   Mobile was deliberately excluded until 2026-07-30, on the reasoning that a sticky track on
+   a phone can leave somebody scrolling against empty space. The unpinned alternatives that
+   replaced it — a horizontal carousel, a stacked list with a sticky rail — were worse in
+   practice: the carousel sliced cards mid-word and the rail collided with the heading. Held
+   sections are what the design wants, so the trap is prevented by construction instead:
+
+     - the panel is never taller than the space below the nav, so content is never clipped
+     - travel per step is bounded, and the whole hold is a known number of screens
+     - a progress line under the nav shows that scrolling is still doing something, which is
+       the moment a phone reader would otherwise think the page had frozen
+     - none of it exists under reduced motion or with JavaScript off, where the markup falls
+       back to an ordinary readable list
+
+   `--nav-h` reserves room for the sticky nav so a pinned panel starts below it rather than
+   underneath it. Desktop sets it back to 0, where the panel has always run full height.
    ───────────────────────────────────────────────────────────── */
-@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  /* 100vh of sticky panel plus 26vh of travel per step. Tight on purpose: with several
-     pinned sections on one page, generous travel stops reading as considered and starts
-     reading as slow. */
-  .js-motion .pin-track { height: calc(100vh + (var(--steps, 4) * 26vh)); }
+@media (prefers-reduced-motion: no-preference) {
+  .js-motion {
+    /* 44px tap target + py-2 top and bottom. */
+    --nav-h: 3.75rem;
+    /* Travel per step. Phone scrolling is faster and more repetitive than a wheel, so the
+       desktop figure feels sluggish in the hand. */
+    --pin-step: 18vh;
+  }
 
-  .js-motion .pin-panel {
+  .js-motion .pin-track { height: calc(100vh + (var(--steps, 4) * var(--pin-step))); }
+
+  .js-motion .pin-panel,
+  .js-motion .audience-panel,
+  .js-motion .turn-panel {
     position: sticky;
-    top: 0;
-    height: 100vh;
+    top: var(--nav-h);
+    height: calc(100vh - var(--nav-h));
     display: flex;
     align-items: center;
   }
 
   .js-motion .pin-stack {
     position: relative;
-    min-height: 15rem;
+    min-height: 22rem;
   }
 
   .js-motion .pin-item {
@@ -215,6 +234,13 @@ body {
     transition: opacity .5s cubic-bezier(.16,.84,.34,1),
                 transform .5s cubic-bezier(.16,.84,.34,1);
     pointer-events: none;
+
+    /* The stack is sized for the TALLEST item, so a short one would sit against the top with
+       dead space under it and the whole panel would read bottom-empty. Centring each item in
+       the stack keeps every step optically in the same place as the reader advances. */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .js-motion .pin-item[data-active='true'] {
@@ -226,63 +252,50 @@ body {
   .js-motion .pin-dot { transition: color .4s, border-color .4s; }
 
   /* The audience section pins the same way: pause becomes the mark as you pass through.
-     `padding: 0` belongs HERE, not outside the query: the track supplies its own height and
-     the padding would add to it. Applied unconditionally it stripped 6rem top and bottom
-     from the phone layout, which has no track to replace it — measured 704px inside an
-     812px viewport, so the section was cramped AND had no room to drive a morph. */
-  .js-motion .audience-track { height: 190vh; padding: 0; }
+     `padding: 0` belongs inside a motion query: the track supplies its own height and the
+     padding would add to it, but the unpinned fallback still needs its breathing room. */
+  .js-motion .audience-track { height: 165vh; padding: 0; }
 
   /* The turn: the line drops in, holds, then lifts away into the call to action. */
-  .js-motion .turn-track { height: 150vh; padding: 0; }
-  .js-motion .turn-panel {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-  }
+  .js-motion .turn-track { height: 130vh; padding: 0; }
   .js-motion .turn-line {
     opacity: 0;
     will-change: transform, opacity;
   }
-  .js-motion .audience-panel {
-    position: sticky;
+
+  /* Progress line under the nav. Scales on the compositor, so it costs nothing to animate.
+     Mobile only: desktop already shows the step dots beside the heading. */
+  .js-motion .pin-progress {
+    position: absolute;
     top: 0;
-    height: 100vh;
-    display: flex;
-    align-items: center;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: color-mix(in srgb, var(--color-graphite) 12%, transparent);
+    overflow: hidden;
+  }
+  .js-motion .pin-progress > i {
+    display: block;
+    height: 100%;
+    background: var(--color-indigo);
+    transform-origin: left center;
+    transform: scaleX(var(--p, 0));
+    will-change: transform;
   }
 }
 
-/* ── Below the pin: a sequence of arrivals ────────────────────
-   Where the pin does not run, the steps are an ordinary stacked list, and each item fades
-   and rises as IT arrives rather than when the section does. A six-step list is several
-   viewports tall on a phone, so a single container-level trigger would animate items that
-   are still off screen and the reader would arrive at content that had already finished
-   moving.
-
-   Scoped to `.js-motion` AND max-width 767px AND no-reduced-motion, so outside that
-   intersection the rules do not exist and every item is simply opaque: no JS, reduced
-   motion, and every width where the desktop pin runs. That last one is not incidental —
-   above 768px `.pin-item` crossfades via an opacity TRANSITION, and an opacity animation
-   layered on top of it would win the cascade and break the pin.
-
-   `.in` is added by an IntersectionObserver at every width, deliberately. It is inert above
-   768px, and always adding it means resizing a phone-width window up to desktop and back
-   can never strand an item at opacity 0.
-   ───────────────────────────────────────────────────────────── */
-@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-  .js-motion .pin-reveal {
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity .6s cubic-bezier(.16, .84, .34, 1),
-                transform .6s cubic-bezier(.16, .84, .34, 1);
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .js-motion {
+    /* Desktop panels have always run the full viewport height from the very top. */
+    --nav-h: 0px;
+    --pin-step: 26vh;
   }
-
-  .js-motion .pin-reveal.in {
-    opacity: 1;
-    transform: none;
-  }
+  .js-motion .pin-stack { min-height: 15rem; }
+  /* Desktop has always top-aligned its items beside the heading. Left as it was. */
+  .js-motion .pin-item { display: block; }
+  .js-motion .audience-track { height: 190vh; }
+  .js-motion .turn-track { height: 150vh; }
+  .js-motion .pin-progress { display: none; }
 }
 
 /* ── Audience section: before / after ────────────────────────

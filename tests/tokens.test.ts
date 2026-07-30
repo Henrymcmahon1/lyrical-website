@@ -175,30 +175,60 @@ describe('reveal animations must never strand content invisible', () => {
     }
   })
 
-  it('confines the mobile per-item reveal to below the pinning breakpoint', () => {
-    // `.pin-item` crossfades via an opacity TRANSITION when the desktop pin is running. An
-    // opacity animation on the same element wins the cascade and breaks the pin, so every
-    // `.pin-reveal` rule has to sit inside a max-width query. Counting occurrences rather
-    // than spot-checking means a rule added outside any query still fails.
+  it('never pins a panel outside a reduced-motion query', () => {
+    // The pin runs at every width now, so the motion preference is the only thing standing
+    // between a reader and a section that holds still. Asserted on `position: sticky` rather
+    // than on class names, because the same classes legitimately carry an UNPINNED fallback
+    // outside the query: `.turn-panel` is a plain centred flex box there, which is exactly
+    // what somebody with reduced motion should get.
     const source = withoutComments(css)
-    const total = (source.match(/\.pin-reveal/g) ?? []).length
-    const scoped = mediaBlocks(source)
-      .filter((block) => /max-width:\s*767px/.test(block.condition))
-      .reduce((n, block) => n + (block.body.match(/\.pin-reveal/g) ?? []).length, 0)
 
-    expect(total).toBeGreaterThan(0)
-    expect(scoped, 'a .pin-reveal rule escaped the max-width: 767px query').toBe(total)
+    const allSticky = rules(source).filter((r) => /position:\s*sticky/.test(r.body))
+    const gatedSticky = mediaBlocks(source)
+      .filter((b) => /prefers-reduced-motion:\s*no-preference/.test(b.condition))
+      .flatMap((b) => rules(b.body))
+      .filter((r) => /position:\s*sticky/.test(r.body))
+
+    expect(allSticky.length, 'no sticky panel is declared at all').toBeGreaterThan(0)
+    expect(gatedSticky.length, 'a sticky rule escaped the reduced-motion query').toBe(
+      allSticky.length,
+    )
+
+    for (const rule of gatedSticky) {
+      expect(rule.selector, `sticky rule not scoped to .js-motion: "${rule.selector}"`).toContain(
+        '.js-motion',
+      )
+    }
   })
 
-  it('keeps the mobile reveal out of the way of reduced motion', () => {
-    const mobileReveal = mediaBlocks(withoutComments(css)).filter((block) =>
-      block.body.includes('.pin-reveal'),
+  it('gives the pinned track its height only inside a motion query', () => {
+    // A tall track without the sticky panel to fill it is a screen of empty space, which is
+    // the failure mode the mobile gate originally existed to prevent.
+    const source = withoutComments(css)
+    const heightRules = rules(source).filter((r) =>
+      /\.pin-track|\.audience-track|\.turn-track/.test(r.selector),
     )
-    expect(mobileReveal.length).toBeGreaterThan(0)
-    for (const block of mobileReveal) {
-      expect(block.condition, `.pin-reveal ignores motion preference: ${block.condition}`).toMatch(
-        /prefers-reduced-motion:\s*no-preference/,
-      )
+    const withHeight = heightRules.filter((r) => /(^|[^-\w])height:/.test(r.body))
+    const gated = mediaBlocks(source)
+      .filter((b) => /prefers-reduced-motion:\s*no-preference/.test(b.condition))
+      .flatMap((b) => rules(b.body))
+      .filter((r) => /\.pin-track|\.audience-track|\.turn-track/.test(r.selector))
+      .filter((r) => /(^|[^-\w])height:/.test(r.body))
+
+    expect(withHeight.length).toBeGreaterThan(0)
+    expect(gated.length, 'a track height escaped the reduced-motion query').toBe(withHeight.length)
+  })
+
+  it('scopes the pin to .js-motion, so no-JS never gets a sticky panel', () => {
+    const source = withoutComments(css)
+    const rulesInMotion = mediaBlocks(source)
+      .filter((b) => /prefers-reduced-motion:\s*no-preference/.test(b.condition))
+      .flatMap((b) => rules(b.body))
+      .filter((r) => /\.pin-|\.audience-panel|\.turn-panel|\.turn-track|\.audience-track/.test(r.selector))
+
+    expect(rulesInMotion.length).toBeGreaterThan(0)
+    for (const rule of rulesInMotion) {
+      expect(rule.selector, `unscoped pin rule: "${rule.selector}"`).toContain('.js-motion')
     }
   })
 

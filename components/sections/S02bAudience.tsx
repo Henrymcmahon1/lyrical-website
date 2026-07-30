@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { lerpOutline, toPath } from '@/lib/mark'
 import { APPROX, EQUAL } from '@/lib/mark-states'
 import { LANGUAGES } from '@/lib/languages'
-import { entryProgress, trackProgress } from '@/lib/scroll-progress'
+import { trackProgress } from '@/lib/scroll-progress'
 import { Mark } from '../Mark'
 
 const FRAMES = 30
@@ -60,64 +60,21 @@ export default function S02bAudience() {
     }
 
     /**
-     * The driver depends on whether the section has a sticky track to measure.
+     * One clock, at every width.
      *
-     * Above 768px `.audience-track` is 190vh and the panel pins, so progress through that
-     * track is the right clock. Below it there is no track: the section is its own content
-     * height, which measured 704px inside an 812px viewport, so `rect.height - innerHeight`
-     * is NEGATIVE and track progress is forced to 1 at every scroll position. The morph
-     * therefore landed on its final frame the instant the section came into view and never
-     * animated.
-     *
-     * Below the breakpoint the clock is entry progress measured on the MARK, not on the
-     * section. The mark sits about 176px inside the section, so keying to the section top
-     * meant the mark did not cross the bottom edge until progress was already 0.26 — the
-     * first 43% of the rotation happened off screen and the reader never saw the pause bars
-     * at all. Measuring the mark itself puts the whole morph on screen, and it stays correct
-     * if the section's padding ever changes.
+     * The section pins on a phone as well now, so `.audience-track` always has real height to
+     * measure and track progress is meaningful everywhere. That removes the mobile-only entry
+     * driver and, with it, the split between the mark morphing on one clock and the copy
+     * resolving on another: the reader holds still while both resolve together, which is what
+     * the pin was for.
      */
-    const MOBILE_SPAN = 0.7
-
-    /**
-     * On a phone the shape and the words resolve on two different clocks, deliberately.
-     *
-     * The mark morphs as it crosses the screen, which is the only window where it is actually
-     * visible. Measured at 375x812: the section is 896px inside an 812px viewport, so it can
-     * never be fully on screen at once, and by the moment its bottom reaches the fold the mark
-     * has already travelled to -111px. Driving the morph from that point put the entire bend
-     * phase off screen.
-     *
-     * The copy and the language bloom wait. They hold on "Everyone who happens to speak the
-     * language" until the bottom of the section has cleared the fold, so the original line has
-     * been read in full before it is replaced, and a little further scrolling commits it.
-     */
-    const RESOLVE_MARGIN = 48
-    const wideMq = window.matchMedia('(min-width: 768px)')
-    let wide = wideMq.matches
-    const syncWide = () => {
-      wide = wideMq.matches
-    }
-    wideMq.addEventListener('change', syncWide)
-
     let raf = 0
     let onScreen = false
     let lastFrame = -1
 
     const measure = () => {
       const rect = track.getBoundingClientRect()
-      const vh = window.innerHeight
-      let p: number
-      let resolved: boolean
-      if (wide) {
-        p = trackProgress(rect, vh)
-        resolved = p > 0.62
-      } else {
-        // Fall back to the track if the mark has no box yet (pre-layout first frame).
-        const markRect = svgRef.current?.getBoundingClientRect()
-        const from = markRect && markRect.height > 0 ? markRect : rect
-        p = entryProgress(from, vh, MOBILE_SPAN)
-        resolved = rect.bottom <= vh - RESOLVE_MARGIN
-      }
+      const p = trackProgress(rect, window.innerHeight)
 
       // First 45% rotates the pause upright; the rest bends it into the mark.
       const rot = -90 + 90 * Math.min(1, p / 0.45)
@@ -130,7 +87,7 @@ export default function S02bAudience() {
         top.setAttribute('d', TOP[frame])
         bot.setAttribute('d', BOTTOM[frame])
       }
-      setAfter(resolved)
+      setAfter(p > 0.62)
 
       raf = onScreen ? requestAnimationFrame(measure) : 0
     }
@@ -146,7 +103,6 @@ export default function S02bAudience() {
     io.observe(track)
 
     return () => {
-      wideMq.removeEventListener('change', syncWide)
       io.disconnect()
       if (raf) cancelAnimationFrame(raf)
     }
