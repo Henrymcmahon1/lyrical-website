@@ -46,3 +46,5 @@ next-env.d.ts
 
 # Temp deploy bundle
 .deploy-payload.json
+
+.vercel
