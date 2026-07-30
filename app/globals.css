@@ -352,44 +352,6 @@ body {
   .drift-up, .drift-down { animation: none; transform: translateY(-25%); }
 }
 
-/* ── Fly through the mark ─────────────────────────────────────
-   Default: no track, no mark layer. The wrapped section is just a section, so a phone or
-   a no-JS visitor reads the statement normally. The flourish only exists with JS, on a
-   pointer-sized screen, with motion allowed.
-   ───────────────────────────────────────────────────────────── */
-.zoom-mark { display: none; }
-
-@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  .js-motion .zoom-track { height: 165vh; }
-
-  .js-motion .zoom-stage {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow: hidden;
-    display: grid;
-  }
-
-  /* Both layers occupy the same grid cell so they overlap without absolute positioning. */
-  .js-motion .zoom-mark,
-  .js-motion .zoom-content {
-    grid-area: 1 / 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .js-motion .zoom-mark {
-    color: var(--color-indigo);
-    pointer-events: none;
-    will-change: transform, opacity;
-  }
-
-  .js-motion .zoom-content {
-    will-change: transform, opacity;
-  }
-}
-
 /* ─────────────────────────────────────────────────────────────
    Reduced motion. Durations COLLAPSE rather than being removed,
    so `both`-filled animations still land on their END state and

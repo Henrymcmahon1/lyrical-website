@@ -37,4 +37,14 @@ npm test && npm run build
 Do NOT build aperture, punch-out or clip-through effects from the mark. It is two open
 strokes with no enclosed area; its middle is the GAP between the waves, so centred content
 sits in the opaque part and the screen renders blank. Use overlapping transform+opacity
-layers instead. See components/ZoomThroughMark.tsx.
+layers instead. The safe pattern is the pause-to-mark morph in
+`components/sections/S02bAudience.tsx`: it interpolates the outline and never masks it.
+(An earlier `ZoomThroughMark.tsx` demonstrated this and no longer exists. Its orphaned
+`.zoom-*` CSS was removed on 2026-07-30.)
+
+## Two scroll clocks, and they are not interchangeable
+`lib/scroll-progress.ts` exports `trackProgress` and `entryProgress`. Track progress is 0 at
+the moment a sticky panel sticks, by which point the panel already fills the screen, so a
+fade keyed to it starts at opacity 0 on a full screen. It is also forced to 1 whenever an
+element is shorter than the viewport, which silently disables anything driving off it on a
+phone. Use it ONLY where something actually pins. Everywhere else, use entry progress.

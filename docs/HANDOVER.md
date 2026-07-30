@@ -8,6 +8,38 @@ breaking the site first, and they are not obvious from the code.
 
 ---
 
+## 0. Update, session 2 (same day). Read this first.
+
+Sections 3.1 and 3.3 below are partly superseded. What changed:
+
+| | |
+|---|---|
+| **Mobile motion** | **Done.** The morph was never disabled below 768px, only its pin was; it read *track* progress, which is forced to 1 when an element is shorter than the viewport, so it snapped to its final frame on arrival. Now driven by entry progress on the mark. Turn line, per-item reveals and a sticky step rail added. Spec: `docs/superpowers/specs/2026-07-30-mobile-motion-design.md` |
+| **The live form** | **Was returning 503 to every visitor.** Vercel had *zero* environment variables set. `ENQUIRY_TO_EMAIL`, `ENQUIRY_FROM_EMAIL` and `GATE_SECRET` are now set across all three environments |
+| **Still outstanding** | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`. Until `RESEND_API_KEY` exists the route still 503s. Run `node scripts/preflight-enquiry.mjs` |
+| **Lead safety** | A 5xx or unreachable server now offers a prefilled `mailto:` carrying every field, so a refused submission no longer discards what was typed. `lib/enquiry-email.ts` is the shared source of the subject and body for both Resend and the fallback |
+| **Deploy** | Pushed to `main` and promoted with `npx vercel --prod`. The GitHub repo is **still not connected**, so pushing alone does not deploy |
+| **Dead code** | The `.zoom-*` CSS was removed. `components/ZoomThroughMark.tsx` referenced in §5 and in `CLAUDE.md` never existed in this repo |
+
+**New verification scripts.** `audit-responsive.mjs` had never been run and had two defects that
+made it useless: a fixed 260ms wait after `scrollTo` (the Lenis trap §5 warns about) and a
+tap-target check that measured hidden inputs rather than their sized labels, giving nine
+permanent false positives. Both fixed; it now passes.
+
+```bash
+node scripts/audit-responsive.mjs <url>   # overflow, blank screens, tap targets
+node scripts/audit-motion.mjs <url>       # proves the motion MOVES. Playwright, because
+                                          # rAF is paused in a hidden browser pane
+node scripts/audit-enquiry.mjs <url>      # the 503 and 400 paths, and the mailto fallback
+node scripts/preflight-enquiry.mjs        # which env vars exist, and what a visitor gets
+```
+
+A conversion review of the live site, with the funnel ranked by leak, is in the session
+artifact rather than this repo. Headline: no audio exists anywhere, the demo gate asks for
+seven fields, there is no social proof and no analytics.
+
+---
+
 ## 1. What this is
 
 A funnel-first marketing site for **Lyrical**, which re-sings existing recordings in another
