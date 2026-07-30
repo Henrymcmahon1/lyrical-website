@@ -46,7 +46,10 @@ export const MAILTO_MESSAGE_LIMIT = 1200
 const displayName = (d: EnquiryEmailFields) => d.name?.trim() || 'Not given'
 
 export function enquiryEmailSubject(d: EnquiryEmailFields): string {
-  return `Lyrical enquiry: ${displayName(d)} (${d.role})`
+  // The email address, not "Not given", when the gate did not collect a name. Otherwise
+  // every examples request arrives with an identical subject line and threads together.
+  const who = d.name?.trim() || d.email
+  return `Lyrical enquiry: ${who} (${d.role})`
 }
 
 export function enquiryEmailText(d: EnquiryEmailFields, messageLimit?: number): string {

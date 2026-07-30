@@ -50,3 +50,6 @@ next-env.d.ts
 .deploy-payload.json
 
 .vercel
+
+# Local email render previews
+.email-preview/

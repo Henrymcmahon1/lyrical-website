@@ -1,0 +1,346 @@
+<title>Lyrical brand guide</title>
+
+<style>
+  @font-face { font-family: 'Fraunces'; src: url(__FRAUNCES__) format('woff2'); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: 'Archivo'; src: url(__ARCHIVO__) format('woff2'); font-weight: 100 900; font-display: swap; }
+
+  :root {
+    --cream: #F7EFE1;
+    --graphite: #1C1A19;
+    --indigo: #4433D6;
+    --ember: #EE4E22;
+    --dark-ground: #1B1D1F;
+    --dark-ink: #EDEBE4;
+    --dark-accent: #FF6B2C;
+
+    --ground: var(--cream);
+    --ink: var(--graphite);
+    --ink-soft: #55504A;
+    --ink-faint: #857E74;
+    --rule: #DCD3C2;
+    --rule-strong: #C2B7A2;
+    --raised: #F1E9DA;
+
+    --display: 'Fraunces', Georgia, serif;
+    --body: 'Archivo', system-ui, sans-serif;
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: var(--dark-ground); --ink: var(--dark-ink);
+      --ink-soft: #B4B0A6; --ink-faint: #837E74;
+      --rule: #2E3234; --rule-strong: #454B4D; --raised: #222527;
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #1B1D1F; --ink: #EDEBE4; --ink-soft: #B4B0A6; --ink-faint: #837E74;
+    --rule: #2E3234; --rule-strong: #454B4D; --raised: #222527;
+  }
+  :root[data-theme='light'] {
+    --ground: #F7EFE1; --ink: #1C1A19; --ink-soft: #55504A; --ink-faint: #857E74;
+    --rule: #DCD3C2; --rule-strong: #C2B7A2; --raised: #F1E9DA;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--body); font-size: 17px; line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 58rem; margin: 0 auto; padding: 4rem 1.5rem 6rem; display: flex; flex-direction: column; gap: 4.5rem; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; font-optical-sizing: auto; }
+  p { margin: 0; }
+  .eyebrow { font-family: var(--mono); font-size: .6875rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
+  .col { max-width: 62ch; }
+
+  header.mast { display: flex; flex-direction: column; gap: 1.5rem; }
+  .mast h1 { font-size: clamp(2.6rem, 7vw, 4.2rem); line-height: 1.02; letter-spacing: -.025em; }
+  .mast p.lede { font-family: var(--display); font-size: clamp(1.1rem, 2.3vw, 1.45rem); line-height: 1.4; color: var(--ink-soft); max-width: 44ch; }
+  .mast-meta { display: flex; flex-wrap: wrap; gap: .5rem 1.75rem; font-family: var(--mono); font-size: .75rem; color: var(--ink-faint); padding-top: 1.25rem; border-top: 1px solid var(--rule); }
+
+  section { display: flex; flex-direction: column; gap: 1.75rem; }
+  section > header { display: flex; flex-direction: column; gap: .7rem; }
+  section h2 { font-size: clamp(1.7rem, 3.6vw, 2.2rem); line-height: 1.14; letter-spacing: -.018em; }
+  section > header p { color: var(--ink-soft); max-width: 62ch; }
+
+  .markbox { display: flex; flex-wrap: wrap; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .markbox > div { flex: 1 1 12rem; padding: 2.5rem 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
+  .markbox span { font-family: var(--mono); font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; }
+
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .sw { padding: 0; display: flex; flex-direction: column; }
+  .sw .chip { height: 6rem; }
+  .sw .meta { padding: .9rem 1rem 1.1rem; background: var(--ground); display: flex; flex-direction: column; gap: .15rem; }
+  .sw .name { font-family: var(--display); font-size: 1.05rem; font-weight: 600; }
+  .sw .hex { font-family: var(--mono); font-size: .75rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .sw .job { font-size: .8125rem; color: var(--ink-soft); line-height: 1.45; margin-top: .3rem; }
+
+  .rules { display: flex; flex-direction: column; border-top: 1px solid var(--rule-strong); }
+  .rule-row { display: grid; grid-template-columns: 4.5rem 1fr; gap: 1.25rem; padding: 1.15rem 0; border-bottom: 1px solid var(--rule); align-items: start; }
+  .tag { font-family: var(--mono); font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; padding: .2rem .45rem; border: 1px solid currentColor; text-align: center; }
+  .do { color: #2A6656; } .dont { color: #B3350F; }
+  @media (prefers-color-scheme: dark) { .do { color: #6FBFA6; } .dont { color: #FF8253; } }
+  .rule-row p { font-size: .9375rem; }
+  .rule-row strong { font-weight: 600; }
+
+  .spec { border-top: 1px solid var(--rule-strong); }
+  .spec > div { padding: 1.6rem 0; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: .5rem; }
+  .spec .label { font-family: var(--mono); font-size: .65rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
+
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: .9375rem; }
+  th { text-align: left; font-family: var(--mono); font-size: .65rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); font-weight: 400; padding: 0 1rem .65rem 0; border-bottom: 1px solid var(--rule-strong); }
+  td { padding: .85rem 1rem .85rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  td:first-child { font-weight: 600; }
+  code { font-family: var(--mono); font-size: .9em; background: var(--raised); padding: .1rem .35rem; }
+  .tnum { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: .85rem; }
+
+  .voice { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .voice > div { background: var(--ground); padding: 1.4rem 1.5rem; display: flex; flex-direction: column; gap: .5rem; }
+  .voice h3 { font-size: 1.05rem; }
+  .voice p { font-size: .9rem; color: var(--ink-soft); }
+  .voice .say { color: #2A6656; } .voice .never { color: #B3350F; }
+  @media (prefers-color-scheme: dark) { .voice .say { color: #6FBFA6; } .voice .never { color: #FF8253; } }
+
+  ul.plain { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .5rem; font-size: .9375rem; color: var(--ink-soft); }
+  a { color: var(--indigo); }
+  @media (prefers-color-scheme: dark) { a { color: #9A8DFF; } }
+  a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .page { padding: 2.5rem 1.15rem 4rem; gap: 3.25rem; }
+    .rule-row { grid-template-columns: 1fr; gap: .5rem; }
+    .tag { justify-self: start; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="mast">
+    <div style="color: var(--indigo);">__MARK_96__</div>
+    <p class="eyebrow">Brand guide &middot; v1 &middot; internal</p>
+    <h1>Lyrical</h1>
+    <p class="lede">
+      One mark, four colours, two typefaces. The whole system exists to make an authorised
+      recording feel as considered as the record it came from.
+    </p>
+    <div class="mast-meta">
+      <span>30 July 2026</span>
+      <span>Everything here is generated from the live site</span>
+      <span>lyrical-website.vercel.app</span>
+    </div>
+  </header>
+
+  <section>
+    <header>
+      <p class="eyebrow">01 &middot; The mark</p>
+      <h2>Approximately equal, not equal</h2>
+      <p>
+        The mark is the mathematical sign for <em>approximately equal to</em>. That is the whole
+        argument in one character: a version in another language is not the identical record, and
+        claiming it is would be dishonest. Two modulated waves, the lower one diverging slightly
+        from the upper, because they are close but not the same.
+      </p>
+      <p>
+        It is <strong>generated, never drawn</strong>. The geometry lives in code and every file in
+        this kit was produced from it, so an exported logo cannot drift from the website.
+      </p>
+    </header>
+
+    <div class="markbox">
+      <div style="background: var(--cream); color: var(--indigo);">__MARK_88__<span style="color:#55504A;">Indigo on cream</span></div>
+      <div style="background: var(--indigo); color: var(--cream);">__MARK_88__<span style="color:#F7EFE1;">Cream on indigo</span></div>
+      <div style="background: var(--dark-ground); color: var(--dark-accent);">__MARK_88__<span style="color:#EDEBE4;">Accent on dark</span></div>
+      <div style="background: var(--cream); color: var(--graphite);">__MARK_88__<span style="color:#55504A;">Graphite, one colour</span></div>
+    </div>
+
+    <div class="rules">
+      <div class="rule-row"><span class="tag do">Do</span><p><strong>Clear space:</strong> keep a margin of at least half the mark's height on every side. On a social avatar, leave more: both Instagram and LinkedIn crop to a circle.</p></div>
+      <div class="rule-row"><span class="tag do">Do</span><p><strong>Minimum size:</strong> 24px tall on screen, 8mm in print. Below that the taper stops reading and it looks like a smudge.</p></div>
+      <div class="rule-row"><span class="tag do">Do</span><p>Use <strong>one flat colour</strong>. Both strokes are always the same colour as each other.</p></div>
+      <div class="rule-row"><span class="tag dont">Never</span><p><strong>Never put anything inside the mark.</strong> It has no counter. The gap between the waves is not an enclosed shape, it is the background showing through, so text or an image placed there sits on top of the strokes and disappears. This is the single most common mistake with it.</p></div>
+      <div class="rule-row"><span class="tag dont">Never</span><p>Never rotate, stretch, outline, add a shadow, or recolour the two strokes differently from each other.</p></div>
+      <div class="rule-row"><span class="tag dont">Never</span><p>Never redraw or trace it. Use the files in <code>logo/</code>. If you need a size that isn't there, ask, and it gets generated from the geometry.</p></div>
+      <div class="rule-row"><span class="tag dont">Never</span><p>Never place indigo on the dark ground. It measures 2.7:1, which fails legibility. Use the dark accent there instead.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <header>
+      <p class="eyebrow">02 &middot; Colour</p>
+      <h2>Four colours, four jobs</h2>
+      <p>
+        Each colour does exactly one thing. That is what keeps the palette from turning into a
+        mood board. There is no fifth colour, and there are <strong>no gradients anywhere</strong>:
+        a gradient dates fast and reads as a template.
+      </p>
+    </header>
+
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#F7EFE1;"></div><div class="meta"><span class="name">Cream</span><span class="hex">#F7EFE1</span><span class="job">Space. The default ground for every page.</span></div></div>
+      <div class="sw"><div class="chip" style="background:#1C1A19;"></div><div class="meta"><span class="name">Graphite</span><span class="hex">#1C1A19</span><span class="job">Type. All headings and body copy.</span></div></div>
+      <div class="sw"><div class="chip" style="background:#4433D6;"></div><div class="meta"><span class="name">Indigo</span><span class="hex">#4433D6</span><span class="job">Identity. The mark, links, focus states.</span></div></div>
+      <div class="sw"><div class="chip" style="background:#EE4E22;"></div><div class="meta"><span class="name">Ember</span><span class="hex">#EE4E22</span><span class="job">Action. Buttons and fills only.</span></div></div>
+      <div class="sw"><div class="chip" style="background:#1B1D1F;"></div><div class="meta"><span class="name">Dark ground</span><span class="hex">#1B1D1F</span><span class="job">Listening sections only.</span></div></div>
+      <div class="sw"><div class="chip" style="background:#EDEBE4;"></div><div class="meta"><span class="name">Dark ink</span><span class="hex">#EDEBE4</span><span class="job">Type on the dark ground.</span></div></div>
+      <div class="sw"><div class="chip" style="background:#FF6B2C;"></div><div class="meta"><span class="name">Dark accent</span><span class="hex">#FF6B2C</span><span class="job">Action on the dark ground.</span></div></div>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Pairing</th><th>Contrast</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>Graphite on cream</td><td class="tnum">14.9 : 1</td><td>Body text. The default.</td></tr>
+          <tr><td>Indigo on cream</td><td class="tnum">7.9 : 1</td><td>Passes for body text, so it can carry links.</td></tr>
+          <tr><td>Ember on cream</td><td class="tnum">3.2 : 1</td><td><strong>Fails body text.</strong> Large type and fills only.</td></tr>
+          <tr><td>Cream on ember</td><td class="tnum">3.3 : 1</td><td>Passes for large text, so ember buttons can carry a label.</td></tr>
+          <tr><td>Dark ink on dark ground</td><td class="tnum">12.4 : 1</td><td>Body text on the dark ground.</td></tr>
+          <tr><td>Dark accent on dark ground</td><td class="tnum">5.9 : 1</td><td>Passes, which is why the dark sections exist.</td></tr>
+          <tr><td>Indigo on dark ground</td><td class="tnum">2.7 : 1</td><td><strong>Never.</strong> Unreadable.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <header>
+      <p class="eyebrow">03 &middot; Typography</p>
+      <h2>Two voices, and they do not swap</h2>
+    </header>
+
+    <div class="spec">
+      <div>
+        <span class="label">Brand voice</span>
+        <p style="font-family: var(--display); font-weight: 600; font-size: clamp(2rem,5vw,3rem); line-height: 1.05; letter-spacing: -.02em;">Fraunces</p>
+        <p style="color: var(--ink-soft); font-size: .9375rem;">
+          Headlines, the wordmark, pull quotes, anything display. Weight <strong>600</strong>, never
+          lighter: at 400 the headlines look thin and unfinished. Fraunces was chosen for its
+          optical-size axis, meaning it is drawn differently at 16px and 72px, so let it size
+          naturally rather than compensating with letter-spacing.
+        </p>
+      </div>
+      <div>
+        <span class="label">Product voice</span>
+        <p style="font-family: var(--body); font-weight: 500; font-size: clamp(1.6rem,4vw,2.2rem); line-height: 1.15;">Archivo</p>
+        <p style="color: var(--ink-soft); font-size: .9375rem;">
+          Body copy, interface labels, captions, forms, decks. Regular for running text. Keep lines
+          near 65 characters; longer and the eye loses its place returning to the left edge.
+        </p>
+      </div>
+      <div>
+        <span class="label">Labels and figures</span>
+        <p style="font-family: var(--mono); font-size: .8rem; letter-spacing: .18em; text-transform: uppercase;">Monospace, uppercase, letter-spaced</p>
+        <p style="color: var(--ink-soft); font-size: .9375rem;">
+          Small eyebrow labels and anything numeric. Always with generous letter-spacing, always
+          small. Use tabular figures wherever numbers stack in a column.
+        </p>
+      </div>
+    </div>
+
+    <p class="col" style="color: var(--ink-soft); font-size: .9375rem;">
+      Both faces are licensed under the SIL Open Font License, so they are free to use
+      commercially, embed in documents and self-host. The <code>fonts/</code> folder has the web
+      files; install the desktop versions from Google Fonts for Word, Keynote or Figma.
+      <strong>Never load them from a CDN on the website.</strong>
+    </p>
+  </section>
+
+  <section>
+    <header>
+      <p class="eyebrow">04 &middot; Voice</p>
+      <h2>What we say, and what we never say</h2>
+      <p>
+        Lyrical sells trust, not technology. Its own strategy is explicit that
+        <strong>authorisation, not production capability, is the binding constraint</strong> in this
+        category. The words have to behave accordingly, because a rights holder's lawyer reads them.
+      </p>
+    </header>
+
+    <div class="voice">
+      <div>
+        <h3 class="say">Say</h3>
+        <p><strong>Recreated. Re-sung. Performed. Transcreation.</strong> The promise is that it does
+        not sound like a machine, so machine language argues against the product.</p>
+      </div>
+      <div>
+        <h3 class="never">Never</h3>
+        <p><strong>"AI-generated".</strong> Or synthesised, cloned, or deepfaked. Not a euphemism
+        problem, a positioning problem.</p>
+      </div>
+      <div>
+        <h3 class="never">Never</h3>
+        <p><strong>Population or reach multipliers.</strong> No "reaches 6.4&times; more listeners".
+        Population figures are an internal prioritisation heuristic and presenting them as reach is
+        a claim we cannot support.</p>
+      </div>
+      <div>
+        <h3 class="never">Never</h3>
+        <p><strong>Another artist's name</strong> as an example, and never one artist's voice
+        described on another's catalogue. Everything we show is authorised, so everything we say
+        must be too.</p>
+      </div>
+      <div>
+        <h3 class="never">Never</h3>
+        <p><strong>"Solutions"</strong> as a label for what we do. It says nothing and it sounds
+        like enterprise software.</p>
+      </div>
+      <div>
+        <h3 class="say">Say</h3>
+        <p><strong>Permission first.</strong> Authorisation leads, in any deck, page or email. It is
+        the reason to choose us, not a disclaimer at the bottom.</p>
+      </div>
+    </div>
+
+    <div class="rules">
+      <div class="rule-row"><span class="tag do">Do</span><p>Write plainly, in short sentences. Concrete nouns beat adjectives: "a finished mix and a dry vocal stem" beats "premium deliverables".</p></div>
+      <div class="rule-row"><span class="tag do">Do</span><p>Use British spelling, sentence case for headings, and no em-dashes in anything a customer reads.</p></div>
+      <div class="rule-row"><span class="tag do">Do</span><p>State the limit when there is one. Saying what we do not do is the cheapest trust we can buy.</p></div>
+      <div class="rule-row"><span class="tag dont">Never</span><p>Never use urgency or scarcity. A buyer deciding whether to trust us with masters gets more cautious under pressure, not less.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <header>
+      <p class="eyebrow">05 &middot; Motion</p>
+      <h2>Motion carries the idea, or it does not run</h2>
+    </header>
+    <ul class="plain">
+      <li><strong>Transform and opacity only.</strong> Never animate width, height, margin or position: those force layout and stutter on a phone.</li>
+      <li><strong>One idea per moment.</strong> The pause symbol becoming the mark is the signature: a held note resolving into <em>approximately equal</em>. Everything else stays quiet so that reads.</li>
+      <li><strong>Scroll-linked, not autoplay.</strong> Motion responds to the reader rather than performing at them.</li>
+      <li><strong>Nothing ever traps the reader.</strong> No pinned section on a phone, no scroll-jacking, no modal that cannot be dismissed.</li>
+      <li><strong>All of it off</strong> under <code>prefers-reduced-motion</code>, and the page must be fully readable with JavaScript disabled.</li>
+      <li><strong>Never build an aperture or punch-through from the mark.</strong> See the mark rules: there is no counter to punch through.</li>
+    </ul>
+  </section>
+
+  <section>
+    <header>
+      <p class="eyebrow">06 &middot; What is in this kit</p>
+      <h2>Files, and which one to reach for</h2>
+    </header>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Folder</th><th>Use it for</th></tr></thead>
+        <tbody>
+          <tr><td><code>logo/svg/</code></td><td>Anything vector: decks, print, embroidery, signage. The mark-only files are pure paths with no font dependency, so they work everywhere.</td></tr>
+          <tr><td><code>logo/png/</code></td><td>Transparent rasters at 1024, 512 and 192px, for places that will not take an SVG.</td></tr>
+          <tr><td><code>social/</code></td><td>Sized exactly for each platform. See <code>social-profiles.md</code> for which file goes where, plus the bios to paste in.</td></tr>
+          <tr><td><code>colour/</code></td><td>Hex and RGB values, a swatch sheet, and a type specimen to show people rather than describe.</td></tr>
+          <tr><td><code>fonts/</code></td><td>The two web fonts, and where to get the desktop versions.</td></tr>
+          <tr><td><code>templates/</code></td><td>Email signature, and reply templates for enquiries.</td></tr>
+          <tr><td><code>marketing-checklist.md</code></td><td>What still needs setting up, in priority order.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="col" style="color: var(--ink-soft); font-size: .9375rem;">
+      Everything in <code>logo/</code>, <code>social/</code> and <code>colour/</code> is generated by
+      <code>scripts/build-brand-kit.mjs</code> from the same geometry and tokens the website uses.
+      If the brand changes, change it in the code and re-run that script. Do not edit these files by
+      hand, or the kit and the site will quietly disagree.
+    </p>
+  </section>
+
+</div>

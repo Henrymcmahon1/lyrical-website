@@ -32,6 +32,16 @@ describe('enquiryEmailSubject', () => {
   })
 })
 
+describe('enquiryEmailSubject falls back to the email when there is no name', () => {
+  it('uses the email address, which is more use in an inbox than "Not given"', () => {
+    // The examples gate does not collect a name. "Lyrical enquiry: Not given (other)" is
+    // indistinguishable from every other gate request in a threaded inbox.
+    expect(enquiryEmailSubject({ ...BARE, name: '' })).toBe(
+      'Lyrical enquiry: al@example.com (artist)',
+    )
+  })
+})
+
 describe('enquiryEmailText', () => {
   it('includes every field that was provided', () => {
     const text = enquiryEmailText(FULL)

@@ -1,0 +1,43 @@
+LYRICAL COLOUR PALETTE
+======================
+
+Cream
+  HEX  #F7EFE1
+  RGB  247, 239, 225
+  Use  Space. The default page ground.
+
+Graphite
+  HEX  #1C1A19
+  RGB  28, 26, 25
+  Use  Type. All body copy and headings.
+
+Indigo
+  HEX  #4433D6
+  RGB  68, 51, 214
+  Use  Identity. The mark, links, focus rings.
+
+Ember
+  HEX  #EE4E22
+  RGB  238, 78, 34
+  Use  Action. Primary buttons and fills ONLY, never body text.
+
+Dark ground
+  HEX  #1B1D1F
+  RGB  27, 29, 31
+  Use  Listening sections only.
+
+Dark ink
+  HEX  #EDEBE4
+  RGB  237, 235, 228
+  Use  Type on the dark ground.
+
+Dark accent
+  HEX  #FF6B2C
+  RGB  255, 107, 44
+  Use  Action on the dark ground. Replaces ember there.
+
+RULES
+  Four colours, four jobs. Do not add a fifth.
+  No gradients, anywhere, on anything.
+  Ember is 3.2:1 on cream. It FAILS as body text. Fills and large type only.
+  Indigo is 2.7:1 on the dark ground. Never use it there.
