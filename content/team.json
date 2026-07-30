@@ -3,12 +3,21 @@
     "name": "Jordan Brock",
     "role": "Co-founder",
     "initials": "JB",
-    "bio": "Leads brand and commercial strategy, and the relationships with artists, labels and rights holders."
+    "short": "Leads brand and commercial strategy, and the relationships with artists, labels and rights holders.",
+    "full": [
+      "Jordan's career spans enterprise technology at Dell and Rackspace, helping grow The Happy Co. past $100 million in annual revenue under its publicly traded parent company, and working alongside New York Times bestselling author Shawn Achor at GoodThink.",
+      "As an entrepreneur he has built products that were supposed to be impossible: one of the first commercially viable zero-net-carb breads that actually tasted and behaved like bread, early perceptual sugar technology, and Tipsy Tabs, a dissolvable tablet designed to rethink the economics of social drinks.",
+      "Every one of them rested on the same conviction, that an impossible trade-off is usually just an unsolved problem. Lyrical is that conviction applied to music: an artist should never have to choose between global reach and artistic identity."
+    ]
   },
   {
     "name": "Henry McMahon",
-    "role": "Co-founder",
+    "role": "Co-founder, engineering",
     "initials": "HM",
-    "bio": "Builds the production system: the translation, the voice work, and the pipeline that turns a finished master into a release-ready version."
+    "short": "Builds the production system: the translation, the voice work, and the pipeline that turns a finished master into a release-ready version.",
+    "full": [
+      "A Mechatronics Engineering graduate from Monash University in Melbourne, Henry leads engineering and is building the technology that powers the platform.",
+      "His work turns an ambitious idea into infrastructure: a system capable of serving artists and rights holders around the world, and of holding a standard high enough that a label will put its name on the result."
+    ]
   }
 ]

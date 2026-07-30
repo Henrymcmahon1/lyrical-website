@@ -8,6 +8,7 @@ import S02bAudience from '@/components/sections/S02bAudience'
 import S04Fidelity from '@/components/sections/S04Fidelity'
 import S05How from '@/components/sections/S05How'
 import S06Receive from '@/components/sections/S06Receive'
+import S06bMaster from '@/components/sections/S06bMaster'
 import S07Doors from '@/components/sections/S07Doors'
 import S08Rights from '@/components/sections/S08Rights'
 import S09Team from '@/components/sections/S09Team'
@@ -35,6 +36,7 @@ export default async function Home() {
       <S04Fidelity />
       <S05How />
       <S06Receive />
+      <S06bMaster />
       <S07Doors />
       <S08Rights />
       <S09Team />

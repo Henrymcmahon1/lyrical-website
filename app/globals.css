@@ -62,6 +62,12 @@ body {
   outline-offset: 2px;
 }
 
+/* The nav is sticky, so anything targeted by an anchor, a deep link or browser find
+   would otherwise land underneath it. */
+[id] {
+  scroll-margin-top: 6rem;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

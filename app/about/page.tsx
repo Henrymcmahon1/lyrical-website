@@ -1,6 +1,7 @@
 import S09Team from '@/components/sections/S09Team'
 import S08Rights from '@/components/sections/S08Rights'
 import S10Enquire from '@/components/sections/S10Enquire'
+import { Origin, Beliefs } from '@/components/sections/Origin'
 
 export const metadata = {
   title: 'About',
@@ -25,8 +26,8 @@ export default function About() {
 
         <p className="mt-6 text-lg leading-relaxed text-graphite/75">
           Everything is built around one rule: the artist&rsquo;s performance is the source
-          of truth. We transfer a performance. We don&rsquo;t invent one. The melody
-          comes from the artist&rsquo;s own take, the vocal carries their own timbre, and the
+          of truth. We transfer a performance. We don&rsquo;t invent one. The melody comes
+          from the artist&rsquo;s own take, the vocal carries their own timbre, and the
           instrumental they recorded is the instrumental you get back.
         </p>
 
@@ -35,7 +36,10 @@ export default function About() {
           ears approve it.
         </p>
       </section>
-      <S09Team />
+
+      <Origin />
+      <Beliefs />
+      <S09Team detail />
       <S08Rights />
       <S10Enquire />
     </>
