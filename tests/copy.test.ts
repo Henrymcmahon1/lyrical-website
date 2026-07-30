@@ -9,6 +9,9 @@ const SKIP = new Set(['node_modules', '.next', '.git', 'docs', 'tests', 'public'
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     if (SKIP.has(entry)) continue
+    // Dotfiles are never shipped source. Scanning them produced a false positive on a
+    // temporary deploy bundle that contained the whole codebase as one JSON blob.
+    if (entry.startsWith('.')) continue
     const p = join(dir, entry)
     if (statSync(p).isDirectory()) walk(p, out)
     else if (/\.(tsx?|css|json)$/.test(entry) && entry !== 'package-lock.json') out.push(p)
