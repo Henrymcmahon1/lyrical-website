@@ -43,21 +43,50 @@ export async function POST(request: Request) {
     return json({ ok: true }, 200)
   }
 
-  const { error } = await supabaseAdmin()
-    .from('enquiries')
-    .insert({
-      name: d.name,
-      email: d.email,
-      role: d.role,
-      company: d.company || null,
-      catalogue_size: d.catalogue_size || null,
-      target_languages: d.target_languages?.length ? d.target_languages : null,
-      message: d.message || null,
-      source: d.source,
-      unlocked_audio: d.unlocked_audio,
-      user_agent: request.headers.get('user-agent'),
-      referrer: request.headers.get('referer'),
-    })
+  /**
+   * Storage is optional at runtime.
+   *
+   * The site can be deployed before Supabase exists, and a hard failure there would show
+   * a live visitor a broken form. If storage is not configured we carry on to the email,
+   * which is enough to not lose the lead. Only a configured-but-failing database is a
+   * real 500, because that is a fault rather than a missing setup step.
+   */
+  const storageConfigured = Boolean(
+    process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY,
+  )
+  const mailConfigured = Boolean(
+    process.env.RESEND_API_KEY && process.env.ENQUIRY_TO_EMAIL && process.env.ENQUIRY_FROM_EMAIL,
+  )
+
+  if (!storageConfigured && !mailConfigured) {
+    console.error('[enquiry] neither Supabase nor Resend is configured; enquiry dropped')
+    if (isFormPost) return Response.redirect(new URL('/?enquiry=error', request.url), 303)
+    return json(
+      {
+        error:
+          'Our form is not connected yet. Please email henry.jamcmahon@gmail.com and we will reply today.',
+      },
+      503,
+    )
+  }
+
+  const { error } = storageConfigured
+    ? await supabaseAdmin()
+        .from('enquiries')
+        .insert({
+          name: d.name,
+          email: d.email,
+          role: d.role,
+          company: d.company || null,
+          catalogue_size: d.catalogue_size || null,
+          target_languages: d.target_languages?.length ? d.target_languages : null,
+          message: d.message || null,
+          source: d.source,
+          unlocked_audio: d.unlocked_audio,
+          user_agent: request.headers.get('user-agent'),
+          referrer: request.headers.get('referer'),
+        })
+    : { error: null }
 
   if (error) {
     console.error('[enquiry] supabase insert failed', error)
@@ -65,16 +94,20 @@ export async function POST(request: Request) {
     return json({ error: 'We could not save that. Please try again.' }, 500)
   }
 
-  // The lead is safe in the database. An email failure must NEVER surface to the visitor
-  // or cost us the enquiry — log it and carry on.
+  /**
+   * When the row was written, an email failure must never surface to the visitor: the
+   * lead is already safe and a silent log is the right outcome.
+   *
+   * When storage is NOT configured the email is the only record of the enquiry, so a
+   * failure there is fatal and has to be told to the visitor. Returning success while the
+   * enquiry disappears is the worst possible behaviour for this form.
+   */
+  let mailSent = false
   try {
-    const apiKey = process.env.RESEND_API_KEY
-    const to = process.env.ENQUIRY_TO_EMAIL
-    const from = process.env.ENQUIRY_FROM_EMAIL
-    if (apiKey && to && from) {
-      await new Resend(apiKey).emails.send({
-        from,
-        to,
+    if (mailConfigured) {
+      await new Resend(process.env.RESEND_API_KEY!).emails.send({
+        from: process.env.ENQUIRY_FROM_EMAIL!,
+        to: process.env.ENQUIRY_TO_EMAIL!,
         replyTo: d.email,
         subject: `Lyrical enquiry: ${d.name} (${d.role})`,
         text: [
@@ -91,11 +124,27 @@ export async function POST(request: Request) {
           d.message || '(none)',
         ].join('\n'),
       })
+      mailSent = true
     } else {
       console.warn('[enquiry] Resend not configured; row written, no email sent')
     }
+    if (!storageConfigured) {
+      console.warn('[enquiry] Supabase not configured; the email is the only record')
+    }
   } catch (e) {
-    console.error('[enquiry] resend send failed, the row was still written', e)
+    console.error('[enquiry] resend send failed', e)
+  }
+
+  if (!storageConfigured && !mailSent) {
+    console.error('[enquiry] no storage and the email failed; the enquiry was LOST')
+    if (isFormPost) return Response.redirect(new URL('/?enquiry=error', request.url), 303)
+    return json(
+      {
+        error:
+          'We could not get that through. Please email henry.jamcmahon@gmail.com and we will reply today.',
+      },
+      502,
+    )
   }
 
   const extra: Record<string, string> = {}

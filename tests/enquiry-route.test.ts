@@ -13,6 +13,8 @@ vi.mock('resend', () => ({
 }))
 
 process.env.GATE_SECRET = 'test-secret'
+process.env.SUPABASE_URL = 'https://example.supabase.co'
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
 process.env.ENQUIRY_TO_EMAIL = 'henry.jamcmahon@gmail.com'
 process.env.ENQUIRY_FROM_EMAIL = 'onboarding@resend.dev'
 process.env.RESEND_API_KEY = 'test-key'
@@ -130,5 +132,47 @@ describe('POST /api/enquiry', () => {
     )
     expect(res.status).toBe(303)
     expect(insert).toHaveBeenCalledOnce()
+  })
+})
+
+describe('degrading when the site is deployed before its services exist', () => {
+  const bare = { ...valid, unlocked_audio: false }
+
+  it('still succeeds with no database, as long as the email goes', async () => {
+    delete process.env.SUPABASE_URL
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY
+    const res = await POST(req(bare))
+    expect(res.status).toBe(200)
+    expect(insert).not.toHaveBeenCalled()
+    expect(send).toHaveBeenCalledOnce()
+    process.env.SUPABASE_URL = 'https://example.supabase.co'
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
+  })
+
+  it('FAILS LOUDLY when there is no database and the email also fails', async () => {
+    // The email is the only record here, so silently returning success would lose the lead.
+    delete process.env.SUPABASE_URL
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY
+    send.mockRejectedValue(new Error('resend down'))
+    const res = await POST(req(bare))
+    expect(res.status).toBe(502)
+    const body = await res.json()
+    expect(body.error).toMatch(/henry\.jamcmahon@gmail\.com/)
+    process.env.SUPABASE_URL = 'https://example.supabase.co'
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
+  })
+
+  it('tells the visitor where to go when nothing is configured at all', async () => {
+    delete process.env.SUPABASE_URL
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY
+    delete process.env.RESEND_API_KEY
+    const res = await POST(req(bare))
+    expect(res.status).toBe(503)
+    const body = await res.json()
+    expect(body.error).toMatch(/henry\.jamcmahon@gmail\.com/)
+    expect(insert).not.toHaveBeenCalled()
+    process.env.SUPABASE_URL = 'https://example.supabase.co'
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
+    process.env.RESEND_API_KEY = 'test-key'
   })
 })

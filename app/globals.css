@@ -68,6 +68,11 @@ body {
   scroll-margin-top: 6rem;
 }
 
+/* Touch targets are handled with Tailwind utilities (`inline-flex items-center min-h-11`)
+   rather than a custom class. A custom `.tap` rule here sits OUTSIDE Tailwind's layers,
+   which means it outranks utilities and silently overrode `hidden`, showing nav links on
+   mobile that were meant to be hidden. */
+
 .sr-only {
   position: absolute;
   width: 1px;

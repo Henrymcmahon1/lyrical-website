@@ -16,13 +16,13 @@ export function Footer() {
           aria-label="Footer"
           className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm"
         >
-          <Link href="/hear" className="hover:text-indigo">
+          <Link href="/hear" className="inline-flex min-h-11 items-center hover:text-indigo">
             Hear it
           </Link>
-          <Link href="/about" className="hover:text-indigo">
+          <Link href="/about" className="inline-flex min-h-11 items-center hover:text-indigo">
             About
           </Link>
-          <Link href="/#enquire" className="hover:text-indigo">
+          <Link href="/#enquire" className="inline-flex min-h-11 items-center hover:text-indigo">
             Start a conversation
           </Link>
         </nav>

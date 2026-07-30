@@ -81,7 +81,7 @@ export function EnquiryForm({
   const border = dark ? 'border-cream/30' : 'border-graphite/25'
   const muted = dark ? 'text-cream/60' : 'text-graphite/55'
   const field = `w-full rounded-card border ${border} bg-transparent px-4 py-3 outline-none transition-colors focus-visible:border-indigo`
-  const chip = `nudge cursor-pointer rounded-card border ${border} px-3 py-2 text-sm transition-colors has-checked:border-ember has-checked:text-ember`
+  const chip = `nudge inline-flex min-h-11 cursor-pointer items-center rounded-card border ${border} px-3 text-sm transition-colors has-checked:border-ember has-checked:text-ember`
 
   if (state === 'done') {
     return (
