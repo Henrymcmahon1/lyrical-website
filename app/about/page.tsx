@@ -1,5 +1,7 @@
-import S09Team from '@/components/sections/S09Team'
+import S06bMaster from '@/components/sections/S06bMaster'
+import S07Doors from '@/components/sections/S07Doors'
 import S08Rights from '@/components/sections/S08Rights'
+import S09Team from '@/components/sections/S09Team'
 import S10Enquire from '@/components/sections/S10Enquire'
 import { Origin, Beliefs } from '@/components/sections/Origin'
 
@@ -9,6 +11,11 @@ export const metadata = {
     'Lyrical expands catalogues that already work, with authorised, artist-approved versions for audiences that could not hear them properly before.',
 }
 
+/**
+ * The depth. Everything a visitor goes looking for once the home page has convinced them
+ * to care: why this matters, where it came from, what we believe, how we work with each
+ * kind of client, the rights position, and who they will actually be dealing with.
+ */
 export default function About() {
   return (
     <>
@@ -37,8 +44,10 @@ export default function About() {
         </p>
       </section>
 
+      <S06bMaster />
       <Origin />
       <Beliefs />
+      <S07Doors />
       <S09Team detail />
       <S08Rights />
       <S10Enquire />

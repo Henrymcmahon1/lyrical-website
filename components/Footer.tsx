@@ -27,10 +27,7 @@ export function Footer() {
           </Link>
         </nav>
 
-        <p className="mt-8 font-mono text-xs tracking-[0.18em] text-graphite/45">
-          english &#8776; espa&#241;ol
-        </p>
-        <p className="mt-2 max-w-md text-xs leading-relaxed text-graphite/50">
+        <p className="mt-8 max-w-md text-xs leading-relaxed text-graphite/50">
           Artist voices are used only with the artist&rsquo;s or rights holder&rsquo;s
           permission.
         </p>

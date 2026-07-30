@@ -10,7 +10,7 @@ export default function S06bMaster() {
     <section className="mx-auto max-w-4xl px-6 py-24 text-center">
       <Reveal>
         <p className="font-mono text-xs tracking-[0.18em] text-graphite/45">
-          What we believe
+          Why it matters
         </p>
         <h2 className="mt-6 font-brand text-3xl leading-snug tracking-tight text-balance sm:text-4xl">
           A master recording is not a finished product. It is the foundation for
