@@ -1,9 +1,10 @@
 import { cookies } from 'next/headers'
 import { GATE_COOKIE, verifyGateSafe } from '@/lib/gate'
 import { HomeInteractive } from '@/components/HomeInteractive'
-import { Divider } from '@/components/Divider'
+import { ZoomThroughMark } from '@/components/ZoomThroughMark'
 import S01Hero from '@/components/sections/S01Hero'
-import S02Border from '@/components/sections/S02Border'
+import S02BorderDetail, { S02BorderStatement } from '@/components/sections/S02Border'
+import S02bAudience from '@/components/sections/S02bAudience'
 import S04Fidelity from '@/components/sections/S04Fidelity'
 import S05How from '@/components/sections/S05How'
 import S06Receive from '@/components/sections/S06Receive'
@@ -20,14 +21,20 @@ export default async function Home() {
   return (
     <>
       <S01Hero />
-      <S02Border />
+
+      {/* Signature moment one: fall through the mark onto the statement. */}
+      <ZoomThroughMark>
+        <S02BorderStatement />
+      </ZoomThroughMark>
+      <S02BorderDetail />
+
+      {/* Signature moment two: the pause becomes the mark, one language becomes eight. */}
+      <S02bAudience />
+
       <HomeInteractive initiallyUnlocked={unlocked} />
-      <Divider />
       <S04Fidelity />
-      <Divider />
       <S05How />
       <S06Receive />
-      <Divider />
       <S07Doors />
       <S08Rights />
       <S09Team />

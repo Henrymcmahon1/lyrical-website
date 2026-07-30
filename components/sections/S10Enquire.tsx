@@ -10,7 +10,7 @@ export default function S10Enquire() {
           </h2>
           <p className="mt-6 leading-relaxed text-cream/75">
             Tell us what you have and where you want it to reach. We&rsquo;ll come back with
-            what a first release would look like &mdash; what it takes, what you&rsquo;d
+            what a first release would look like: what it takes, what you&rsquo;d
             receive, and how long it runs.
           </p>
 

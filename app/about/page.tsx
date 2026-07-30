@@ -1,12 +1,11 @@
 import S09Team from '@/components/sections/S09Team'
 import S08Rights from '@/components/sections/S08Rights'
 import S10Enquire from '@/components/sections/S10Enquire'
-import { Divider } from '@/components/Divider'
 
 export const metadata = {
   title: 'About',
   description:
-    'Lyrical expands catalogues that already work — authorised, artist-approved versions for audiences that could not hear them properly before.',
+    'Lyrical expands catalogues that already work, with authorised, artist-approved versions for audiences that could not hear them properly before.',
 }
 
 export default function About() {
@@ -26,7 +25,7 @@ export default function About() {
 
         <p className="mt-6 text-lg leading-relaxed text-graphite/75">
           Everything is built around one rule: the artist&rsquo;s performance is the source
-          of truth. We transfer a performance &mdash; we don&rsquo;t invent one. The melody
+          of truth. We transfer a performance. We don&rsquo;t invent one. The melody
           comes from the artist&rsquo;s own take, the vocal carries their own timbre, and the
           instrumental they recorded is the instrumental you get back.
         </p>
@@ -36,8 +35,6 @@ export default function About() {
           ears approve it.
         </p>
       </section>
-
-      <Divider />
       <S09Team />
       <S08Rights />
       <S10Enquire />

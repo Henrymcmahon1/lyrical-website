@@ -21,7 +21,7 @@ export default async function Hear() {
         </h1>
         <p className="mt-8 text-lg leading-relaxed text-graphite/75">
           Choose a language pair and hear the original against the recreated version. The
-          melody, the phrasing and the backing are identical &mdash; only the language
+          melody, the phrasing and the backing are identical. Only the language
           changes.
         </p>
       </section>

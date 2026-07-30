@@ -33,8 +33,13 @@ describe('copy guardrails — these are commitments, not preferences', () => {
     expect(corpus).not.toMatch(/>\s*Solutions\s*</)
   })
 
-  it('declares no gradient anywhere', () => {
-    expect(corpus).not.toMatch(/linear-gradient|radial-gradient|conic-gradient/)
+  it('paints no gradient anywhere', () => {
+    // Mask gradients are an alpha channel, not paint. See tests/tokens.test.ts.
+    const painting = corpus
+      .split('\n')
+      .filter((line) => !/(^|[^-\w])(-webkit-)?mask-image\s*:/.test(line))
+      .join('\n')
+    expect(painting).not.toMatch(/linear-gradient|radial-gradient|conic-gradient/)
   })
 
   it('states the deliverable as a finished mix plus a dry stem', () => {
@@ -77,5 +82,36 @@ describe('the service key never reaches the browser', () => {
       return src.includes("'use client'") || src.includes('"use client"')
     })
     expect(offenders).toEqual([])
+  })
+})
+
+describe('typography rules', () => {
+  // Em-dashes are removed from all visitor-facing copy by request. Code comments are not
+  // "the website", so only rendered strings, metadata and content files are checked.
+  const facing = files.filter(
+    (f) => f.startsWith('components') || f.startsWith('app') || f.startsWith('content'),
+  )
+
+  /**
+   * Strip comments before scanning. A naive per-line check misses continuation lines of
+   * block comments, which is exactly where the first two false positives hid.
+   */
+  function stripComments(src: string): string {
+    return src
+      .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, '') // {/* jsx block */}
+      .replace(/\/\*[\s\S]*?\*\//g, '') // /* block */
+      .replace(/^\s*\/\/.*$/gm, '') // // line
+  }
+
+  it('uses no em-dash in rendered copy', () => {
+    const offenders: string[] = []
+    for (const f of facing) {
+      stripComments(readFileSync(f, 'utf8'))
+        .split('\n')
+        .forEach((line, i) => {
+          if (/&mdash;|—/.test(line)) offenders.push(`${f}:${i + 1} ${line.trim()}`)
+        })
+    }
+    expect(offenders, `em-dash in rendered copy:\n${offenders.join('\n')}`).toEqual([])
   })
 })

@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         from,
         to,
         replyTo: d.email,
-        subject: `Lyrical enquiry — ${d.name} (${d.role})`,
+        subject: `Lyrical enquiry: ${d.name} (${d.role})`,
         text: [
           `Name:      ${d.name}`,
           `Email:     ${d.email}`,
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       console.warn('[enquiry] Resend not configured; row written, no email sent')
     }
   } catch (e) {
-    console.error('[enquiry] resend send failed — the row was still written', e)
+    console.error('[enquiry] resend send failed, the row was still written', e)
   }
 
   const extra: Record<string, string> = {}

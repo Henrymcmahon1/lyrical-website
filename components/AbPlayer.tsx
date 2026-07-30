@@ -87,7 +87,7 @@ export function AbPlayer({
   return (
     <div className="mt-12 flex flex-col items-center gap-6">
       <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-dark-ink/55 tabular-nums">
-        {demo.artist} &mdash; {demo.title} &middot; {demo.seconds}s excerpt
+        {demo.artist} &middot; {demo.title} &middot; {demo.seconds}s excerpt
       </p>
 
       <div

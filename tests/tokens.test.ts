@@ -3,6 +3,16 @@ import { describe, it, expect } from 'vitest'
 
 const css = readFileSync('app/globals.css', 'utf8')
 
+export const GRADIENT = /linear-gradient|radial-gradient|conic-gradient/
+
+/** Drop mask declarations: a gradient there is an alpha channel, not paint. */
+export function withoutMasks(source: string): string {
+  return source
+    .split('\n')
+    .filter((line) => !/(^|[^-\w])(-webkit-)?mask-image\s*:/.test(line))
+    .join('\n')
+}
+
 /** Relative luminance, WCAG 2.1. */
 function lum(hex: string): number {
   const ch = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
@@ -30,8 +40,18 @@ describe('brand tokens', () => {
     }
   })
 
-  it('never declares a gradient', () => {
-    expect(css).not.toMatch(/linear-gradient|radial-gradient|conic-gradient/)
+  it('never PAINTS a gradient', () => {
+    // The rule is "no visible colour gradients": they date fast and read as an AI product.
+    // A gradient used as a `mask-image` is an alpha channel, not paint. It fades the edge
+    // of the drifting language reels and never puts a colour ramp on screen, so mask
+    // declarations are excluded. Everything that could actually paint is still banned.
+    expect(withoutMasks(css)).not.toMatch(GRADIENT)
+  })
+
+  it('only ever uses a gradient inside a mask declaration', () => {
+    for (const line of css.split('\n').filter((l) => /-gradient\(/.test(l))) {
+      expect(line, `gradient outside a mask: ${line.trim()}`).toMatch(/mask-image\s*:/)
+    }
   })
 })
 

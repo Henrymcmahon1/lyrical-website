@@ -35,7 +35,7 @@ export default function S06Receive() {
 
       <p className="mt-8 max-w-2xl text-sm leading-relaxed text-graphite/60">
         You keep full creative and mixing control. We iterate with you until the phrasing,
-        pronunciation and feel are exactly right &mdash; from a single flagship release to an
+        pronunciation and feel are exactly right, from a single flagship release to an
         entire catalogue, at a pace that fits your rollout.
       </p>
     </section>

@@ -87,7 +87,7 @@ export function EnquiryForm({
     return (
       <div>
         <p className="font-brand text-2xl leading-snug">
-          Thank you &mdash; we&rsquo;ll be in touch shortly.
+          Thank you. We&rsquo;ll be in touch shortly.
         </p>
         <p className={`mt-3 text-sm ${muted}`}>
           If it&rsquo;s urgent, reach us directly at henry.jamcmahon@gmail.com.

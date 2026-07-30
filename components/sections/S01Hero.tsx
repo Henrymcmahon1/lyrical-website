@@ -18,7 +18,7 @@ export default function S01Hero() {
 
       <p className="mt-8 max-w-xl text-lg leading-relaxed text-graphite/75">
         We recreate a finished record in another language so it sounds like the artist
-        genuinely recorded it that way &mdash; the melody, the rhythm and the feel kept
+        genuinely recorded it that way. The melody, the rhythm and the feel are kept
         intact, sung in the artist&rsquo;s own voice, over the untouched original backing.
       </p>
 
