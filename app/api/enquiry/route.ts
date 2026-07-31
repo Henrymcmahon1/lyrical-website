@@ -11,6 +11,7 @@ import {
 import { EnquirySchema, MIN_ELAPSED_MS, resolveName } from '@/lib/enquiry-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { GATE_COOKIE, signGate } from '@/lib/gate'
+import { clientKey, consume } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -20,7 +21,34 @@ const json = (body: unknown, status: number, extra: Record<string, string> = {})
     headers: { 'content-type': 'application/json', ...extra },
   })
 
+/** Enough for a person who mis-typed their email twice. Not enough to flood the inbox. */
+const ENQUIRY_LIMIT = 5
+const ENQUIRY_WINDOW_MS = 10 * 60 * 1000
+
 export async function POST(request: Request) {
+  /**
+   * The honeypot and the elapsed-time check already catch naive bots, but neither stops
+   * somebody deliberately POSTing this endpoint in a loop. Every submission costs a database
+   * row and two emails, so the cost of abuse is real.
+   */
+  const limit = consume(
+    clientKey(request.headers, 'enquiry'),
+    ENQUIRY_LIMIT,
+    ENQUIRY_WINDOW_MS,
+    Date.now(),
+  )
+  if (!limit.allowed) {
+    const retry = Math.ceil(limit.retryAfterMs / 1000)
+    if (!request.headers.get('content-type')?.includes('application/json')) {
+      return Response.redirect(new URL('/?enquiry=error', request.url), 303)
+    }
+    return json(
+      { error: 'That is a lot of enquiries in a short time. Please try again shortly.' },
+      429,
+      { 'retry-after': String(retry) },
+    )
+  }
+
   const contentType = request.headers.get('content-type') ?? ''
   const isFormPost = !contentType.includes('application/json')
 

@@ -77,14 +77,47 @@ describe('language claims', () => {
   })
 })
 
-describe('the service key never reaches the browser', () => {
-  it('is only referenced from server-only modules', () => {
+describe('no secret ever reaches the browser', () => {
+  /**
+   * Anything named here must only ever be read from server code. A `'use client'` module is
+   * compiled into the bundle a visitor downloads, so a reference to one of these there means
+   * the value ships to every browser that loads the page.
+   *
+   * All four are covered, not just the Supabase key: ADMIN_PASSWORD opens the enquiry inbox,
+   * RESEND_API_KEY can send mail as the company, and GATE_SECRET signs both the audio-gate
+   * cookie and the /leads session, so leaking it forges admin access.
+   */
+  const SECRETS = [
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'ADMIN_PASSWORD',
+    'RESEND_API_KEY',
+    'GATE_SECRET',
+  ]
+
+  it.each(SECRETS)('%s is only referenced from server-only modules', (secret) => {
     const offenders = files.filter((f) => {
       const src = readFileSync(f, 'utf8')
-      if (!src.includes('SUPABASE_SERVICE_ROLE_KEY')) return false
+      if (!src.includes(secret)) return false
       return src.includes("'use client'") || src.includes('"use client"')
     })
     expect(offenders).toEqual([])
+  })
+
+  it('exposes nothing secret through a NEXT_PUBLIC_ variable', () => {
+    // NEXT_PUBLIC_ is inlined into the client bundle by design, so a secret given that prefix
+    // is published rather than configured. Only the site URL is legitimately public.
+    const ALLOWED = new Set(['NEXT_PUBLIC_SITE_URL'])
+    const found = new Set<string>()
+
+    for (const f of files) {
+      for (const m of readFileSync(f, 'utf8').matchAll(/NEXT_PUBLIC_[A-Z0-9_]+/g)) {
+        found.add(m[0])
+      }
+    }
+
+    for (const name of found) {
+      expect(ALLOWED.has(name), `unexpected public env var: ${name}`).toBe(true)
+    }
   })
 })
 

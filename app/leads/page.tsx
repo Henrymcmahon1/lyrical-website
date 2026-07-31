@@ -33,7 +33,7 @@ type Lead = {
 
 const SHELL = 'mx-auto w-full max-w-4xl px-6'
 
-function Login({ failed }: { failed: boolean }) {
+function Login({ error }: { error?: string }) {
   return (
     <section className={`${SHELL} py-24`}>
       <h1 className="font-brand text-4xl tracking-tight">Leads</h1>
@@ -55,9 +55,14 @@ function Login({ failed }: { failed: boolean }) {
           />
         </label>
 
-        {failed && (
+        {error === '1' && (
           <p role="alert" className="text-sm text-ember">
             That password is not right.
+          </p>
+        )}
+        {error === 'rate' && (
+          <p role="alert" className="text-sm text-ember">
+            Too many attempts. Wait ten minutes and try again.
           </p>
         )}
 
@@ -94,7 +99,7 @@ export default async function LeadsPage({
 }) {
   const [signedIn, params] = await Promise.all([hasAdminSession(), searchParams])
 
-  if (!signedIn) return <Login failed={params.error === '1'} />
+  if (!signedIn) return <Login error={params.error} />
 
   const showAll = params.show === 'all'
 

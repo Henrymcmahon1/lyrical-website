@@ -1,10 +1,11 @@
 'use server'
 
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { ADMIN_COOKIE, ADMIN_MAX_AGE_MS, checkAdminPassword, signAdminSession } from '@/lib/admin-auth'
 import { hasAdminSession } from '@/lib/admin-session'
+import { clientKey, consume } from '@/lib/rate-limit'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 /**
@@ -18,7 +19,27 @@ const COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === 'production',
 }
 
+/** Five attempts per ten minutes per IP. Generous for a human, useless for a script. */
+const LOGIN_ATTEMPTS = 5
+const LOGIN_WINDOW_MS = 10 * 60 * 1000
+
 export async function login(formData: FormData) {
+  /**
+   * Throttle before checking the password.
+   *
+   * One shared password with unlimited guesses is the weakest thing on this site: given
+   * enough attempts, the strength of the passphrase stops mattering. Rate limiting is what
+   * makes it matter again. Counted per IP and per attempt, whether the guess is right or
+   * wrong, so a correct guess cannot be used to reset the counter.
+   */
+  const limit = consume(
+    clientKey(await headers(), 'leads-login'),
+    LOGIN_ATTEMPTS,
+    LOGIN_WINDOW_MS,
+    Date.now(),
+  )
+  if (!limit.allowed) redirect('/leads?error=rate')
+
   const supplied = String(formData.get('password') ?? '')
 
   // `checkAdminPassword` fails closed when ADMIN_PASSWORD is unset, so an unconfigured

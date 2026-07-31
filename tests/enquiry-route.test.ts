@@ -20,6 +20,7 @@ process.env.ENQUIRY_FROM_EMAIL = 'onboarding@resend.dev'
 process.env.RESEND_API_KEY = 'test-key'
 
 const { POST } = await import('@/app/api/enquiry/route')
+const { resetAllLimits } = await import('@/lib/rate-limit')
 
 const valid = {
   name: 'Jordan Brock',
@@ -42,6 +43,9 @@ beforeEach(() => {
   send.mockReset()
   insert.mockResolvedValue({ error: null })
   send.mockResolvedValue({})
+  // The route is rate limited per IP. Every request here comes from the same (absent) IP,
+  // so without this the sixth test in the file would start getting 429s from the fifth.
+  resetAllLimits()
 })
 
 describe('POST /api/enquiry', () => {
@@ -174,5 +178,44 @@ describe('degrading when the site is deployed before its services exist', () => 
     process.env.SUPABASE_URL = 'https://example.supabase.co'
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
     process.env.RESEND_API_KEY = 'test-key'
+  })
+})
+
+describe('the enquiry route is rate limited', () => {
+  it('allows five submissions from one caller, then answers 429', async () => {
+    for (let i = 0; i < 5; i++) {
+      expect((await POST(req(valid))).status, `submission ${i + 1}`).toBe(200)
+    }
+    const blocked = await POST(req(valid))
+    expect(blocked.status).toBe(429)
+  })
+
+  it('tells a throttled caller when to come back', async () => {
+    for (let i = 0; i < 5; i++) await POST(req(valid))
+    const blocked = await POST(req(valid))
+    expect(Number(blocked.headers.get('retry-after'))).toBeGreaterThan(0)
+  })
+
+  it('writes nothing and sends nothing once throttled', async () => {
+    for (let i = 0; i < 5; i++) await POST(req(valid))
+    insert.mockClear()
+    send.mockClear()
+    await POST(req(valid))
+    expect(insert).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('counts callers separately by forwarded IP', async () => {
+    const from = (ip: string) =>
+      new Request('http://localhost:3000/api/enquiry', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+        body: JSON.stringify(valid),
+      })
+
+    for (let i = 0; i < 5; i++) await POST(from('203.0.113.9'))
+    expect((await POST(from('203.0.113.9'))).status).toBe(429)
+    // A different visitor must be unaffected by somebody else exhausting their allowance.
+    expect((await POST(from('198.51.100.4'))).status).toBe(200)
   })
 })
