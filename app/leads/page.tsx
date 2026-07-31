@@ -33,6 +33,20 @@ type Lead = {
 
 const SHELL = 'mx-auto w-full max-w-4xl px-6'
 
+/**
+ * Readable form of the catalogue-size answer.
+ *
+ * The raw values are form option keys, so rendering `${value} songs` produced "unsure songs",
+ * which reads as though somebody is unsure what a song is.
+ */
+const CATALOGUE_LABEL: Record<string, string> = {
+  '1': 'One song',
+  '2-10': '2 to 10 songs',
+  '11-100': '11 to 100 songs',
+  '100+': '100+ songs',
+  unsure: 'Size not known',
+}
+
 function Login({ error }: { error?: string }) {
   return (
     <section className={`${SHELL} py-24`}>
@@ -196,8 +210,8 @@ export default async function LeadsPage({
                 )}
                 {l.catalogue_size && (
                   <div className="flex gap-2">
-                    <dt className="sr-only">Songs</dt>
-                    <dd>{l.catalogue_size} songs</dd>
+                    <dt className="sr-only">Catalogue</dt>
+                    <dd>{CATALOGUE_LABEL[l.catalogue_size] ?? l.catalogue_size}</dd>
                   </div>
                 )}
                 {l.target_languages?.length ? (
