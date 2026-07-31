@@ -1,5 +1,5 @@
 /**
- * Interactive setter for the three secrets that need your own accounts.
+ * Interactive setter for the secrets that only you can supply.
  *
  *   node scripts/set-keys.mjs
  *
@@ -46,6 +46,14 @@ const WANTED = [
     hint: 'Resend > API Keys. Starts re_',
     check: (v) => (v.startsWith('re_') ? null : 'Expected a key starting re_'),
   },
+  {
+    name: 'ADMIN_PASSWORD',
+    hint: 'Your own choice. Opens /leads. Make it long, you only type it twice a week.',
+    check: (v) =>
+      v.length >= 12
+        ? null
+        : 'Use at least 12 characters. This one guards other people’s contact details.',
+  },
 ]
 
 const rl = createInterface({ input: stdin, output: stdout })
@@ -69,7 +77,7 @@ function vercel(args, input) {
   })
 }
 
-console.log('\nSetting the three keys that need your own accounts.')
+console.log(`\nSetting ${WANTED.length} values across ${ENVIRONMENTS.length} environments.`)
 console.log('Paste each value and press Enter. Nothing is stored locally.\n')
 
 const values = {}
@@ -114,6 +122,6 @@ for (const [name, value] of Object.entries(values)) {
 console.log(
   failed
     ? `\n${failed} write(s) failed. Check you are logged in: npx vercel whoami\n`
-    : '\nAll nine writes succeeded.\n\nNext:\n  npx vercel --prod --yes\n  node scripts/preflight-enquiry.mjs --smoke\n',
+    : `\nAll ${WANTED.length * ENVIRONMENTS.length} writes succeeded.\n\nNext:\n  npx vercel --prod --yes\n  node scripts/preflight-enquiry.mjs --smoke\n`,
 )
 process.exitCode = failed ? 1 : 0

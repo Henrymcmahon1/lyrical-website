@@ -25,7 +25,8 @@ const REQUIRED = {
   RESEND_API_KEY: 'sends the notification email',
   ENQUIRY_TO_EMAIL: 'where the notification goes',
   ENQUIRY_FROM_EMAIL: 'the sender. onboarding@resend.dev until a domain is verified',
-  GATE_SECRET: 'signs the "asked for examples" cookie',
+  GATE_SECRET: 'signs the "asked for examples" cookie, and the /leads session',
+  ADMIN_PASSWORD: 'opens /leads. Without it the page refuses everybody, which is the safe way to fail',
 }
 
 console.log(`Preflight for ${BASE}\n`)

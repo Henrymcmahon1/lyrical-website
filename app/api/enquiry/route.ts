@@ -1,5 +1,13 @@
 import { Resend } from 'resend'
-import { enquiryEmailHtml, enquiryEmailSubject, enquiryEmailText } from '@/lib/enquiry-email'
+import {
+  canEmailStrangers,
+  confirmationHtml,
+  confirmationSubject,
+  confirmationText,
+  enquiryEmailHtml,
+  enquiryEmailSubject,
+  enquiryEmailText,
+} from '@/lib/enquiry-email'
 import { EnquirySchema, MIN_ELAPSED_MS, resolveName } from '@/lib/enquiry-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { GATE_COOKIE, signGate } from '@/lib/gate'
@@ -125,6 +133,33 @@ export async function POST(request: Request) {
         html: enquiryEmailHtml(record),
       })
       mailSent = true
+
+      /**
+       * Then the enquirer's own confirmation, best effort.
+       *
+       * Gated on the sender being a verified domain rather than a separate flag: Resend's
+       * test address can only deliver to the account owner, so attempting this while it is
+       * configured would fail for every real enquirer. It turns itself on the moment
+       * ENQUIRY_FROM_EMAIL becomes a real address.
+       *
+       * Sent in its own try so a failure here can never affect the response. The lead is
+       * already stored and the founder already notified by this point; the visitor not
+       * getting an acknowledgement is not worth showing them an error over.
+       */
+      if (canEmailStrangers(process.env.ENQUIRY_FROM_EMAIL)) {
+        try {
+          await new Resend(process.env.RESEND_API_KEY!).emails.send({
+            from: process.env.ENQUIRY_FROM_EMAIL!,
+            to: d.email,
+            replyTo: process.env.ENQUIRY_TO_EMAIL!,
+            subject: confirmationSubject(),
+            text: confirmationText(record),
+            html: confirmationHtml(record),
+          })
+        } catch (e) {
+          console.error('[enquiry] confirmation to the enquirer failed', e)
+        }
+      }
     } else {
       console.warn('[enquiry] Resend not configured; row written, no email sent')
     }

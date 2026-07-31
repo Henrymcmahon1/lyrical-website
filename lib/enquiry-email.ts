@@ -184,6 +184,112 @@ Sent by the enquiry form on the Lyrical site. The full record is in the enquirie
 </body></html>`
 }
 
+/* ── The confirmation the enquirer receives ────────────────────────────────────
+ *
+ * Separate from the notification above, and deliberately so: this one goes to a stranger, so
+ * it says nothing about how the enquiry was routed, reflects nothing back that could look
+ * like a database record, and commits to a reply time. Without it the strongest moment in
+ * the funnel ends with nothing but an on-screen thank-you.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Whether the configured sender can reach somebody who is not the Resend account owner.
+ *
+ * Resend's test sender only delivers to the address that owns the account, so a confirmation
+ * to an enquirer would silently fail. Derived from the sender rather than a separate flag, so
+ * the moment ENQUIRY_FROM_EMAIL becomes a verified domain address this turns itself on with
+ * nothing else to remember.
+ */
+export function canEmailStrangers(from: string | undefined): boolean {
+  if (!from) return false
+  return !from.trim().toLowerCase().endsWith('@resend.dev')
+}
+
+/** First name only, or a generic greeting when the gate collected no name. */
+function greeting(d: EnquiryEmailFields): string {
+  const first = d.name?.trim().split(/\s+/)[0]
+  return first ? `Hi ${first},` : 'Hi there,'
+}
+
+export function confirmationSubject(): string {
+  return 'Lyrical: we have your enquiry'
+}
+
+export function confirmationText(d: EnquiryEmailFields): string {
+  return [
+    greeting(d),
+    '',
+    'Thanks for getting in touch. Your enquiry has reached us and a person, not a system,',
+    'will reply within one working day.',
+    '',
+    'One thing worth saying up front, because it is the part most people want to know:',
+    'nothing is ever made without the rights holder or artist approval, and voice models are',
+    'built only from catalogues we are permitted to use. Authorisation comes first, before any',
+    'work begins.',
+    '',
+    'When we reply we will ask which song you want to start with and which language, so have',
+    'a think about that if you have not already. One song is the usual first step.',
+    '',
+    'If anything is urgent in the meantime, just reply to this email.',
+    '',
+    'Lyrical',
+    'Every song. Any language. Same soul.',
+  ].join('\n')
+}
+
+export function confirmationHtml(d: EnquiryEmailFields): string {
+  const para = `margin:0 0 18px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.62;color:${GRAPHITE};`
+
+  return `<!doctype html>
+<html><body style="margin:0;padding:0;background:${CREAM};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${CREAM};padding:32px 16px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+<tr><td style="padding-bottom:28px;">
+<span style="font-size:30px;line-height:1;color:${INDIGO};font-family:Georgia,serif;">&#8776;</span>
+<span style="font-size:15px;color:${GRAPHITE};font-family:Georgia,serif;padding-left:8px;">lyrical</span>
+</td></tr>
+
+<tr><td>
+<h1 style="margin:0 0 22px;font-family:Georgia,serif;font-weight:normal;font-size:27px;line-height:1.25;color:${GRAPHITE};">
+${esc(greeting(d))}
+</h1>
+
+<p style="${para}">
+Thanks for getting in touch. Your enquiry has reached us, and a person, not a system, will
+reply within one working day.
+</p>
+
+<p style="${para}">
+One thing worth saying up front, because it is the part most people want to know: nothing is
+ever made without the rights holder or artist approval, and voice models are built only from
+catalogues we are permitted to use. Authorisation comes first, before any work begins.
+</p>
+
+<p style="${para}">
+When we reply we will ask which song you want to start with and which language, so have a
+think about that if you have not already. One song is the usual first step.
+</p>
+
+<p style="${para}">
+If anything is urgent in the meantime, just reply to this email.
+</p>
+</td></tr>
+
+<tr><td style="padding-top:26px;border-top:1px solid ${RULE};">
+<p style="margin:0;font-family:Georgia,serif;font-size:15px;color:${GRAPHITE};">Lyrical</p>
+<p style="margin:6px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#857E74;">
+Every song. Any language. Same soul.
+</p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`
+}
+
 export function enquiryMailto(d: EnquiryEmailFields, to: string): string {
   const subject = encodeURIComponent(enquiryEmailSubject(d))
   const body = encodeURIComponent(enquiryEmailText(d, MAILTO_MESSAGE_LIMIT))

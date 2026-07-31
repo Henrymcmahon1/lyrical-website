@@ -209,7 +209,15 @@ body {
     --pin-step: 18vh;
   }
 
-  .js-motion .pin-track { height: calc(100vh + (var(--steps, 4) * var(--pin-step))); }
+  /**
+   * `--pin-step-mobile` lets one section ask for more travel per step without touching the
+   * others, and without leaking to desktop: the desktop rule below reads `--pin-step` only,
+   * so an inline override here cannot reach it. Sections with few steps advance in larger
+   * visible jumps, so the same rate reads as twitchier there than it does with six.
+   */
+  .js-motion .pin-track {
+    height: calc(100vh + (var(--steps, 4) * var(--pin-step-mobile, var(--pin-step))));
+  }
 
   .js-motion .pin-panel,
   .js-motion .audience-panel,
