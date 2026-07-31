@@ -53,3 +53,9 @@ next-env.d.ts
 
 # Local email render previews
 .email-preview/
+
+# Ad-hoc probe scripts. These end up holding credentials while debugging, and one of
+# them was committed to a PUBLIC repo with the /leads password in it. Never again.
+*-probe.mjs
+*-e2e.mjs
+leads-e2e.mjs
