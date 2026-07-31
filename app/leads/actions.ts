@@ -25,12 +25,18 @@ const LOGIN_WINDOW_MS = 10 * 60 * 1000
 
 export async function login(formData: FormData) {
   /**
-   * Throttle before checking the password.
+   * Throttle first. Best effort only, and measured as such.
    *
-   * One shared password with unlimited guesses is the weakest thing on this site: given
-   * enough attempts, the strength of the passphrase stops mattering. Rate limiting is what
-   * makes it matter again. Counted per IP and per attempt, whether the guess is right or
-   * wrong, so a correct guess cannot be used to reset the counter.
+   * This limiter is per serverless instance, and a live test of six wrong passwords against
+   * production was throttled ZERO times: Vercel spread the requests across instances and each
+   * one saw its first attempt. So this is a speed bump against a single hot instance, not a
+   * control anything should depend on.
+   *
+   * What actually protects this page is the password itself: 32 random characters from a
+   * 58-character alphabet, about 187 bits, which is not brute-forceable at any request rate.
+   * The delay below raises the cost further. If per-IP limiting ever needs to be real it has
+   * to live somewhere shared, in Redis or in Postgres, rather than in a process that Vercel
+   * may replace between two requests.
    */
   const limit = consume(
     clientKey(await headers(), 'leads-login'),
@@ -44,7 +50,18 @@ export async function login(formData: FormData) {
 
   // `checkAdminPassword` fails closed when ADMIN_PASSWORD is unset, so an unconfigured
   // deployment refuses everybody rather than admitting everybody.
-  if (!checkAdminPassword(supplied)) redirect('/leads?error=1')
+  if (!checkAdminPassword(supplied)) {
+    /**
+     * Deliberate delay on failure, and only on failure.
+     *
+     * Unlike the counter above this works regardless of which instance serves the request,
+     * because it costs the attacker wall-clock time on every single attempt rather than
+     * relying on shared state. Kept modest: a long delay would let an attacker run up the
+     * serverless bill, so this is a cost multiplier rather than a wall.
+     */
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    redirect('/leads?error=1')
+  }
 
   const jar = await cookies()
   jar.set(ADMIN_COOKIE, signAdminSession(Date.now()), {
