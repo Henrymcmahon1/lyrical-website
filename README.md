@@ -82,10 +82,13 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
-ENQUIRY_TO_EMAIL=henry.jamcmahon@gmail.com
+ENQUIRY_TO_EMAIL=jordan@lyricalglobal.com,henry@lyricalglobal.com
 ENQUIRY_FROM_EMAIL=onboarding@resend.dev
 GATE_SECRET=
 ```
+
+`ENQUIRY_TO_EMAIL` is a **comma separated list**. Adding or removing a founder is an
+environment change with no deploy.
 
 `.env.local` is gitignored. Never commit it.
 
@@ -171,6 +174,6 @@ Everything animates `transform` and `opacity` only, and all of it is disabled un
 ## Still open
 
 - Jordan's and Henry's real bios and roles — placeholders in `content/team.json`
-- A domain (needed for a proper sending address and OG tags)
 - Real demo audio
-- Partner confirmation that the name is **Lyrical**, not *Lyricall*
+
+Settled since: the domain is live at **lyricalglobal.com**, and the name is **Lyrical**, one L.

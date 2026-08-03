@@ -59,3 +59,7 @@ next-env.d.ts
 *-probe.mjs
 *-e2e.mjs
 leads-e2e.mjs
+
+# Agent working directory. Holds session state and local settings, and is exactly the kind
+# of thing a `git add -A` sweeps into a PUBLIC repo without anyone reading it first.
+.claude/

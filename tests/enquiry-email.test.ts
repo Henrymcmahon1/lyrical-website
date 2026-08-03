@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import {
+  CONTACT_EMAIL,
   MAILTO_MESSAGE_LIMIT,
   enquiryEmailSubject,
   enquiryEmailText,
   enquiryMailto,
+  enquiryRecipients,
 } from '@/lib/enquiry-email'
 
 const FULL = {
@@ -110,5 +112,45 @@ describe('enquiryMailto', () => {
     const url = enquiryMailto(BARE, 'hello@example.com')
     expect(() => new URL(url)).not.toThrow()
     expect(new URL(url).searchParams.get('body')).toContain('al@example.com')
+  })
+})
+
+describe('enquiryRecipients', () => {
+  it('splits a comma separated list into separate addresses', () => {
+    expect(enquiryRecipients('jordan@lyricalglobal.com,henry@lyricalglobal.com')).toEqual([
+      'jordan@lyricalglobal.com',
+      'henry@lyricalglobal.com',
+    ])
+  })
+
+  it('trims the whitespace people naturally type after a comma', () => {
+    expect(enquiryRecipients(' jordan@lyricalglobal.com ,  henry@lyricalglobal.com ')).toEqual([
+      'jordan@lyricalglobal.com',
+      'henry@lyricalglobal.com',
+    ])
+  })
+
+  it('drops empty entries, so a trailing comma cannot fail the whole send', () => {
+    expect(enquiryRecipients('jordan@lyricalglobal.com,,')).toEqual(['jordan@lyricalglobal.com'])
+  })
+
+  it('still handles a single address, which is the common case', () => {
+    expect(enquiryRecipients('jordan@lyricalglobal.com')).toEqual(['jordan@lyricalglobal.com'])
+  })
+
+  it('returns nothing when the variable is unset or blank', () => {
+    // The route treats an empty list as "mail not configured", so this is the value that
+    // decides whether a visitor is told the form is not connected.
+    expect(enquiryRecipients(undefined)).toEqual([])
+    expect(enquiryRecipients('')).toEqual([])
+    expect(enquiryRecipients('  ,  ')).toEqual([])
+  })
+})
+
+describe('CONTACT_EMAIL', () => {
+  it('is a shared company address, not a founder personal address', () => {
+    // It ships in the client bundle and is rendered on the page. Putting an individual's
+    // address here publishes it, and it breaks the moment that person changes role.
+    expect(CONTACT_EMAIL).toBe('info@lyricalglobal.com')
   })
 })

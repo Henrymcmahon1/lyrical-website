@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import {
+  CONTACT_EMAIL,
   canEmailStrangers,
   confirmationHtml,
   confirmationSubject,
@@ -7,6 +8,7 @@ import {
   enquiryEmailHtml,
   enquiryEmailSubject,
   enquiryEmailText,
+  enquiryRecipients,
 } from '@/lib/enquiry-email'
 import { EnquirySchema, MIN_ELAPSED_MS, resolveName } from '@/lib/enquiry-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -98,8 +100,11 @@ export async function POST(request: Request) {
   const storageConfigured = Boolean(
     process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY,
   )
+  // Recipients rather than the raw variable: ENQUIRY_TO_EMAIL set to "," or " " is present
+  // but addresses nobody, and treating that as configured would send into the void.
+  const notifyList = enquiryRecipients(process.env.ENQUIRY_TO_EMAIL)
   const mailConfigured = Boolean(
-    process.env.RESEND_API_KEY && process.env.ENQUIRY_TO_EMAIL && process.env.ENQUIRY_FROM_EMAIL,
+    process.env.RESEND_API_KEY && notifyList.length > 0 && process.env.ENQUIRY_FROM_EMAIL,
   )
 
   if (!storageConfigured && !mailConfigured) {
@@ -107,8 +112,7 @@ export async function POST(request: Request) {
     if (isFormPost) return Response.redirect(new URL('/?enquiry=error', request.url), 303)
     return json(
       {
-        error:
-          'Our form is not connected yet. Please email henry.jamcmahon@gmail.com and we will reply today.',
+        error: `Our form is not connected yet. Please email ${CONTACT_EMAIL} and we will reply today.`,
       },
       503,
     )
@@ -151,7 +155,7 @@ export async function POST(request: Request) {
     if (mailConfigured) {
       await new Resend(process.env.RESEND_API_KEY!).emails.send({
         from: process.env.ENQUIRY_FROM_EMAIL!,
-        to: process.env.ENQUIRY_TO_EMAIL!,
+        to: notifyList,
         replyTo: d.email,
         // Shared with the client's mailto fallback, so both routes to the inbox look
         // identical and one inbox rule catches either. No length cap here: only the
@@ -179,7 +183,7 @@ export async function POST(request: Request) {
           await new Resend(process.env.RESEND_API_KEY!).emails.send({
             from: process.env.ENQUIRY_FROM_EMAIL!,
             to: d.email,
-            replyTo: process.env.ENQUIRY_TO_EMAIL!,
+            replyTo: notifyList,
             subject: confirmationSubject(),
             text: confirmationText(record),
             html: confirmationHtml(record),
@@ -203,8 +207,7 @@ export async function POST(request: Request) {
     if (isFormPost) return Response.redirect(new URL('/?enquiry=error', request.url), 303)
     return json(
       {
-        error:
-          'We could not get that through. Please email henry.jamcmahon@gmail.com and we will reply today.',
+        error: `We could not get that through. Please email ${CONTACT_EMAIL} and we will reply today.`,
       },
       502,
     )

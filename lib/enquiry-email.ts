@@ -10,12 +10,34 @@
  */
 
 /**
- * The address a visitor is sent to when the form itself cannot deliver.
+ * The address a visitor is shown, and sent to, when the form itself cannot deliver.
  *
- * Duplicated from `ENQUIRY_TO_EMAIL` on purpose: that one is server-only, and the fallback
- * has to be reachable from the client bundle. Change both together.
+ * Deliberately NOT the same value as `ENQUIRY_TO_EMAIL`. That one is server-only and is the
+ * internal routing list, which may name individual people; this one is public, ships in the
+ * client bundle, and is rendered on the page. A shared company address is the right thing to
+ * show a stranger, and it keeps the founders' individual addresses out of the bundle.
+ *
+ * It must be a real, deliverable mailbox: this is the last resort when everything else failed.
  */
-export const CONTACT_EMAIL = 'henry.jamcmahon@gmail.com'
+export const CONTACT_EMAIL = 'info@lyricalglobal.com'
+
+/**
+ * The internal notification list, parsed from `ENQUIRY_TO_EMAIL`.
+ *
+ * Stored as one comma-separated variable rather than several, so adding a founder is an
+ * environment change with no deploy. Resend takes an array for `to`; handing it a raw
+ * "a@x.com,b@x.com" string would be treated as one malformed address and rejected, which is
+ * exactly the kind of failure that looks fine in the logs and loses leads.
+ *
+ * Whitespace is trimmed and empty entries dropped, so a trailing comma cannot produce an
+ * empty recipient that fails the whole send.
+ */
+export function enquiryRecipients(value: string | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((address) => address.trim())
+    .filter(Boolean)
+}
 
 export type EnquiryEmailFields = {
   name: string

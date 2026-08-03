@@ -99,9 +99,11 @@ internal notification too.
   largest conversion lever on the site and the only one that cannot be faked. Blocked on rights.
 - **No social proof.** No client names, testimonials or case studies on any route.
 - **No pricing signal at all.**
-- Five open recommendations from the first session, still undecided: un-pin *What you receive*
-  on desktop, rights-first on the home page, *Lyrical* vs *Lyricall*, Jordan's "$100 million"
-  claim, and the changed tagline. Raise them, do not action them.
+- Four open recommendations from the first session, still undecided: un-pin *What you receive*
+  on desktop, rights-first on the home page, Jordan's "$100 million" claim, and the changed
+  tagline. Raise them, do not action them.
+- **Settled 2026-08-03:** the name is **Lyrical**, one L. Confirmed by Henry. The site already
+  spelt it that way; the brand kit and README no longer carry it as an open question.
 
 ---
 

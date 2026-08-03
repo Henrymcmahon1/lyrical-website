@@ -22,8 +22,8 @@ is cheap, and several items are blocking things that are not.
 
 - [ ] **One named reference**, even a pilot, quoted and attributed. The trust argument is
       the one that cannot be made in your own voice.
-- [ ] **Trademark search** before printing anything or filing. Also settle *Lyrical* against
-      *Lyricall*: materials use both and the site assumes Lyrical.
+- [ ] **Trademark search** before printing anything or filing. The spelling is settled:
+      **Lyrical**, one L. Any older material spelling it *Lyricall* is out of date.
 - [ ] **A one-page PDF leave-behind.** What it is, what you receive, how rights work, how to
       start. The most-requested asset after a first call.
 - [ ] **A rights position one-pager** a lawyer can forward internally. Turns marketing copy

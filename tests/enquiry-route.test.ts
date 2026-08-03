@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { CONTACT_EMAIL } from '@/lib/enquiry-email'
 
 const insert = vi.fn()
 vi.mock('@/lib/supabase-admin', () => ({
@@ -15,7 +16,9 @@ vi.mock('resend', () => ({
 process.env.GATE_SECRET = 'test-secret'
 process.env.SUPABASE_URL = 'https://example.supabase.co'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
-process.env.ENQUIRY_TO_EMAIL = 'henry.jamcmahon@gmail.com'
+// Two recipients on purpose: the notification goes to both founders, and a single-address
+// value would not exercise the comma splitting that keeps Resend from seeing one bad address.
+process.env.ENQUIRY_TO_EMAIL = 'jordan@lyricalglobal.com, henry@lyricalglobal.com'
 process.env.ENQUIRY_FROM_EMAIL = 'onboarding@resend.dev'
 process.env.RESEND_API_KEY = 'test-key'
 
@@ -60,10 +63,12 @@ describe('POST /api/enquiry', () => {
     expect(insert.mock.calls[0][0]).toMatchObject({ email: 'jordan@example.com' })
   })
 
-  it('emails the founder, with reply-to set to the enquirer', async () => {
+  it('emails both founders, with reply-to set to the enquirer', async () => {
     await POST(req(valid))
     expect(send.mock.calls[0][0]).toMatchObject({
-      to: 'henry.jamcmahon@gmail.com',
+      // An array, never the raw comma-separated string. Resend treats that string as a
+      // single malformed address and rejects the send, which loses the lead silently.
+      to: ['jordan@lyricalglobal.com', 'henry@lyricalglobal.com'],
       replyTo: 'jordan@example.com',
     })
   })
@@ -161,7 +166,9 @@ describe('degrading when the site is deployed before its services exist', () => 
     const res = await POST(req(bare))
     expect(res.status).toBe(502)
     const body = await res.json()
-    expect(body.error).toMatch(/henry\.jamcmahon@gmail\.com/)
+    // The public contact address, not a founder's personal one: this string is shown to a
+    // visitor whose enquiry just failed, so it has to be somewhere they can actually reach.
+    expect(body.error).toContain(CONTACT_EMAIL)
     process.env.SUPABASE_URL = 'https://example.supabase.co'
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
   })
@@ -173,7 +180,7 @@ describe('degrading when the site is deployed before its services exist', () => 
     const res = await POST(req(bare))
     expect(res.status).toBe(503)
     const body = await res.json()
-    expect(body.error).toMatch(/henry\.jamcmahon@gmail\.com/)
+    expect(body.error).toContain(CONTACT_EMAIL)
     expect(insert).not.toHaveBeenCalled()
     process.env.SUPABASE_URL = 'https://example.supabase.co'
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
