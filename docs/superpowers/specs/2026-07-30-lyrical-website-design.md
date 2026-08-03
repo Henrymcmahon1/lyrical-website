@@ -312,6 +312,10 @@ Recorded because they were raised, questioned, and confirmed by the client:
    the tagline retains "Any language."
 2. Deliverable is a finished mix plus a dry vocal stem (not stems only).
 3. Public technical depth is limited to outcomes. No pipeline stages, vendors, tooling or costs.
+   **Amended 2026-08-03 on Henry's instruction:** the product section is headed "Our
+   technology", a capability label. The trade-off was put to him and he confirmed twice. The
+   points underneath remain outcome-worded and no pipeline stage, vendor, tool or cost
+   appears anywhere, so the rule still holds for content. Only the heading changed.
 4. The name is **Lyrical**, single L, pending partner confirmation.
 
 ---

@@ -163,6 +163,20 @@ Dark treatment (listening sections only): ground `#1B1D1F`, ink `#EDEBE4`, accen
 The site claims **8 languages**. The internal capability document proves **Spanish ↔ English**
 only. Raised with Henry three times and confirmed. Do not reopen without being asked.
 
+### Changed decision, on the record — 2026-08-03
+
+The spec records that **public technical depth is limited to outcomes** and that the site sells
+trust rather than capability. The product section is now headed **"Our technology"**, which is
+a capability label.
+
+This was Henry's explicit instruction, given after the trade-off was put to him: that a
+section headed this way invites the pipeline and tooling questions the rule exists to prevent,
+and that a rights holder's lawyer reads that page. He asked for it anyway, twice.
+
+**What did not change:** the three points underneath are still worded as outcomes. No pipeline
+stage, vendor, tool or cost appears anywhere. The label moved; the content did not. If you are
+tempted to "fix" this heading back to an outcome, it is a decision, not drift.
+
 ---
 
 ## 5. Gotchas that cost real time
@@ -313,7 +327,8 @@ who asked for examples would hold a valid admin session. A test asserts a gate t
 | `supabase/schema.sql` | Idempotent. Safe to re-run |
 | `content/about-folds.ts` | The four /about folds, as data. Edit words here, never in a component |
 | `components/FoldBody.tsx` | The one renderer those folds share. Holds no copy of its own |
-| `components/PinnedStepper.tsx` | The two pinned sections, and the persistent mobile section label |
+| `components/PinnedStepper.tsx` | The process section. Owns the pinned mobile header; copy comes from the section |
+| `components/PinnedClaims.tsx` | The product section. Same contract. Stopped hardcoding its own copy on 2026-08-03 |
 | `components/ScrollCue.tsx` | One chevron, two modes: controlled by the caller, or self retiring on first scroll |
 
 **Audio drop-in:** `public/audio/{src}-{tgt}/{slug}.original.mp3` and `.translated.mp3`,
