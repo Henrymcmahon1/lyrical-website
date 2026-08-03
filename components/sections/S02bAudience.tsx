@@ -118,7 +118,18 @@ export default function S02bAudience() {
               <span className="a-after">Your audience with Lyrical</span>
             </p>
 
-            <div className="mt-10 flex justify-center text-indigo">
+            {/*
+              This panel is a fixed `100vh - nav`, so its content cannot be allowed to grow
+              past it: anything taller is clipped rather than scrolled, and what got clipped
+              was the last paragraph. On a 375x667 screen the content came to 704px against a
+              607px panel.
+
+              So the mark and the vertical rhythm both shrink on small screens and return to
+              full size from `sm` up. The type is untouched, because this section is the
+              emotional turn of the page and shrinking the headline to buy space would cost
+              more than the space is worth.
+            */}
+            <div className="mt-6 flex justify-center text-indigo [&_svg]:h-20 [&_svg]:w-20 sm:mt-10 sm:[&_svg]:h-[132px] sm:[&_svg]:w-[132px]">
               {/* Animated mark: only shown once JS has opted in. */}
               <svg
                 ref={svgRef}
@@ -140,18 +151,18 @@ export default function S02bAudience() {
               </span>
             </div>
 
-            <h2 className="mt-10 font-brand text-4xl leading-tight tracking-tight text-balance sm:text-5xl">
+            <h2 className="mt-6 font-brand text-4xl leading-tight tracking-tight text-balance sm:mt-10 sm:text-5xl">
               <span className="a-before">Everyone who happens to speak the language.</span>
               <span className="a-after">Everyone who was always going to love it.</span>
             </h2>
 
             {/* One language becomes eight. Names, never numbers. */}
-            <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
-              <li className="font-brand text-2xl sm:text-3xl">English</li>
+            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:mt-10 sm:gap-y-3">
+              <li className="font-brand text-xl sm:text-3xl">English</li>
               {OTHERS.map((l, i) => (
                 <li
                   key={l.code}
-                  className="a-bloom font-brand text-2xl sm:text-3xl"
+                  className="a-bloom font-brand text-xl sm:text-3xl"
                   style={{ transitionDelay: `${i * 70}ms` }}
                 >
                   {l.endonym}
@@ -159,7 +170,7 @@ export default function S02bAudience() {
               ))}
             </ul>
 
-            <p className="mt-10 text-graphite/70">
+            <p className="mt-6 text-graphite/70 sm:mt-10">
               <span className="a-before">
                 A finished record, available everywhere, built for one language.
               </span>
@@ -174,7 +185,7 @@ export default function S02bAudience() {
               page explains why this has not simply been done already, which is what
               justifies the price.
             */}
-            <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-graphite/55">
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-graphite/55 sm:mt-6">
               Until now that meant re-recording: the artist, a studio, a translator and an
               engineer, weeks per song. So it only ever happened for the biggest releases.
             </p>

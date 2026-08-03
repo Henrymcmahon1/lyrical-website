@@ -2,7 +2,8 @@
  * Responsive audit.
  *
  * Loads every route at real device viewports and checks the things that actually break:
- * horizontal overflow, blank screens, tap-target size, and text that runs off its box.
+ * horizontal overflow, blank screens, tap-target size, text that runs off its box, and
+ * text clipped inside a pinned panel.
  *
  *   node scripts/audit-responsive.mjs [baseUrl]
  */
@@ -194,7 +195,47 @@ for (const vp of VIEWPORTS) {
     })
     if (blanks.length) note(route, vp.name, 'blank-screens', blanks)
 
-    // 4. Page length in screens.
+    /*
+     * 4. Text clipped INSIDE a pinned panel.
+     *
+     * A pinned panel is a fixed `100vh - nav` box and its content is clipped, not scrolled,
+     * when it does not fit. That is invisible to every other check here: the page does not
+     * overflow horizontally, no screen is blank, and the text is present in the DOM. It just
+     * cannot be read.
+     *
+     * It shipped once. On a short screen the audience section lost its closing paragraph
+     * entirely, and the only reason anybody found out is that Henry scrolled the live site
+     * on his phone.
+     */
+    const clipped = await page.evaluate(async () => {
+      const out = new Set()
+      // Most routes have no pinned panel at all. Walking them costs minutes and can find
+      // nothing, so leave immediately rather than scrolling a page with nothing to check.
+      if (!document.querySelector('.audience-panel, .pin-panel, .turn-panel')) return []
+      const settle = () => new Promise((r) => setTimeout(r, 160))
+      for (let y = 0; y < document.body.scrollHeight; y += Math.round(window.innerHeight * 0.6)) {
+        window.scrollTo(0, y)
+        await settle()
+        for (const panel of document.querySelectorAll('.audience-panel, .pin-panel, .turn-panel')) {
+          const pr = panel.getBoundingClientRect()
+          if (pr.bottom < 0 || pr.top > window.innerHeight) continue
+          for (const el of panel.querySelectorAll('h1, h2, h3, p, li')) {
+            const r = el.getBoundingClientRect()
+            // Mid-fade items are legitimately invisible; only settled content counts.
+            if (!el.innerText.trim() || r.height === 0) continue
+            if (getComputedStyle(el).opacity === '0') continue
+            if (r.bottom > pr.bottom + 1 || r.top < pr.top - 1) {
+              out.add(el.innerText.replace(/\s+/g, ' ').slice(0, 60))
+            }
+          }
+        }
+      }
+      window.scrollTo(0, 0)
+      return [...out]
+    })
+    if (clipped.length) note(route, vp.name, 'clipped-in-pinned-panel', clipped)
+
+    // 5. Page length in screens.
     const screens = await page.evaluate(
       () => +(document.documentElement.scrollHeight / window.innerHeight).toFixed(1),
     )
@@ -207,7 +248,8 @@ for (const vp of VIEWPORTS) {
     console.log(
       `${vp.name.padEnd(11)} ${route.padEnd(7)} ${String(screens).padStart(5)} screens` +
         (overflow ? '  OVERFLOW' : '') +
-        (blanks.length ? `  ${blanks.length} BLANK` : ''),
+        (blanks.length ? `  ${blanks.length} BLANK` : '') +
+        (clipped.length ? `  ${clipped.length} CLIPPED` : ''),
     )
   }
 
@@ -218,7 +260,7 @@ await browser.close()
 
 console.log('\n' + '='.repeat(60))
 if (problems.length === 0) {
-  console.log('PASS: no overflow, no blank screens, no small tap targets.')
+  console.log('PASS: no overflow, no blank screens, no small tap targets, nothing clipped.')
 } else {
   console.log(`${problems.length} problem group(s):\n`)
   for (const p of problems) {

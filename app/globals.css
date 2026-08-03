@@ -200,7 +200,20 @@ body {
    `--nav-h` reserves room for the sticky nav so a pinned panel starts below it rather than
    underneath it. Desktop sets it back to 0, where the panel has always run full height.
    ───────────────────────────────────────────────────────────── */
-@media (prefers-reduced-motion: no-preference) {
+/*
+ * `min-height: 640px` is a correctness floor, not a design choice.
+ *
+ * A pinned panel is `100vh - nav` and its content is CLIPPED, not scrolled, when it does not
+ * fit. On a 320x568 screen the audience section's content comes to 664px against a 508px
+ * panel, and the last paragraph simply vanished. No amount of tightening fixes that: the
+ * headline alone is about 180px at that width.
+ *
+ * Below this height nothing pins. Every section falls back to normal flow, which is the same
+ * path already taken with JavaScript off and under reduced motion, and which is readable by
+ * construction because nothing is constrained to a fixed box. A short screen loses the
+ * pinning; it does not lose the words.
+ */
+@media (prefers-reduced-motion: no-preference) and (min-height: 640px) {
   .js-motion {
     /* 44px tap target + py-2 top and bottom. */
     --nav-h: 3.75rem;
@@ -324,7 +337,8 @@ body {
   }
 }
 
-@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+/* Same height floor as above: a desktop window dragged short must not clip either. */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) and (min-height: 640px) {
   .js-motion {
     /* Desktop panels have always run the full viewport height from the very top. */
     --nav-h: 0px;
