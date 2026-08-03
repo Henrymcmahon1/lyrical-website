@@ -1,152 +1,107 @@
 # Lyrical website — handover
 
-**Date:** 2026-07-30 · **Live:** https://lyrical-website.vercel.app ·
-**Repo:** https://github.com/Henrymcmahon1/lyrical-website
+**Date:** 2026-07-31 · **Live:** https://lyricalglobal.com ·
+**Repo:** https://github.com/Henrymcmahon1/lyrical-website · **Vercel team:** `hjam`
 
-Read this before touching anything. Several of the constraints below were arrived at by
-breaking the site first, and they are not obvious from the code.
+Read this before touching anything. Most of what follows was learned by breaking something,
+and none of it is obvious from the code.
 
 ---
 
-## 0. Update, session 2 (same day). Read this first.
+## 0. Read these four things first
 
-Sections 3.1 and 3.3 below are partly superseded. What changed:
-
-| | |
-|---|---|
-| **Mobile motion** | **Done.** The morph was never disabled below 768px, only its pin was; it read *track* progress, which is forced to 1 when an element is shorter than the viewport, so it snapped to its final frame on arrival. Now driven by entry progress on the mark. Turn line, per-item reveals and a sticky step rail added. Spec: `docs/superpowers/specs/2026-07-30-mobile-motion-design.md` |
-| **The live form** | **Was returning 503 to every visitor.** Vercel had *zero* environment variables set. `ENQUIRY_TO_EMAIL`, `ENQUIRY_FROM_EMAIL` and `GATE_SECRET` are now set across all three environments |
-| **Still outstanding** | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`. Until `RESEND_API_KEY` exists the route still 503s. Run `node scripts/preflight-enquiry.mjs` |
-| **Lead safety** | A 5xx or unreachable server now offers a prefilled `mailto:` carrying every field, so a refused submission no longer discards what was typed. `lib/enquiry-email.ts` is the shared source of the subject and body for both Resend and the fallback |
-| **Deploy** | Pushed to `main` and promoted with `npx vercel --prod`. The GitHub repo is **still not connected**, so pushing alone does not deploy |
-| **Dead code** | The `.zoom-*` CSS was removed. `components/ZoomThroughMark.tsx` referenced in §5 and in `CLAUDE.md` never existed in this repo |
-
-**New verification scripts.** `audit-responsive.mjs` had never been run and had two defects that
-made it useless: a fixed 260ms wait after `scrollTo` (the Lenis trap §5 warns about) and a
-tap-target check that measured hidden inputs rather than their sized labels, giving nine
-permanent false positives. Both fixed; it now passes.
-
-```bash
-node scripts/audit-responsive.mjs <url>   # overflow, blank screens, tap targets
-node scripts/audit-motion.mjs <url>       # proves the motion MOVES. Playwright, because
-                                          # rAF is paused in a hidden browser pane
-node scripts/audit-enquiry.mjs <url>      # the 503 and 400 paths, and the mailto fallback
-node scripts/preflight-enquiry.mjs        # which env vars exist, and what a visitor gets
-```
-
-A conversion review of the live site, with the funnel ranked by leak, is in the session
-artifact rather than this repo. Headline: no audio exists anywhere, the demo gate asks for
-seven fields, there is no social proof and no analytics.
+1. **THE REPO IS PUBLIC.** `"private": false`. Anything you commit is world-readable the
+   instant it is pushed. In this session I hardcoded the `/leads` password into a throwaway
+   probe script, `git add -A` swept it up, and it went to a public repo. It had to be rotated.
+   **Never put a credential in a file here, even for one command.** Pass it via `process.argv`
+   or an environment variable. `*-probe.mjs` and `*-e2e.mjs` are gitignored for this reason.
+2. **Secrets are unreadable from an agent sandbox.** `vercel env pull` returns the literal
+   string `[SENSITIVE]` (13 bytes with quotes) for every secret value. If you send that to an
+   API it will be rejected, and that is a fact about the sandbox, **not** about the key. Do not
+   report it as a bad key. I did, once, and it was wrong.
+3. **You cannot create accounts or enter API keys.** Henry does that. You can do everything
+   either side of it, including all DNS via the Vercel CLI.
+4. **Everything is verified by running it, never by assuming.** Four separate times this
+   session, something that looked right was wrong, and twice my *test* was wrong rather than
+   the code. Run the audits in §6.
 
 ---
 
 ## 1. What this is
 
 A funnel-first marketing site for **Lyrical**, which re-sings existing recordings in another
-language *in the original artist's voice*, keeping the melody, phrasing and the untouched
+language in the original artist's voice, keeping the melody, phrasing and the untouched
 original instrumental.
 
-**The site has one job: convert a rights holder into an enquiry.** Lyrical's own strategy
-states that *authorization, not production capability, is the binding constraint* in this
-category. So the site sells **trust**, not technology. Two audiences share one page: artists
-and managers who want one flagship release, and labels who want catalogue infrastructure.
+**The site has one job: convert a rights holder into an enquiry.** Lyrical's own strategy says
+*authorization, not production capability, is the binding constraint*. So the site sells
+**trust**, not technology.
 
 Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineering, the user).
 
 ---
 
-## 2. Current state
+## 2. Current state — what works
 
 | | |
 |---|---|
-| Stack | Next.js 16.2 (App Router), React 19, Tailwind **4**, TypeScript |
-| Tests | **61**, all passing (`npm test`, Vitest) |
-| Commits | 13, all pushed to `main` |
-| Hosting | Vercel, team **HJAM**, project `lyrical-website` |
-| Deploy | **Manual CLI only.** The GitHub repo is NOT connected yet |
-| Database | **Not set up.** No Supabase, no Resend |
-| Demo audio | **None exists.** Every `hasAudio` in `content/demos.json` is `false` |
+| Stack | Next.js 16.2, React 19, Tailwind 4, TypeScript |
+| Tests | **171**, all passing (`npm test`) |
+| `npm audit` | **0 vulnerabilities** |
+| Domain | **https://lyricalglobal.com**, TLS live, `www` 308s to apex |
+| DNS | Nameservers moved to Vercel, so **all DNS is CLI-manageable** (`vercel dns add`) |
+| Database | **Working.** Supabase `enquiries` table exists, RLS on, no anon policy |
+| Enquiry form | **Working.** Live POST returns 200, row written, notification email sent |
+| `/leads` | **Working.** Password gated, list, mark handled, CSV export |
+| Analytics | Vercel Web Analytics live (`window.vam === 'production'`) |
+| Deploy | **Manual only.** GitHub is NOT connected to Vercel. `git push` does nothing on its own |
 
-### Home page order
+### Verified end to end on production
 
-`S01Hero` → `S02bAudience` → `HomeInteractive` (wraps `S03Wheels`) → `S04Fidelity` →
-`S05How` → `S06Receive` → `S09bNow` → `S10Enquire`
-
-`/about` carries the depth: master-recording thesis, origin story, beliefs, artist/label
-split, full founder bios, rights position. `/hear` is the listening page.
+Submit → 200 → row in Supabase → email to `henry.jamcmahon@gmail.com` → visible on `/leads`
+→ CSV export contains it → mark handled moves it between views → sign out makes the export 404.
 
 ---
 
-## 3. The four tasks you were asked to do
+## 3. What is NOT done
 
-### 3.1 Set up the database
+### 3.1 The enquirer confirmation email is built but dormant
 
-Everything is written and tested; it just needs credentials. `README.md` has the exact
-click-path. In short:
+`ENQUIRY_FROM_EMAIL` is still `onboarding@resend.dev`, which Resend only delivers to the
+account owner. `canEmailStrangers()` in `lib/enquiry-email.ts` derives the switch from the
+sender address, so **the moment that variable becomes a verified-domain address, the
+confirmation turns itself on**. No code change, no flag.
 
-1. Supabase project → run `supabase/schema.sql` in the SQL editor → copy the URL and the
-   **`service_role`** key (not `anon`).
-2. Resend account **registered with henry.jamcmahon@gmail.com** (their test sender can only
-   deliver to the account owner's address until a domain is verified) → API key.
-3. `openssl rand -hex 32` → `GATE_SECRET`.
-4. Put all of them in Vercel → Settings → Environment Variables, and in `.env.local` locally.
+**Do not change it early.** Resend rejects senders on unverified domains, which would break the
+internal notification too.
 
-**The route already degrades safely**, so nothing is broken while this is pending:
+### 3.2 Email host and Resend — the sequence Henry agreed
 
-| Situation | Behaviour |
-|---|---|
-| Both configured | Row written, email sent, 200 |
-| DB configured, email fails | 200. The lead is safe; never surface it |
-| No DB, email works | 200. The email is the record |
-| No DB and email fails | **502** with the direct address. The lead would be lost, so say so |
-| Nothing configured | **503** with the direct address |
+1. Henry creates a **Zoho Mail** account (Forever Free: 5 users, 1 domain, real mailboxes).
+   Chosen over ImprovMX because ImprovMX's free tier is **forwarding only, no SMTP sending** —
+   you could receive at `hello@` but never send as it, which is wrong for a business selling
+   trust.
+2. Zoho shows a **TXT verification record and MX records**. These are account and region
+   specific (`zoho.com` vs `zoho.com.au`), so they cannot be guessed. Henry pastes them to you.
+3. **You add them** with `npx vercel dns add lyricalglobal.com <name> <type> <value>`.
+4. Henry creates the `hello@lyricalglobal.com` mailbox.
+5. Henry creates a **new Resend account using `hello@lyricalglobal.com`**. This also solves the
+   plan limit: the existing Resend account's single free domain slot is taken by an unrelated
+   `avenuemission.com`. A fresh account for the company is the correct structure anyway.
+6. Henry adds `lyricalglobal.com` in Resend, pastes you the DKIM/SPF records, you add them.
+7. You set `ENQUIRY_FROM_EMAIL=hello@lyricalglobal.com` and `RESEND_API_KEY` (Henry supplies
+   the key), redeploy, and the confirmation email switches on.
 
-Do not "simplify" that ladder. Each branch is covered by a test in
-`tests/enquiry-route.test.ts`.
+### 3.3 Still open, no decision yet
 
-### 3.2 Custom domain
-
-Henry owns a domain — **ask which one**. Then:
-
-1. Vercel → project → Settings → Domains → add it, follow the DNS records.
-2. Set `NEXT_PUBLIC_SITE_URL=https://thedomain` in Vercel env vars. Without it the site
-   falls back to the Vercel domain (see `lib/site.ts`) — correct, but not canonical.
-3. Verify the domain in **Resend** too, then change `ENQUIRY_FROM_EMAIL` from
-   `onboarding@resend.dev` to something like `hello@thedomain`. Until that is done, Resend
-   can only deliver to the Resend account owner.
-4. Re-check `/sitemap.xml` and the `og:url` meta after the change.
-
-### 3.3 Mobile feels static — this is the interesting one
-
-**It is static on purpose, and the reason matters.** Every pinned section, the audience
-morph and the parallax are gated behind:
-
-```css
-@media (min-width: 768px) and (prefers-reduced-motion: no-preference) { .js-motion … }
-```
-
-That gate exists because a sticky pinned track on a phone can trap a user mid-section with
-nothing but empty space. Do **not** simply lower the breakpoint — that reintroduces the trap.
-
-What survives on mobile today: scroll reveals, staggered pop-in, the drifting language
-reels, the hero Unlock animation. What is lost: all four pinned sections and the
-pause-becomes-mark morph, which is why it reads flat.
-
-**Suggested approach** (design decision, get Henry's view first):
-
-- Give the audience morph a **non-pinned** mobile version: drive the pause→mark morph off
-  the section entering the viewport rather than off a tall sticky track. The frames are
-  already precomputed in `S02bAudience.tsx`; only the driver needs changing.
-- Replace pinned steppers on mobile with a **snap carousel** (`scroll-snap-type: x
-  mandatory`) so one idea is still on screen at a time, but the user is never held.
-- Consider a light entrance transform on section headings.
-- Whatever you add, re-run the blank-screen sweep in §5. Every motion bug on this project
-  produced a blank screen, not a visual glitch.
-
-### 3.4 Cleanup and partner feedback
-
-Partner feedback is expected from **Jordan Brock**. Before acting on it, read §4 — several
-of his likely instincts were already reconciled once, and the reasoning is recorded.
+- **No audio anywhere.** Every `hasAudio` in `content/demos.json` is `false`. The hero says
+  "Hear a before and after" and leads to a page with nothing to play. This is the single
+  largest conversion lever on the site and the only one that cannot be faked. Blocked on rights.
+- **No social proof.** No client names, testimonials or case studies on any route.
+- **No pricing signal at all.**
+- Five open recommendations from the first session, still undecided: un-pin *What you receive*
+  on desktop, rights-first on the home page, *Lyrical* vs *Lyricall*, Jordan's "$100 million"
+  claim, and the changed tagline. Raise them, do not action them.
 
 ---
 
@@ -163,127 +118,128 @@ of his likely instincts were already reconciled once, and the reasoning is recor
 
 Dark treatment (listening sections only): ground `#1B1D1F`, ink `#EDEBE4`, accent `#FF6B2C`.
 
-- **No gradients that paint.** A gradient in a `mask-image` is fine (alpha, not paint) and
-  the test allows exactly that, nothing else.
+- **No gradients that paint.** A gradient in `mask-image` is alpha, not paint, and is allowed.
 - **Ember never carries body text** — 3.2:1 on cream. Fills and large type only.
 - **Indigo is never used on the dark ground** — 2.7:1.
-- Fonts: **Fraunces** (brand voice) + **Archivo** (product), self-hosted woff2, never a CDN.
-  Fraunces was chosen for its **optical-size axis**; Bodoni Moda was replaced because its
-  hairlines vanished below ~32px.
-- Headings are explicitly `font-weight: 600`. Tailwind's preflight resets headings to
-  inherit, which had left every headline at 400.
-- Corners: `rounded-card` = 4px, from the `--radius-card` theme token.
+- Fonts: **Fraunces** + **Archivo**, self-hosted woff2, never a CDN. Headings are explicitly
+  `font-weight: 600` because Tailwind preflight resets them to 400.
+- The full brand system, generated from the same geometry the site uses, is in `brand-kit/`.
+  Regenerate with `npx tsx scripts/build-brand-kit.mjs`. Never hand-edit those files.
 
-### Copy rules
+### Copy rules, enforced by `tests/copy.test.ts`
 
-Banned, and enforced by `tests/copy.test.ts`:
-
-- **"AI-generated"** — say *recreated*, *re-sung*, *performed*, *transcreation*. The whole
-  promise is that it does not sound like a machine; machine language argues against it.
-- **`6.4×`, `2.38B`, any population multiplier.** Lyrical's own Monetization Thesis says
-  population figures are an internal prioritisation heuristic and must never be presented as
-  reach. A rights holder's lawyer reads this site.
+- **"AI-generated"** — say *recreated*, *re-sung*, *performed*, *transcreation*.
+- **`6.4×`, `2.38B`, any population multiplier.** A rights holder's lawyer reads this site.
 - **"Solutions"** as a nav label.
-- **No em-dashes** in visitor-facing copy. Test strips comments first so only rendered text
-  is checked.
-- **No artist names.** The founding story originally named four real artists and described
-  one artist's voice on another's catalogue. That is unauthorised cross-catalogue cloning on
-  a site whose entire proposition is that everything is authorised. It was removed. Do not
-  restore it.
+- **No em-dashes** in visitor-facing copy.
+- **No artist names.**
 
 ### Stated assumption, on the record
 
-The site claims **8 languages** (EN, ES, PT, IT, FR, ZH, JA, KO). The internal capability
-document only proves **Spanish ↔ English** end to end. This was raised with Henry three
-times and confirmed by him. It is recorded in §7 of the spec. If a partner questions it,
-that is the history.
+The site claims **8 languages**. The internal capability document proves **Spanish ↔ English**
+only. Raised with Henry three times and confirmed. Do not reopen without being asked.
 
 ---
 
 ## 5. Gotchas that cost real time
 
-Every one of these was found by breaking the site, not by reading the code.
+**Two scroll clocks, and they are not interchangeable.** `lib/scroll-progress.ts` exports
+`trackProgress` and `entryProgress`. Track progress is 0 at the moment a sticky panel sticks —
+when the panel already fills the screen — so a fade keyed to it starts at `opacity: 0` on a full
+screen. It is also **forced to 1 whenever an element is shorter than the viewport**, which is
+what silently disabled the mobile morph for weeks. Use it only where something actually pins.
 
-**The mark has no counter.** ≈ is two open strokes; its middle is the *gap* between them. A
-punch-out aperture scaled from the centre expands that gap and renders a **blank cream
-screen**. Do not build aperture, clip-through or mask-reveal effects from the mark. Use
-overlapping transform+opacity layers. See `components/ZoomThroughMark.tsx` (now a
-fly-through, not a punch-out).
+**Every section pins at every width now.** The old mobile gate is gone. Two unpinned
+alternatives were tried and both were worse: a carousel sliced cards mid-word, and a sticky rail
+collided with the heading. The trap the gate feared is prevented by construction instead: the
+panel is `calc(100vh - var(--nav-h))` and sticks *below* the nav, travel is bounded at 18vh per
+step on mobile against 26vh on desktop, and a progress line under the nav shows scrolling is
+still doing something.
 
-**Never use `animation-timeline: view()` for reveals.** It was observed pinning elements at
-*negative* timeline progress alongside Lenis, leaving 14 of 17 sections permanently at
-`opacity: 0`. IntersectionObserver only. A test asserts no `animation-timeline` declaration.
+**The mark has no counter.** `≈` is two open strokes; its middle is the *gap*. Any aperture,
+punch-out or clip-through built from it renders a blank cream screen. Use overlapping
+transform+opacity layers.
 
-**Reveal animations must stay scoped to `.js-motion`.** An inline script in `layout.tsx`
-adds that class before first paint. Unscoped, every wrapped section renders at `opacity: 0`
-with JavaScript disabled. A test enforces the scoping.
+**Never use `animation-timeline: view()`.** It was observed pinning elements at negative
+progress alongside Lenis, leaving 14 of 17 sections permanently at `opacity: 0`.
+IntersectionObserver only. A test asserts this.
 
-**Never define a utility-like class outside Tailwind's layers.** A custom `.tap { display:
-inline-flex }` outranked Tailwind's `hidden` and silently showed nav links on mobile that
-were meant to be hidden. Use utilities (`min-h-11`) or `@layer components`.
+**Reveal animations must stay scoped to `.js-motion`.** An inline script in `layout.tsx` adds
+it before first paint. Unscoped, every wrapped section renders invisible with JS off.
 
-**Scroll-driven fades must key off viewport entry, not pinned-track progress.** Track
-progress is 0 at the moment a panel becomes sticky, and the panel already fills the screen
-there — so `opacity: 0` at progress 0 is a genuinely blank screen.
+**In-memory rate limiting does not work on Vercel.** Measured, not assumed: six wrong passwords
+against production were throttled **zero** times, because requests spread across serverless
+instances and each saw its first attempt. It *is* effective on `/api/enquiry` (five then 429,
+confirmed live) only because bursts tend to hit one warm instance. `/leads` is protected by the
+password strength plus a 500ms delay on failed logins, not by the limiter. Real per-IP limiting
+needs shared state in Redis or Postgres.
 
-**Lenis eases scroll.** Any `scrollTo` in a test or audit must wait until `scrollY` actually
-settles, not a fixed timeout. Sampling mid-flight produced false readings twice.
+**`requestAnimationFrame` is paused in the in-app Browser pane.** Anything rAF-driven reads as
+inert there. Use Playwright for motion; the pane is fine for static geometry.
 
-**Two GitHub accounts.** `Henrymcmahon1` owns the repo; `HenryMcMahon` is a different, older
-account whose credential is cached in Windows Credential Manager. The remote is pinned with
-`https://Henrymcmahon1@github.com/...` so it resolves the right one. Use `Henrymcmahon1` when
-connecting Vercel to GitHub.
+**Lenis eases scroll.** Any `scrollTo` in a test must poll until `scrollY` settles. A fixed
+timeout samples mid-flight and gave false readings twice.
 
-**Delete `app/favicon.ico` if a scaffold ever reintroduces it.** Next emits `favicon.ico`
-*before* `icon.svg`, so the Next.js logo would become the site's favicon.
-`app/icon.svg` is generated from the real mark geometry.
+**Network Solutions' account area renders blank under browser automation.** Do not try to drive
+it. DNS is at Vercel now anyway.
+
+**Vercel certs do not always auto-issue.** A `000` from curl on a fresh domain usually means no
+certificate exists (`vercel certs ls` confirms), not a DNS fault. Force with `vercel certs issue`.
+
+**`npm audit fix --force` wanted to install `next@9.3.3`.** It is not a fix. `sharp` and
+`postcss` are pinned via `overrides` in `package.json` instead, which cleared all 7 advisories.
 
 ---
 
 ## 6. How to verify anything
 
 ```bash
-npm test          # 61 tests: geometry, contrast, schema, route, copy guardrails
-npx eslint .      # must be silent
-npx tsc --noEmit  # must be silent
-npm run build     # must compile clean
-npm run dev       # http://localhost:3000
+npm test                                            # 171 tests
+npx eslint .                                        # must be silent
+npx tsc --noEmit                                    # must be silent
+npm run build                                       # must compile clean
+npm audit --omit=dev                                # must be 0
+
+node scripts/preflight-enquiry.mjs                  # which env vars exist, what a visitor gets
+node scripts/preflight-enquiry.mjs --smoke          # sends ONE real labelled test enquiry
+node scripts/audit-responsive.mjs <url>             # overflow, blank screens, tap targets
+node scripts/audit-motion.mjs <url>                 # proves the motion MOVES, 31 assertions
+node scripts/audit-enquiry.mjs http://localhost:3000 # the 503 path and the mailto fallback
 ```
 
-**The tests are not decoration.** They encode commitments: measured contrast ratios, the
-banned copy list, that the Unlock animation's final frame is byte-identical to the canonical
-mark, that the service key never appears in a client component, and that an email failure
-never loses a lead. If one fails, fix the code, not the test.
+`audit-enquiry` asserts the **unconfigured** branch, so run it against a local server with no
+`RESEND_API_KEY`, not production.
 
-**Blank-screen sweep.** This project's motion bugs all manifested as empty screens. After
-any motion change, walk the page in third-viewport steps and measure visible non-transparent
-text at each stop, waiting for scroll to settle. `scripts/audit-responsive.mjs` does this
-across routes and viewports with Playwright — it was written but never run, so treat it as a
-starting point rather than proven.
+**The tests are not decoration.** They encode commitments: measured contrast ratios, the banned
+copy list, that no secret appears in a client component, that no `NEXT_PUBLIC_` variable other
+than the site URL exists, that email HTML escapes user input, that the CSV export defuses
+spreadsheet formula injection, and that the pin never runs under reduced motion. If one fails,
+fix the code.
 
-**Mobile.** Windows Chrome will not size a window below 500px. To test 375px, constrain the
-document (`documentElement.style.width = '375px'`) — every breakpoint sits above 500, so the
-same mobile CSS applies. Or use the Playwright script.
+**Deploy is manual:**
+
+```bash
+git push origin main && npx vercel --prod --yes
+```
 
 ---
 
-## 7. Open recommendations Henry has not acted on
+## 7. Credentials and where they live
 
-These are mine, not his instructions. Raise them, do not just do them.
+Nothing secret is in the repo. All of it is in Vercel → Settings → Environment Variables, and
+values can be revealed there with the eye icon.
 
-1. **Un-pin "What you receive."** It is a list, not a sequence, and it is the third pinned
-   section in a row. Roughly −2 screens and it makes the remaining pins feel deliberate.
-   The home page is currently **~13 screens**, which is long for a B2B page.
-2. **Rights-first on the home page.** It exists as step 00 of How it works and as a line
-   under the form, but the standalone trust block now only lives on `/about`. For a buyer
-   whose whole hesitation is "can I trust you with my masters", that is the page most of
-   them will never reach.
-3. **The name.** Materials use both *Lyrical* and *Lyricall*. The site assumes **Lyrical**.
-   Jordan has not confirmed.
-4. **Jordan's bio** claims The Happy Co. grew past "$100 million in annual revenue". A
-   specific, checkable claim about a third party on a credibility page. Worth confirming.
-5. **The tagline changed** from Jordan's "One song. Any language. Same soul." to "**Every**
-   song…". He authored the original in Brand Bible v1.2 and may not know.
+| Variable | State |
+|---|---|
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Set (Preview + Production) |
+| `RESEND_API_KEY` | Set (Preview + Production). Will be replaced when the new Resend account exists |
+| `ENQUIRY_TO_EMAIL`, `ENQUIRY_FROM_EMAIL`, `GATE_SECRET` | Set (all three environments) |
+| `NEXT_PUBLIC_SITE_URL` | `https://lyricalglobal.com` (Production + Preview) |
+| `ADMIN_PASSWORD` | Set (all three). **Rotated 2026-07-31 after I leaked the previous value.** |
+
+`GATE_SECRET` signs two different things: the visitor audio-gate cookie and the `/leads`
+session. The admin payload is namespaced `admin:` for that reason — without it, every visitor
+who asked for examples would hold a valid admin session. A test asserts a gate token is rejected.
 
 ---
 
@@ -292,22 +248,37 @@ These are mine, not his instructions. Raise them, do not just do them.
 | Path | Responsibility |
 |---|---|
 | `lib/mark.ts` | Pure Bézier geometry. The mark is *generated*, never hand-drawn |
-| `lib/mark-states.ts` | Named outline sets: `APPROX` (the logo), `EQUAL` (pause bars) |
-| `lib/site.ts` | Canonical origin, with Vercel fallbacks |
-| `lib/gate.ts` | HMAC cookie recording "this visitor asked for examples" |
-| `lib/enquiry-schema.ts` | Zod schema shared by client and server |
-| `app/api/enquiry/route.ts` | Validate → Supabase → Resend → cookie, with the degradation ladder |
-| `app/icon.svg` | Generated from the same geometry as the mark. Regenerate if geometry changes |
-| `components/Pinned*.tsx` | The pinned sections. All CSS-gated to desktop |
-| `components/sections/` | One file per section, `S01`–`S10` |
-| `content/demos.json` | Audio manifest. Flip `hasAudio` when files land |
-| `docs/superpowers/specs/` | The design spec. Still the source of truth |
-| `CLAUDE.md` | The short version of the rules, loaded automatically |
+| `lib/scroll-progress.ts` | The two clocks. Read its doc comment before using either |
+| `lib/enquiry-email.ts` | One source for the notification and the confirmation, plus the mailto fallback |
+| `lib/enquiry-schema.ts` | Zod schema. `name` is conditionally required: optional for the gate |
+| `lib/admin-auth.ts` | `/leads` session signing and password check. Fails closed |
+| `lib/rate-limit.ts` | In-memory limiter. Read the honest limitation in its doc comment |
+| `lib/csv.ts` | CSV writer that defuses spreadsheet formula injection |
+| `app/api/enquiry/route.ts` | Validate → rate limit → Supabase → Resend → cookie, with a degradation ladder |
+| `app/leads/` | The enquiry inbox. Page, server actions, CSV export route |
+| `components/Pinned*.tsx` | The pinned sections, now pinning at every width |
+| `next.config.ts` | Security headers, CSP, and the www → apex redirect |
+| `brand-kit/` | Generated brand kit. Share the folder; start at `brand-guide.html` |
+| `supabase/schema.sql` | Idempotent. Safe to re-run |
 
 **Audio drop-in:** `public/audio/{src}-{tgt}/{slug}.original.mp3` and `.translated.mp3`,
-lowercase pair folder, then set `hasAudio: true`. The wheels and player read the manifest,
-so adding a pair is a data change.
+lowercase pair folder, then set `hasAudio: true`. Adding a pair is a data change.
 
-⚠️ The "Send me before and afters" button currently promises **a personal email**, because no
-audio exists. If audio is published, update that copy — and if a dashboard is ever built,
-only then promise one.
+⚠️ The "Send me before and afters" button promises **a personal email**, because no audio
+exists. If audio is published, update that copy.
+
+---
+
+## 9. Do not repeat these mistakes
+
+Four things went wrong in this session that were mine, not the code's:
+
+1. **A credential in a committed file.** Covered in §0.
+2. **Trusting a control I had not measured.** I shipped rate limiting and a weak generated
+   password believing the limiter protected it. A live test showed it did not throttle at all.
+   Measure the control, then choose the password strength that survives the control failing.
+3. **Tests that asserted the wrong property.** Twice a "failure" was my assertion, not the
+   code: checking class names where I should have checked `position: sticky`, and checking
+   elements at rest where I should have checked only what was on screen. When a test fails,
+   ask what property actually matters before touching either side.
+4. **Reporting a sandbox artifact as a user-facing fault.** See §0 item 2.
