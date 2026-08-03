@@ -77,6 +77,34 @@ export async function logout() {
   redirect('/leads')
 }
 
+/**
+ * Delete one enquiry, permanently.
+ *
+ * This exists for two reasons, and the second is the important one. A test row lands in the
+ * inbox during setup and reads like a real lead. And this table holds real people's names,
+ * addresses and free text: when somebody asks for their data to be removed, that has to be
+ * possible without opening the database by hand.
+ *
+ * There is no soft delete. A row someone asked you to erase, kept under a flag, is still the
+ * row they asked you to erase.
+ *
+ * The confirmation step is a page state rather than a browser dialog, so it works with
+ * JavaScript disabled and cannot be skipped by posting straight to this action: the guard
+ * below is what actually protects it, not the button someone clicked to get here.
+ */
+export async function deleteLead(formData: FormData) {
+  if (!(await hasAdminSession())) redirect('/leads')
+
+  const id = String(formData.get('id') ?? '')
+  if (!id) return
+
+  await supabaseAdmin().from('enquiries').delete().eq('id', id)
+
+  revalidatePath('/leads')
+  // Back to the list, and out of the confirm state, so a refresh cannot re-post it.
+  redirect(formData.get('show') === 'all' ? '/leads?show=all&deleted=1' : '/leads?deleted=1')
+}
+
 export async function setHandled(formData: FormData) {
   // Re-checked here, not just in the page. A server action is a POST endpoint like any
   // other, and reaching it does not require having rendered the page first.
