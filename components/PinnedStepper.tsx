@@ -24,7 +24,6 @@ export function PinnedStepper({
   intro,
   steps,
   numbered = true,
-  startAt = 1,
 }: {
   /**
    * Short. It is the pinned header on a phone as well as the heading, so a sentence here
@@ -36,9 +35,16 @@ export function PinnedStepper({
   intro?: string
   steps: Step[]
   numbered?: boolean
-  /** 0 lets a precondition sit at step 00 rather than renumbering the real sequence. */
-  startAt?: number
 }) {
+  /*
+   * Everything counts from 01.
+   *
+   * There used to be a `startAt` prop so "It starts with permission" could sit at step 00,
+   * on the argument that a precondition is not part of the sequence. It read as a bug beside
+   * the other pinned section counting 01, 02, 03, and one section using a different base from
+   * the other is a worse problem than a precondition sharing a number with a step. Removed
+   * rather than defaulted, so it cannot come back by accident.
+   */
   const trackRef = useRef<HTMLDivElement>(null)
   const barRef = useRef<HTMLElement>(null)
   const [active, setActive] = useState(0)
@@ -88,17 +94,27 @@ export function PinnedStepper({
     }
   }, [steps.length])
 
+  // Indigo here too. The mobile pinned header uses it, and the same heading rendering in two
+  // different colours depending on window width is the kind of inconsistency that reads as
+  // an accident rather than a decision.
   const heading = (
     <>
-      <h2 className="font-brand text-4xl leading-tight tracking-tight text-balance">{title}</h2>
+      <h2 className="font-brand text-4xl leading-tight tracking-tight text-balance text-indigo">
+        {title}
+      </h2>
       {intro && <p className="mt-5 max-w-sm leading-relaxed text-graphite/70">{intro}</p>}
     </>
   )
 
   return (
     <>
-      {/* Mobile: the headline arrives at full size in normal flow, then hands over to the pin. */}
-      <div className="mx-auto max-w-6xl px-6 pb-12 md:hidden">{heading}</div>
+      {/*
+        No mobile heading block above the track any more.
+
+        It rendered the title at full size in normal flow and then the pinned panel rendered
+        it again, so a phone showed the same words twice within one screen of each other. The
+        panel is now the only place the section names itself.
+      */}
 
       <div
         ref={trackRef}
@@ -150,15 +166,25 @@ export function PinnedStepper({
                 Desktop keeps the real heading in the left column, which never scrolls away,
                 so this is mobile only rather than saying it twice.
               */}
-              <div className="mb-8 flex items-baseline justify-between gap-4 border-b border-graphite/15 pb-3 md:hidden">
-                <h3 className="font-brand text-2xl leading-none tracking-tight">{title}</h3>
-                <span className="font-mono text-[13px] tabular-nums text-indigo">
-                  {String(active + startAt).padStart(2, '0')}
-                  <span className="text-graphite/35">
-                    {' / '}
-                    {String(steps.length - 1 + startAt).padStart(2, '0')}
+              <div className="mb-8 border-b border-graphite/15 pb-4 md:hidden">
+                <div className="flex items-baseline justify-between gap-4">
+                  {/* Indigo: this is the section's identity and the one fixed point while
+                      everything under it changes. Graphite would make it compete with the
+                      step headings, which are the thing actually moving. */}
+                  <h2 className="font-brand text-3xl leading-none tracking-tight text-indigo">
+                    {title}
+                  </h2>
+                  <span className="font-mono text-[13px] tabular-nums text-graphite/45">
+                    {String(active + 1).padStart(2, '0')}
+                    <span className="text-graphite/30">
+                      {' / '}
+                      {String(steps.length).padStart(2, '0')}
+                    </span>
                   </span>
-                </span>
+                </div>
+                {intro && (
+                  <p className="mt-3 text-sm leading-relaxed text-graphite/65">{intro}</p>
+                )}
               </div>
 
               <ul className="pin-stack flex flex-col gap-12 md:gap-0">
@@ -172,7 +198,7 @@ export function PinnedStepper({
                       // Desktop only: the persistent header above already carries the
                       // position on a phone, and two copies of it on one screen is noise.
                       <span className="hidden font-mono text-xs tracking-[0.18em] text-indigo tabular-nums md:inline">
-                        {String(i + startAt).padStart(2, '0')}
+                        {String(i + 1).padStart(2, '0')}
                       </span>
                     )}
                     <h3 className="mt-3 font-brand text-3xl leading-tight tracking-tight md:text-4xl">

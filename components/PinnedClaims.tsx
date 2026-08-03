@@ -82,17 +82,23 @@ export function PinnedClaims({
 
   // Copy lives in the section now, not here. It was hardcoded, which meant the component
   // could only ever render one section.
+  // Indigo, matching the mobile pinned header. See PinnedStepper.
   const heading = (
     <>
-      <h2 className="font-brand text-4xl leading-tight tracking-tight text-balance">{title}</h2>
+      <h2 className="font-brand text-4xl leading-tight tracking-tight text-balance text-indigo">
+        {title}
+      </h2>
       {intro && <p className="mt-5 max-w-sm leading-relaxed text-graphite/70">{intro}</p>}
     </>
   )
 
   return (
     <>
-      {/* Mobile: the headline arrives at full size, then hands over to the pinned panel. */}
-      <div className="mx-auto max-w-6xl px-6 pb-12 md:hidden">{heading}</div>
+      {/*
+        No mobile heading block above the track. It rendered the title at full size and then
+        the pinned panel rendered it again, so a phone showed the same words twice within a
+        screen of each other. The panel is the only place the section names itself now.
+      */}
 
       <div ref={trackRef} className="pin-track" style={{ '--steps': claims.length } as React.CSSProperties}>
         <div className="pin-panel">
@@ -124,15 +130,24 @@ export function PinnedClaims({
                 because a sentence held here cramps the claims. Desktop keeps the real
                 heading in the left column, which persists on its own.
               */}
-              <div className="mb-8 flex items-baseline justify-between gap-4 border-b border-graphite/15 pb-3 md:hidden">
-                <h3 className="font-brand text-2xl leading-none tracking-tight">{title}</h3>
-                <span className="font-mono text-[13px] tabular-nums text-indigo">
-                  {String(active + 1).padStart(2, '0')}
-                  <span className="text-graphite/35">
-                    {' / '}
-                    {String(claims.length).padStart(2, '0')}
+              <div className="mb-8 border-b border-graphite/15 pb-4 md:hidden">
+                <div className="flex items-baseline justify-between gap-4">
+                  {/* Indigo: the section's identity, and the one fixed point while the
+                      claims underneath change. See PinnedStepper for the same reasoning. */}
+                  <h2 className="font-brand text-3xl leading-none tracking-tight text-indigo">
+                    {title}
+                  </h2>
+                  <span className="font-mono text-[13px] tabular-nums text-graphite/45">
+                    {String(active + 1).padStart(2, '0')}
+                    <span className="text-graphite/30">
+                      {' / '}
+                      {String(claims.length).padStart(2, '0')}
+                    </span>
                   </span>
-                </span>
+                </div>
+                {intro && (
+                  <p className="mt-3 text-sm leading-relaxed text-graphite/65">{intro}</p>
+                )}
               </div>
 
               <ul className="pin-stack flex flex-col gap-12 md:gap-0">

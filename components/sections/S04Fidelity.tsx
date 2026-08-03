@@ -36,7 +36,7 @@ export default function S04Fidelity() {
     <section id="technology" className="pt-24 md:py-0">
       <PinnedClaims
         title="Our technology"
-        intro="What changes is the language. Nothing else. Every stage is measured against the original record, and every song is checked by ear before it reaches you."
+        intro="What changes is the language. Nothing else. Every song is checked by ear before it reaches you."
         claims={CLAIMS}
       />
     </section>
