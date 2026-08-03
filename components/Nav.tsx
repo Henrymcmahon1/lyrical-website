@@ -2,11 +2,22 @@ import Link from 'next/link'
 import { Wordmark } from './Wordmark'
 
 /**
- * Nav labels are plain language. Never "Solutions".
+ * One destination and one action, at every width.
  *
- * On a phone the secondary links drop for width, but About is kept: it carries the story,
- * the team and the rights position, and hiding it left a phone visitor with no route to
- * any of that. The call to action shortens instead, which costs nothing.
+ * The phone layout was the honest one, so desktop now matches it rather than the other way
+ * round. Two links went:
+ *
+ * - **Hear it** pointed at a page that promises "hear the original against the recreated
+ *   version" and has nothing to play, so the most prominent link on every page advertised
+ *   the site's biggest gap. Put it back the day real audio publishes; it will be the best
+ *   link here.
+ * - **How it works** was an anchor into the middle of a page that is now two content
+ *   sections and about ten screens. Anybody scrolling reaches it without help.
+ *
+ * What remains is what a rights holder actually needs: About, which carries the rights
+ * position and the team, and the way to make contact.
+ *
+ * Nav labels are plain language. Never "Solutions".
  *
  * Touch targets use `min-h-11` (44px) rather than a custom class. A custom class defined
  * outside Tailwind's layers outranks utilities and silently breaks `hidden`.
@@ -28,29 +39,18 @@ export function Nav() {
 
         <div className="ml-auto flex items-center gap-4 text-sm sm:gap-7">
           <Link
-            href="/hear"
-            className="hidden min-h-11 items-center hover:text-indigo sm:inline-flex"
-          >
-            Hear it
-          </Link>
-          <Link
-            href="/#how"
-            className="hidden min-h-11 items-center hover:text-indigo sm:inline-flex"
-          >
-            How it works
-          </Link>
-          <Link
             href="/about"
             className="inline-flex min-h-11 items-center hover:text-indigo"
           >
             About
           </Link>
+          {/* One label at both widths. It used to read "Get started" on a phone and
+              "Start a conversation" on desktop, which is two voices for one button. */}
           <Link
             href="/#enquire"
             className="inline-flex min-h-11 items-center rounded-card bg-indigo px-4 text-cream transition-colors hover:bg-graphite"
           >
-            <span className="sm:hidden">Get started</span>
-            <span className="hidden sm:inline">Start a conversation</span>
+            Get started
           </Link>
         </div>
       </nav>
