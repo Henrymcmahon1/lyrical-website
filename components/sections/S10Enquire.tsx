@@ -31,27 +31,20 @@ export default function S10Enquire() {
             </p>
           </Reveal>
 
-          <Reveal delay={200}>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <a
-                href="#hear"
-                className="nudge rounded-card border border-cream/35 px-7 py-4 text-cream transition-colors hover:border-cream"
-              >
-                Hear an example
-              </a>
-              <a
-                href="#enquiry-form"
-                className="nudge rounded-card bg-ember px-7 py-4 text-cream"
-              >
-                Let&rsquo;s get started <span className="shift-arrow">&rarr;</span>
-              </a>
-            </div>
-          </Reveal>
         </div>
 
+        {/*
+          The two buttons that used to sit here are gone.
+
+          One scrolled UP to the listening section, sending somebody who had reached the ask
+          back to a section with no audio in it. The other scrolled DOWN to this form, which
+          is already on screen by the time you can read the button, so its entire job was
+          "look slightly lower". What replaces both is the form itself, which now opens by
+          asking what the person actually wants.
+        */}
         <div
           id="enquiry-form"
-          className="mx-auto mt-16 max-w-xl border-t border-cream/15 pt-12"
+          className="mx-auto mt-12 max-w-xl border-t border-cream/15 pt-12"
         >
           <EnquiryForm source="footer" tone="dark" />
           <p className="mt-8 text-sm leading-relaxed text-cream/55">
@@ -68,9 +61,14 @@ export default function S10Enquire() {
           */}
           <p className="mt-3 text-sm text-cream/55">
             Or email us directly:{' '}
+            {/*
+              `min-h-11` is 44px. Making this a link without it produced a 15px tap target on
+              every route at phone widths, which the responsive audit caught. A link that is
+              hard to hit is worse than the plain text it replaced.
+            */}
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="text-cream underline decoration-cream/30 underline-offset-4 transition-colors hover:decoration-cream"
+              className="nudge inline-flex min-h-11 items-center text-cream underline decoration-cream/30 underline-offset-4 transition-colors hover:decoration-cream"
             >
               {CONTACT_EMAIL}
             </a>

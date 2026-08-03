@@ -62,7 +62,10 @@ export async function POST(request: Request) {
       ...Object.fromEntries(fd.entries()),
       target_languages: fd.getAll('target_languages').map(String),
       elapsed_ms: Number(fd.get('elapsed_ms') ?? MIN_ELAPSED_MS),
-      unlocked_audio: fd.get('source') === 'gate',
+      // Derived here rather than trusted from the body, so a hand-crafted POST cannot claim
+      // it. The gate is an examples request by definition; on the full form it is the intent
+      // radio, which is optional and defaults to false when nobody picked.
+      unlocked_audio: fd.get('source') === 'gate' || fd.get('intent') === 'examples',
     }
   } else {
     raw = await request.json().catch(() => null)

@@ -5,6 +5,18 @@ import { CONTACT_EMAIL, enquiryMailto } from '@/lib/enquiry-email'
 import { ROLES } from '@/lib/enquiry-schema'
 import { LANGUAGES } from '@/lib/languages'
 
+/**
+ * Why somebody is writing. Two answers, because there are two conversations.
+ *
+ * `examples` sets `unlocked_audio`, the column that has always recorded "this person asked to
+ * hear examples". Reusing it means the choice is visible on /leads and in the notification
+ * with no migration and no second source of truth.
+ */
+const INTENTS = [
+  { value: 'examples', label: 'I’d like to hear examples' },
+  { value: 'project', label: 'I’d like to talk about a project' },
+] as const
+
 const ROLE_LABELS: Record<(typeof ROLES)[number], string> = {
   artist: 'An artist',
   manager: 'A manager',
@@ -75,7 +87,10 @@ export function EnquiryForm({
       target_languages: fd.getAll('target_languages').map(String),
       message: String(fd.get('message') ?? ''),
       source,
-      unlocked_audio: source === 'gate',
+      // The gate IS an examples request, so it stays true there regardless. On the full form
+      // it is whatever they picked, and an unanswered choice stays false, which is not a
+      // guess: false records that they did not ask for examples, which is exactly true.
+      unlocked_audio: source === 'gate' || fd.get('intent') === 'examples',
       website: String(fd.get('website') ?? ''),
       // If the ref somehow never initialised, don't let a real person be treated as a bot.
       elapsed_ms: mountedAt.current ? Date.now() - mountedAt.current : 10_000,
@@ -172,10 +187,33 @@ export function EnquiryForm({
       </div>
 
       {!compact && (
-        <label className="flex flex-col gap-2">
-          <span className="text-sm">Your name</span>
-          <input name="name" required minLength={2} autoComplete="name" className={field} />
-        </label>
+        <>
+          {/*
+            First, because it frames everything under it and it is the one question whose
+            answer changes what the reply should say. It replaced two buttons that both
+            pointed at things already on the same screen.
+
+            Radios, not a select: two options are faster to read side by side than to open.
+            Neither is pre-selected, and nothing here is required. An unanswered choice
+            records `unlocked_audio: false`, which is a true statement rather than a guess.
+          */}
+          <fieldset className="flex flex-col gap-3">
+            <legend className="text-sm">What can we help with?</legend>
+            <div className="flex flex-wrap gap-2">
+              {INTENTS.map((i) => (
+                <label key={i.value} className={chip}>
+                  <input type="radio" name="intent" value={i.value} className="sr-only" />
+                  {i.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <label className="flex flex-col gap-2">
+            <span className="text-sm">Your name</span>
+            <input name="name" required minLength={2} autoComplete="name" className={field} />
+          </label>
+        </>
       )}
 
       <label className="flex flex-col gap-2">

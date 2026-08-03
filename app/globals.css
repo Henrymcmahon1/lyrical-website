@@ -291,33 +291,34 @@ body {
     will-change: transform;
   }
 
-  /* Which way a pinned section advances.
+  /* Which way the page continues. Used by the hero and by every pinned section.
 
-     Absolutely positioned against the panel, which is `position: sticky` and therefore a
-     containing block. Transform and opacity only, so it composites and never lays out.
+     Positioned against whichever parent is a containing block: a pinned panel is
+     `position: sticky` and the hero is explicitly `relative`. Transform and opacity only, so
+     it composites and never lays out.
 
      The drift is deliberately small. A large bounce reads as a button asking to be pressed;
      6px reads as a direction. */
-  .js-motion .pin-cue {
+  .js-motion .scroll-cue {
     position: absolute;
     bottom: 1.75rem;
     left: 50%;
     color: var(--color-indigo);
     opacity: .5;
     transform: translateX(-50%);
-    animation: pin-cue-drift 2.2s cubic-bezier(.45,0,.55,1) infinite;
+    animation: scroll-cue-drift 2.2s cubic-bezier(.45,0,.55,1) infinite;
     transition: opacity .6s ease;
     pointer-events: none;
   }
 
-  /* Gone for good once the reader reaches step two. It has made its point by then, and a
-     permanently animating element beside the copy competes with it. */
-  .js-motion .pin-cue[data-done] {
+  /* Gone for good once it has made its point: the reader reached step two, or, in the hero,
+     scrolled at all. A permanently animating element beside the copy competes with it. */
+  .js-motion .scroll-cue[data-done] {
     opacity: 0;
     animation-play-state: paused;
   }
 
-  @keyframes pin-cue-drift {
+  @keyframes scroll-cue-drift {
     0%, 100% { transform: translate(-50%, 0); }
     50%      { transform: translate(-50%, 6px); }
   }

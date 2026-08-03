@@ -142,6 +142,52 @@ describe('POST /api/enquiry', () => {
     expect(res.status).toBe(303)
     expect(insert).toHaveBeenCalledOnce()
   })
+
+  /**
+   * The intent radio replaced two buttons in the enquire section. It is optional, and it is
+   * the only thing that tells the two kinds of enquiry apart in the inbox, so it is worth
+   * pinning that it cannot be forged and cannot be guessed.
+   *
+   * Read from the form rather than the JSON body on purpose: a value the client asserts about
+   * itself is a value a hand-written POST can assert too.
+   */
+  describe('the intent choice', () => {
+    const post = (extra: Record<string, string>) => {
+      const fd = new FormData()
+      fd.set('name', 'Henry McMahon')
+      fd.set('email', 'henry@example.com')
+      fd.set('source', 'footer')
+      fd.set('elapsed_ms', '9000')
+      for (const [k, v] of Object.entries(extra)) fd.set(k, v)
+      return POST(new Request('http://localhost:3000/api/enquiry', { method: 'POST', body: fd }))
+    }
+
+    it('records an examples request when that is what was chosen', async () => {
+      await post({ intent: 'examples' })
+      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: true })
+    })
+
+    it('records a project enquiry as not an examples request', async () => {
+      await post({ intent: 'project' })
+      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: false })
+    })
+
+    it('treats an unanswered choice as false rather than guessing', async () => {
+      await post({})
+      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: false })
+    })
+
+    it('cannot be forged by asserting it in the body', async () => {
+      // The client says true; the form says nothing. The form wins.
+      await post({ unlocked_audio: 'true' })
+      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: false })
+    })
+
+    it('still treats the examples gate as an examples request', async () => {
+      await post({ source: 'gate', intent: '' })
+      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: true })
+    })
+  })
 })
 
 describe('degrading when the site is deployed before its services exist', () => {

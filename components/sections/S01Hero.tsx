@@ -1,9 +1,12 @@
 import { MarkUnlock } from '../MarkUnlock'
 import { Parallax } from '../Parallax'
+import { ScrollCue } from '../ScrollCue'
 
 export default function S01Hero() {
   return (
-    <section className="mx-auto flex min-h-[84vh] max-w-6xl flex-col items-center justify-center px-6 py-20 text-center">
+    // `relative` so the scroll cue has something to position against. The hero is 84vh, so
+    // the fold lands inside it and nothing else says the page continues.
+    <section className="relative mx-auto flex min-h-[84vh] max-w-6xl flex-col items-center justify-center px-6 py-20 text-center">
       <Parallax speed={0.06}>
         <div className="text-indigo">
           <MarkUnlock size={156} />
@@ -36,6 +39,9 @@ export default function S01Hero() {
           Start a conversation
         </a>
       </div>
+
+      {/* Self managing: the hero has no step state, so the cue retires on the first scroll. */}
+      <ScrollCue />
     </section>
   )
 }
