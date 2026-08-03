@@ -10,7 +10,7 @@ an enquiry form that writes to Supabase and emails you.
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm test         # 56 tests
+npm test         # 186 tests
 npm run build
 ```
 
@@ -28,16 +28,15 @@ It lists which variables exist on Vercel, tells you what a visitor currently get
 submit, and prints the exact commands for whatever is missing. Add `--smoke` once you think
 you are done and it will send one labelled test enquiry end to end.
 
-`ENQUIRY_TO_EMAIL`, `ENQUIRY_FROM_EMAIL` and `GATE_SECRET` are **already set** on Vercel
-across all three environments. Only three remain, and all three need an account only you can
-create: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`.
+**Every variable is set on Vercel and the pipeline is live**, verified end to end on
+production. What follows is the setup record, and what you would repeat to stand this up
+somewhere else.
 
-Until `RESEND_API_KEY` exists the route returns **503** and the form offers the visitor a
-prefilled email instead, so nothing typed is thrown away. That is a safety net, not a
-substitute: it costs the visitor a second step.
+The site still runs without any of these. With no `RESEND_API_KEY` the route returns **503**
+and the form offers the visitor a prefilled email instead, so nothing typed is thrown away.
+That is a safety net, not a substitute: it costs the visitor a second step.
 
-The site runs right now without any accounts. To make enquiries actually arrive, do these
-four things. **They all have free tiers; none of this costs money.**
+**All four have free tiers; none of this costs money.**
 
 ### 1. Supabase (the database)
 
@@ -55,14 +54,24 @@ To read your enquiries: **Table Editor → enquiries**.
 
 ### 2. Resend (the email alert)
 
-1. Create an account at [resend.com](https://resend.com) using **henry.jamcmahon@gmail.com**.
-2. **API Keys → Create API Key** → `RESEND_API_KEY`.
-3. Leave `ENQUIRY_FROM_EMAIL=onboarding@resend.dev` for now.
+**Already done.** The account is owned by `info@lyricalglobal.com`, `lyricalglobal.com` is
+verified, and the live key is named `lyrical-website-prod` with sending access only.
 
-> ⚠️ Resend's test sender can only deliver to the address that owns the Resend account.
-> That is why step 1 says to sign up with your Gmail. Once you own a domain, verify it in
-> Resend and change `ENQUIRY_FROM_EMAIL` to something like `hello@yourdomain.com` — then it
-> can send anywhere.
+Kept for whoever sets this up again somewhere else:
+
+1. Create an account at [resend.com](https://resend.com).
+2. **Domains → Add Domain**, then add the DKIM and SPF records it gives you.
+3. **API Keys → Create API Key** → `RESEND_API_KEY`. Sending access, not full access.
+4. Set `ENQUIRY_FROM_EMAIL` to an address on the verified domain.
+
+> ⚠️ Until a domain is verified, Resend's test sender only delivers to the address that owns
+> the account. `canEmailStrangers()` in `lib/enquiry-email.ts` reads that from the sender, so
+> the enquirer confirmation switches itself on the moment `ENQUIRY_FROM_EMAIL` stops being an
+> `@resend.dev` address, and off again if it ever goes back.
+
+> ⚠️ If the domain also receives mail elsewhere, put Resend's SPF on a subdomain such as
+> `send.`, and never add its "Enable Receiving" record. That one is an MX at the apex with a
+> lower priority number than most mail hosts use, so it silently captures all inbound mail.
 
 ### 3. A gate secret
 
@@ -83,7 +92,7 @@ SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
 ENQUIRY_TO_EMAIL=jordan@lyricalglobal.com,henry@lyricalglobal.com
-ENQUIRY_FROM_EMAIL=onboarding@resend.dev
+ENQUIRY_FROM_EMAIL=info@lyricalglobal.com
 GATE_SECRET=
 ```
 
@@ -173,7 +182,8 @@ Everything animates `transform` and `opacity` only, and all of it is disabled un
 
 ## Still open
 
-- Jordan's and Henry's real bios and roles — placeholders in `content/team.json`
-- Real demo audio
+- Real demo audio. Nothing is rights-cleared yet, so this is a commercial task, not a
+  technical one
+- No social proof and no pricing signal anywhere on the site
 
 Settled since: the domain is live at **lyricalglobal.com**, and the name is **Lyrical**, one L.

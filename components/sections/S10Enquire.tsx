@@ -1,5 +1,6 @@
 import { EnquiryForm } from '../EnquiryForm'
 import { Reveal } from '../Reveal'
+import { CONTACT_EMAIL } from '@/lib/enquiry-email'
 
 /**
  * The ask. Two ways in, because the two audiences convert differently: an artist or
@@ -57,8 +58,22 @@ export default function S10Enquire() {
             Every version is authorised before it is made. Voice models are built only from
             catalogues we have permission to use.
           </p>
+          {/*
+            Read from CONTACT_EMAIL rather than written out. This line held a hardcoded
+            personal address that survived a rename of every other copy of it, precisely
+            because it was a literal and nothing pointed at it.
+
+            A link, not plain text: on a phone an address you cannot tap is a instruction to
+            go and type it somewhere else, which is the opposite of "directly".
+          */}
           <p className="mt-3 text-sm text-cream/55">
-            Or email us directly: henry.jamcmahon@gmail.com
+            Or email us directly:{' '}
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="text-cream underline decoration-cream/30 underline-offset-4 transition-colors hover:decoration-cream"
+            >
+              {CONTACT_EMAIL}
+            </a>
           </p>
         </div>
       </div>

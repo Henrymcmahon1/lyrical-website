@@ -139,6 +139,29 @@ describe('typography rules', () => {
       .replace(/^\s*\/\/.*$/gm, '') // // line
   }
 
+  /**
+   * A personal address hardcoded into a section survived a rename of every other copy of it,
+   * because a search for the constant could never find a string literal. It shipped on the
+   * live site pointing at a founder's Gmail while the rest of the page said otherwise.
+   *
+   * Rendered copy names the company address by importing CONTACT_EMAIL. Anything else is a
+   * second place the address has to be kept in step, and this is the proof that there isn't
+   * one. Scripts and docs are excluded: `preflight-enquiry` legitimately mails a real person.
+   */
+  it('publishes no personal email address', () => {
+    const offenders: string[] = []
+    for (const f of facing) {
+      stripComments(readFileSync(f, 'utf8'))
+        .split('\n')
+        .forEach((line, i) => {
+          if (/[\w.+-]+@(gmail|outlook|hotmail|yahoo|icloud)\.com/i.test(line)) {
+            offenders.push(`${f}:${i + 1} ${line.trim()}`)
+          }
+        })
+    }
+    expect(offenders, `personal address in rendered copy:\n${offenders.join('\n')}`).toEqual([])
+  })
+
   it('uses no em-dash in rendered copy', () => {
     const offenders: string[] = []
     for (const f of facing) {
