@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { trackProgress } from '@/lib/scroll-progress'
+import { PIN_ITEM_BODY, PIN_ITEM_HEADING } from './pinned-type'
 
 export type Claim = { h: string; p: string }
 
@@ -162,8 +163,8 @@ export function PinnedClaims({
                     <span className="hidden font-mono text-xs tracking-[0.18em] text-indigo md:inline">
                       {String(i + 1).padStart(2, '0')}
                     </span>
-                    <h3 className="mt-3 font-brand text-2xl tracking-tight md:text-3xl">{c.h}</h3>
-                    <p className="mt-3 max-w-md leading-relaxed text-graphite/75">{c.p}</p>
+                    <h3 className={PIN_ITEM_HEADING}>{c.h}</h3>
+                    <p className={PIN_ITEM_BODY}>{c.p}</p>
                   </li>
                 ))}
               </ul>

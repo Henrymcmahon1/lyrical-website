@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { trackProgress } from '@/lib/scroll-progress'
 import { ScrollCue } from './ScrollCue'
+import { PIN_ITEM_BODY, PIN_ITEM_HEADING } from './pinned-type'
 
 export type Step = { h: string; p: string }
 
@@ -201,12 +202,8 @@ export function PinnedStepper({
                         {String(i + 1).padStart(2, '0')}
                       </span>
                     )}
-                    <h3 className="mt-3 font-brand text-3xl leading-tight tracking-tight md:text-4xl">
-                      {s.h}
-                    </h3>
-                    <p className="mt-4 max-w-md text-lg leading-relaxed text-graphite/75">
-                      {s.p}
-                    </p>
+                    <h3 className={PIN_ITEM_HEADING}>{s.h}</h3>
+                    <p className={PIN_ITEM_BODY}>{s.p}</p>
                   </li>
                 ))}
               </ul>
