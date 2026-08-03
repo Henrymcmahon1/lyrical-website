@@ -23,8 +23,19 @@ import { Wordmark } from './Wordmark'
  * outside Tailwind's layers outranks utilities and silently breaks `hidden`.
  */
 export function Nav() {
+  /*
+   * White, not cream, and opaque.
+   *
+   * White is outside the four locked brand tokens, which is deliberate and Henry's call: the
+   * bar reads as a distinct surface sitting above the cream page rather than dissolving into
+   * it. The backdrop blur went with the translucency, because blurring behind an opaque layer
+   * buys nothing and still costs a compositing layer on every scroll frame.
+   *
+   * Contrast is unaffected: graphite on white is about 17:1 and indigo about 8.6:1, both well
+   * clear of AA.
+   */
   return (
-    <header className="sticky top-0 z-40 border-b border-graphite/10 bg-cream/85 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-graphite/10 bg-white">
       <nav
         aria-label="Primary"
         className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-2 sm:gap-6 sm:py-3"

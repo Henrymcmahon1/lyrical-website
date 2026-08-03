@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Mark } from './Mark'
+import { Trademark } from './Trademark'
 
 /** The STACKED lockup — the primary, sanctioned arrangement. Mark above wordmark. */
 export function Footer() {
@@ -7,7 +8,10 @@ export function Footer() {
     <footer className="border-t border-graphite/10 px-6 py-16">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 text-center">
         <Mark size={44} className="text-indigo" />
-        <span className="font-brand text-3xl tracking-tight">lyrical</span>
+        <span className="font-brand text-3xl tracking-tight">
+          lyrical
+          <Trademark />
+        </span>
         <p className="font-brand text-lg text-graphite/70">
           Every song. Any language. Same soul.
         </p>

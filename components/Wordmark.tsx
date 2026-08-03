@@ -1,4 +1,5 @@
 import { Mark } from './Mark'
+import { Trademark } from './Trademark'
 
 /**
  * Horizontal utility lockup — nav bars, email signatures, letterheads, contract headers.
@@ -12,6 +13,7 @@ export function Wordmark({ size = 'sm' }: { size?: 'sm' | 'lg' }) {
         className={`font-brand tracking-tight ${size === 'lg' ? 'text-4xl' : 'text-2xl'}`}
       >
         lyrical
+        <Trademark />
       </span>
     </span>
   )
