@@ -98,7 +98,7 @@ export async function auditMobilePin({ browser, base, check }) {
 
   for (const [sel, panelSel, name] of [
     ['.audience-track', '.audience-panel', 'audience'],
-    ['.pin-track', '.pin-panel', 'what we do'],
+    ['.pin-track', '.pin-panel', 'our technology'],
     ['#how .pin-track', '.pin-panel', 'how it works'],
   ]) {
     /*

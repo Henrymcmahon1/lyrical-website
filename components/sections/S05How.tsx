@@ -37,9 +37,8 @@ export default function S05How() {
   return (
     <section id="how">
       <PinnedStepper
-        eyebrow="How it works"
-        title="It begins with your permission, and ends with your approval."
-        intro="You authorise it and you sign it off. Everything in between is ours."
+        title="How it works"
+        intro="It begins with your permission, and ends with your approval. You authorise it and you sign it off. Everything in between is ours."
         steps={STEPS}
         startAt={0}
       />

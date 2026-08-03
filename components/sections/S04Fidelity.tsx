@@ -33,8 +33,12 @@ const CLAIMS: Claim[] = [
 
 export default function S04Fidelity() {
   return (
-    <section id="what-we-do" className="pt-24 md:py-0">
-      <PinnedClaims claims={CLAIMS} label="What we do" />
+    <section id="technology" className="pt-24 md:py-0">
+      <PinnedClaims
+        title="Our technology"
+        intro="What changes is the language. Nothing else. Every stage is measured against the original record, and every song is checked by ear before it reaches you."
+        claims={CLAIMS}
+      />
     </section>
   )
 }

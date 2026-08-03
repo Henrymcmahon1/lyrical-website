@@ -20,15 +20,19 @@ export type Step = { h: string; p: string }
  * the earlier mobile layout got wrong.
  */
 export function PinnedStepper({
-  eyebrow,
   title,
   intro,
   steps,
   numbered = true,
   startAt = 1,
 }: {
-  eyebrow?: string
+  /**
+   * Short. It is the pinned header on a phone as well as the heading, so a sentence here
+   * would eat a third of the panel and cramp the steps, which is what the earlier mobile
+   * layout got wrong. Two or three words.
+   */
   title: string
+  /** The longer framing. Introduces the section, then scrolls away with it. */
   intro?: string
   steps: Step[]
   numbered?: boolean
@@ -86,15 +90,8 @@ export function PinnedStepper({
 
   const heading = (
     <>
-      {eyebrow && (
-        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/45">
-          {eyebrow}
-        </p>
-      )}
-      <h2 className="mt-4 font-brand text-4xl leading-tight tracking-tight text-balance">
-        {title}
-      </h2>
-      {intro && <p className="mt-5 max-w-sm text-graphite/70">{intro}</p>}
+      <h2 className="font-brand text-4xl leading-tight tracking-tight text-balance">{title}</h2>
+      {intro && <p className="mt-5 max-w-sm leading-relaxed text-graphite/70">{intro}</p>}
     </>
   )
 
@@ -140,30 +137,29 @@ export function PinnedStepper({
 
             <div>
               {/*
-                What section am I in?
+                The title, pinned.
 
-                On a phone the full heading arrives above the track and scrolls away, so once
-                the panel takes over, this label is the only thing naming the section. At
-                11px and 45% opacity it was a caption, and readers reached the second step
-                without knowing what they were reading about.
+                On a phone the heading arrives above the track at full size and scrolls away;
+                this is where it lands, so the section names itself for the whole hold. It
+                used to be a separate 11px uppercase label, which said the title's job in a
+                caption's voice and left readers on step two unsure what they were reading.
 
-                Now it reads as a header: larger, full contrast, and separated by a rule so
-                it sits above the content rather than beside it. Desktop keeps the real
-                heading in the left column, which never scrolls away, so this stays mobile
-                only rather than saying it twice.
+                The title only. The intro stays above and scrolls off, because a sentence
+                held here costs about a third of a 375px panel and cramps the steps.
+
+                Desktop keeps the real heading in the left column, which never scrolls away,
+                so this is mobile only rather than saying it twice.
               */}
-              {eyebrow && (
-                <p className="mb-8 flex items-baseline justify-between gap-4 border-b border-graphite/15 pb-3 font-mono text-[13px] uppercase tracking-[0.16em] text-graphite md:hidden">
-                  <span>{eyebrow}</span>
-                  <span className="tabular-nums text-indigo">
-                    {String(active + startAt).padStart(2, '0')}
-                    <span className="text-graphite/35">
-                      {' / '}
-                      {String(steps.length - 1 + startAt).padStart(2, '0')}
-                    </span>
+              <div className="mb-8 flex items-baseline justify-between gap-4 border-b border-graphite/15 pb-3 md:hidden">
+                <h3 className="font-brand text-2xl leading-none tracking-tight">{title}</h3>
+                <span className="font-mono text-[13px] tabular-nums text-indigo">
+                  {String(active + startAt).padStart(2, '0')}
+                  <span className="text-graphite/35">
+                    {' / '}
+                    {String(steps.length - 1 + startAt).padStart(2, '0')}
                   </span>
-                </p>
-              )}
+                </span>
+              </div>
 
               <ul className="pin-stack flex flex-col gap-12 md:gap-0">
                 {steps.map((s, i) => (

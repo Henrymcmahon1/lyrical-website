@@ -19,11 +19,17 @@ export type Claim = { h: string; p: string }
  */
 export function PinnedClaims({
   claims,
-  label,
+  title,
+  intro,
 }: {
   claims: Claim[]
-  /** Compact form of the heading, shown inside the pinned panel on mobile. */
-  label?: string
+  /**
+   * Short. It is the pinned header on a phone as well as the heading, so a sentence here
+   * would cost about a third of the panel and cramp the claims. Two or three words.
+   */
+  title: string
+  /** The longer framing. Introduces the section, then scrolls away with it. */
+  intro?: string
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const barRef = useRef<HTMLElement>(null)
@@ -74,15 +80,12 @@ export function PinnedClaims({
     }
   }, [claims.length])
 
+  // Copy lives in the section now, not here. It was hardcoded, which meant the component
+  // could only ever render one section.
   const heading = (
     <>
-      <h2 className="font-brand text-4xl leading-tight tracking-tight text-balance">
-        What changes is the language. Nothing else.
-      </h2>
-      <p className="mt-5 max-w-sm text-graphite/70">
-        Every stage is measured against the original record, and every song is checked by ear
-        before it reaches you.
-      </p>
+      <h2 className="font-brand text-4xl leading-tight tracking-tight text-balance">{title}</h2>
+      {intro && <p className="mt-5 max-w-sm leading-relaxed text-graphite/70">{intro}</p>}
     </>
   )
 
@@ -116,23 +119,21 @@ export function PinnedClaims({
 
             <div>
               {/*
-                What section am I in? Same reasoning as PinnedStepper: on a phone the heading
-                scrolls away and this label is all that names the section, so it is sized and
-                weighted as a header rather than a caption. Desktop keeps the real heading in
-                the left column, which persists on its own.
+                The title, pinned. Same reasoning as PinnedStepper: on a phone the heading
+                scrolls away, so this is where the section keeps naming itself. Title only,
+                because a sentence held here cramps the claims. Desktop keeps the real
+                heading in the left column, which persists on its own.
               */}
-              {label && (
-                <p className="mb-8 flex items-baseline justify-between gap-4 border-b border-graphite/15 pb-3 font-mono text-[13px] uppercase tracking-[0.16em] text-graphite md:hidden">
-                  <span>{label}</span>
-                  <span className="tabular-nums text-indigo">
-                    {String(active + 1).padStart(2, '0')}
-                    <span className="text-graphite/35">
-                      {' / '}
-                      {String(claims.length).padStart(2, '0')}
-                    </span>
+              <div className="mb-8 flex items-baseline justify-between gap-4 border-b border-graphite/15 pb-3 md:hidden">
+                <h3 className="font-brand text-2xl leading-none tracking-tight">{title}</h3>
+                <span className="font-mono text-[13px] tabular-nums text-indigo">
+                  {String(active + 1).padStart(2, '0')}
+                  <span className="text-graphite/35">
+                    {' / '}
+                    {String(claims.length).padStart(2, '0')}
                   </span>
-                </p>
-              )}
+                </span>
+              </div>
 
               <ul className="pin-stack flex flex-col gap-12 md:gap-0">
                 {claims.map((c, i) => (
