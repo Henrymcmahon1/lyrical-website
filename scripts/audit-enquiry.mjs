@@ -50,7 +50,15 @@ if (hasLink) {
   const href = await link.getAttribute('href')
   const u = new URL(href)
   const body = u.searchParams.get('body') ?? ''
-  check('addressed to the founder inbox', u.pathname === 'henry.jamcmahon@gmail.com', u.pathname)
+  /**
+   * Asserted against the address the page itself shows, not a literal copied into this
+   * script. A hardcoded address here drifts the moment CONTACT_EMAIL changes, and then the
+   * audit fails for a reason that has nothing to do with the behaviour it is checking. The
+   * property that matters is that the link goes where the visitor was just told to write.
+   */
+  const shown = (await alert.innerText()).match(/[\w.+-]+@[\w.-]+\.\w+/)?.[0]
+  check('the fallback names a contact address to the visitor', Boolean(shown), shown)
+  check('addressed to the address the page shows', u.pathname === shown, `${u.pathname} vs ${shown}`)
   check('subject carries name and role', u.searchParams.get('subject') === 'Lyrical enquiry: Preflight Tester (label)', u.searchParams.get('subject'))
   check('body carries the email', body.includes('preflight@example.com'))
   check('body carries the company, ampersand intact', body.includes('Example Records & Co'))
