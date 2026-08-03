@@ -1,6 +1,6 @@
 # Lyrical website — handover
 
-**Date:** 2026-07-31 · **Live:** https://lyricalglobal.com ·
+**Date:** 2026-08-03 · **Live:** https://lyricalglobal.com ·
 **Repo:** https://github.com/Henrymcmahon1/lyrical-website · **Vercel team:** `hjam`
 
 Read this before touching anything. Most of what follows was learned by breaking something,
@@ -46,7 +46,11 @@ Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineerin
 | | |
 |---|---|
 | Stack | Next.js 16.2, React 19, Tailwind 4, TypeScript |
-| Tests | **171**, all passing (`npm test`) |
+| Tests | **185**, all passing (`npm test`) |
+| Email host | **Zoho Mail**, US data centre. MX, SPF and DKIM live. `info@` is a GROUP reaching Jordan and Henry |
+| Sending | **Resend**, own account owned by `info@lyricalglobal.com`, domain verified. SPF lives on the `send.` subdomain so it does not collide with Zoho's at the apex |
+| Confirmation email | **LIVE.** `ENQUIRY_FROM_EMAIL` is `info@lyricalglobal.com`, so `canEmailStrangers()` turns it on |
+| Notifications | Go to **both founders**. `ENQUIRY_TO_EMAIL` is a comma separated list, parsed to an array |
 | `npm audit` | **0 vulnerabilities** |
 | Domain | **https://lyricalglobal.com**, TLS live, `www` 308s to apex |
 | DNS | Nameservers moved to Vercel, so **all DNS is CLI-manageable** (`vercel dns add`) |
@@ -65,32 +69,39 @@ Submit → 200 → row in Supabase → email to `henry.jamcmahon@gmail.com` → 
 
 ## 3. What is NOT done
 
-### 3.1 The enquirer confirmation email is built but dormant
+### 3.1 Email is DONE. This section is kept as the record of how.
 
-`ENQUIRY_FROM_EMAIL` is still `onboarding@resend.dev`, which Resend only delivers to the
-account owner. `canEmailStrangers()` in `lib/enquiry-email.ts` derives the switch from the
-sender address, so **the moment that variable becomes a verified-domain address, the
-confirmation turns itself on**. No code change, no flag.
+Completed 2026-08-03 and verified by a live send: both founders received the notification and
+the enquirer received the confirmation, both `Delivered` in the Resend log.
 
-**Do not change it early.** Resend rejects senders on unverified domains, which would break the
-internal notification too.
+The address is `info@`, not `hello@`, and it is a Zoho **group** reaching Jordan and Henry
+rather than a mailbox. Zoho is on the **US** data centre, so the records are `mx.zoho.com`,
+`mx2`, `mx3` and `v=spf1 include:zohomail.com ~all`.
 
-### 3.2 Email host and Resend — the sequence Henry agreed
+Two things worth keeping in your head:
 
-1. Henry creates a **Zoho Mail** account (Forever Free: 5 users, 1 domain, real mailboxes).
-   Chosen over ImprovMX because ImprovMX's free tier is **forwarding only, no SMTP sending** —
-   you could receive at `hello@` but never send as it, which is wrong for a business selling
-   trust.
-2. Zoho shows a **TXT verification record and MX records**. These are account and region
-   specific (`zoho.com` vs `zoho.com.au`), so they cannot be guessed. Henry pastes them to you.
-3. **You add them** with `npx vercel dns add lyricalglobal.com <name> <type> <value>`.
-4. Henry creates the `hello@lyricalglobal.com` mailbox.
-5. Henry creates a **new Resend account using `hello@lyricalglobal.com`**. This also solves the
-   plan limit: the existing Resend account's single free domain slot is taken by an unrelated
-   `avenuemission.com`. A fresh account for the company is the correct structure anyway.
-6. Henry adds `lyricalglobal.com` in Resend, pastes you the DKIM/SPF records, you add them.
-7. You set `ENQUIRY_FROM_EMAIL=hello@lyricalglobal.com` and `RESEND_API_KEY` (Henry supplies
-   the key), redeploy, and the confirmation email switches on.
+- **Resend's SPF is on `send.lyricalglobal.com`, not the apex.** That is why there is no
+  collision with Zoho. Two `v=spf1` records on one name invalidate **both**, and all mail
+  fails. If anything ever moves Resend to the apex, they must be merged into one record.
+- **Never add Resend's "Enable Receiving" record.** It is an MX at the apex with priority
+  **9**, and Zoho's best is **10**. Lower wins, so it would silently take over every inbound
+  message to the domain. Sending and receiving are deliberately split.
+
+`canEmailStrangers()` in `lib/enquiry-email.ts` still derives the confirmation switch from the
+sender address. If `ENQUIRY_FROM_EMAIL` ever goes back to an `@resend.dev` address, the
+confirmation turns itself off again with no other signal.
+
+### 3.2 Two addresses, two jobs. Do not merge them.
+
+- `ENQUIRY_TO_EMAIL` is server-only, and is now a **comma separated list**. Adding or removing
+  a founder is an environment change with no deploy. It is parsed by `enquiryRecipients()`
+  into an array before it reaches Resend: handed the raw string, Resend treats it as one
+  malformed address and rejects the send, which fails quietly and loses the lead.
+- `CONTACT_EMAIL` in `lib/enquiry-email.ts` is **public**. It ships in the client bundle and is
+  rendered on the page, so it is the shared company address and never a founder's personal one.
+
+`audit-enquiry` asserts the mailto fallback points at whatever address the page displays,
+rather than at a literal copied into the script, so changing one cannot silently drift.
 
 ### 3.3 Still open, no decision yet
 
@@ -99,11 +110,18 @@ internal notification too.
   largest conversion lever on the site and the only one that cannot be faked. Blocked on rights.
 - **No social proof.** No client names, testimonials or case studies on any route.
 - **No pricing signal at all.**
-- Four open recommendations from the first session, still undecided: un-pin *What you receive*
-  on desktop, rights-first on the home page, Jordan's "$100 million" claim, and the changed
-  tagline. Raise them, do not action them.
+- Two open recommendations, still undecided: un-pin *What you receive* on desktop, and the
+  changed tagline. Raise them, do not action them.
 - **Settled 2026-08-03:** the name is **Lyrical**, one L. Confirmed by Henry. The site already
   spelt it that way; the brand kit and README no longer carry it as an open question.
+- **Raised 2026-08-03, awaiting Henry:** rights-first on the home page and Jordan's
+  "$100 million" claim are both argued in the site review artifact, along with the missing
+  price signal and the language framing. Nothing was actioned.
+- **Audio is still the blocker, and the rights answer is now known.** Henry confirmed nothing
+  is cleared, and that a fully consented original could be commissioned. The production route
+  was scoped and then deliberately parked. Two requirements that are painful to retrofit if it
+  restarts: get **separated stems**, not a mixdown, because the pitch is an untouched original
+  instrumental; and deliver **stereo**.
 
 ---
 
@@ -191,12 +209,27 @@ certificate exists (`vercel certs ls` confirms), not a DNS fault. Force with `ve
 **`npm audit fix --force` wanted to install `next@9.3.3`.** It is not a fix. `sharp` and
 `postcss` are pinned via `overrides` in `package.json` instead, which cleared all 7 advisories.
 
+**A Playwright locator re-resolves, and that will fool you.** `.pin-cue:visible` looked like a
+handle on one element. As the page scrolled it silently started describing the *next* section's
+cue, freshly visible at full opacity, so a fade that worked perfectly read as broken. When you
+need to watch one element change over time, take an `evaluateHandle` and keep it. This is the
+third time in this repo that a failing check was the test's fault, not the code's.
+
+**The optional enquiry fields live inside a closed `<details>`.** Playwright will not act on a
+hidden control, correctly, so any script touching role, company, catalogue size, languages or
+the message has to click the `summary` open first. `audit-enquiry` does.
+
+**`vercel env ls` shows a `created` date that does not move when you think it should.** It was
+the only signal available for whether a new API key had actually been saved, and it was
+ambiguous. There is no way to read a value back: `vercel env pull` returns `[SENSITIVE]`. The
+only real proof that a key works is a live send appearing in the Resend log.
+
 ---
 
 ## 6. How to verify anything
 
 ```bash
-npm test                                            # 171 tests
+npm test                                            # 185 tests
 npx eslint .                                        # must be silent
 npx tsc --noEmit                                    # must be silent
 npm run build                                       # must compile clean
@@ -234,8 +267,10 @@ values can be revealed there with the eye icon.
 | Variable | State |
 |---|---|
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Set (Preview + Production) |
-| `RESEND_API_KEY` | Set (Preview + Production). Will be replaced when the new Resend account exists |
-| `ENQUIRY_TO_EMAIL`, `ENQUIRY_FROM_EMAIL`, `GATE_SECRET` | Set (all three environments) |
+| `RESEND_API_KEY` | Set (Preview + Production). **Rotated 2026-08-03** to the new `lyricalglobal` account, key named `lyrical-website-prod`, sending access only |
+| `ENQUIRY_TO_EMAIL` | `jordan@lyricalglobal.com,henry@lyricalglobal.com` (all three environments). Comma separated |
+| `ENQUIRY_FROM_EMAIL` | `info@lyricalglobal.com` (all three). This is what makes the confirmation email live |
+| `GATE_SECRET` | Set (all three environments) |
 | `NEXT_PUBLIC_SITE_URL` | `https://lyricalglobal.com` (Production + Preview) |
 | `ADMIN_PASSWORD` | Set (all three). **Rotated 2026-07-31 after I leaked the previous value.** |
 
@@ -262,6 +297,9 @@ who asked for examples would hold a valid admin session. A test asserts a gate t
 | `next.config.ts` | Security headers, CSP, and the www → apex redirect |
 | `brand-kit/` | Generated brand kit. Share the folder; start at `brand-guide.html` |
 | `supabase/schema.sql` | Idempotent. Safe to re-run |
+| `content/about-folds.ts` | The four /about folds, as data. Edit words here, never in a component |
+| `components/FoldBody.tsx` | The one renderer those folds share. Holds no copy of its own |
+| `components/PinnedStepper.tsx` | The pinned sections, and the scroll cue all three inherit |
 
 **Audio drop-in:** `public/audio/{src}-{tgt}/{slug}.original.mp3` and `.translated.mp3`,
 lowercase pair folder, then set `hasAudio: true`. Adding a pair is a data change.
