@@ -13,6 +13,12 @@ import { PinnedStepper, type Step } from '../PinnedStepper'
  * instead. The deliverables are the end of this journey, not a separate topic, and a pinned
  * section of its own was two screens of scrolling to say what a sentence says.
  *
+ * The "48.0 kHz / 24 bit / 08 languages / Reviewed by ear" strip that used to sit under this
+ * section is gone. It qualified "what you receive" back when that was its own section, and
+ * once the deliverables moved into step 02 it read as four disconnected numbers floating in
+ * empty space with nothing to attach to. Sample rate and bit depth are table stakes to an
+ * engineer and meaningless to everybody else, so nothing was lost by removing it.
+ *
  * Numbering is legitimate here: this is a real sequence. Permission is step 00 rather than a
  * footnote, because for a rights holder authorisation is not a disclaimer at the bottom of a
  * page, it is the precondition for everything after it. Putting it first is the difference
@@ -42,17 +48,6 @@ export default function S05How() {
         steps={STEPS}
         startAt={0}
       />
-
-      {/* Moved here with the deliverables it describes. It qualified "what you receive" and
-          was orphaned when that section was folded into the step above. */}
-      <div className="mx-auto max-w-6xl px-6 pb-16">
-        <div className="flex flex-wrap gap-x-10 gap-y-3 font-mono text-xs tracking-[0.14em] text-graphite/50 tabular-nums">
-          <span>48.0 kHz</span>
-          <span>24 bit</span>
-          <span>08 languages</span>
-          <span>Reviewed by ear</span>
-        </div>
-      </div>
     </section>
   )
 }
