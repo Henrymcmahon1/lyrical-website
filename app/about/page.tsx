@@ -1,10 +1,9 @@
 import { Fold } from '@/components/Fold'
-import S06bMaster from '@/components/sections/S06bMaster'
-import S07Doors from '@/components/sections/S07Doors'
+import { FoldBody } from '@/components/FoldBody'
+import { ABOUT_FOLDS } from '@/content/about-folds'
 import S08Rights from '@/components/sections/S08Rights'
 import S09Team from '@/components/sections/S09Team'
 import S10Enquire from '@/components/sections/S10Enquire'
-import { Origin, Beliefs } from '@/components/sections/Origin'
 
 export const metadata = {
   title: 'About',
@@ -23,6 +22,10 @@ export const metadata = {
  * What stays open is what a buyer came for: who they are dealing with, the rights position,
  * and the way to start a conversation. The folds are native `<details>`, so none of this
  * depends on JavaScript and find-in-page still reaches inside them.
+ *
+ * The folds render from `content/about-folds.ts` through one body component. They previously
+ * wrapped four standalone section components, which each brought their own width, alignment
+ * and heading scale into a container narrower than any of them.
  */
 export default function About() {
   return (
@@ -58,27 +61,11 @@ export default function About() {
         </p>
 
         <div className="mt-6">
-          <Fold
-            label="Why it matters"
-            summary="What a master recording actually is, and why it is the safest place to start."
-          >
-            <S06bMaster />
-          </Fold>
-
-          <Fold label="Origin" summary="How Lyrical started, and the song that started it.">
-            <Origin />
-          </Fold>
-
-          <Fold label="Beliefs" summary="The rules we hold ourselves to, in writing.">
-            <Beliefs />
-          </Fold>
-
-          <Fold
-            label="Ways in"
-            summary="One flagship release, or catalogue infrastructure. They are different jobs."
-          >
-            <S07Doors />
-          </Fold>
+          {ABOUT_FOLDS.map((fold) => (
+            <Fold key={fold.label} label={fold.label} summary={fold.summary}>
+              <FoldBody fold={fold} />
+            </Fold>
+          ))}
         </div>
       </div>
 

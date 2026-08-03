@@ -31,6 +31,20 @@ export const NAME_NOT_GIVEN = 'Not given'
 const optionalText = (max: number) =>
   z.string().trim().max(max).optional().or(z.literal(''))
 
+/**
+ * An unanswered `<select>` submits an empty string, which an enum rejects.
+ *
+ * That is the wrong outcome twice over: skipping an optional question is not a validation
+ * error, and the visitor would be shown a message about a field they were told they could
+ * leave alone. Both selects below map a blank before validation rather than after.
+ *
+ * They differ in where the blank lands, which is why they are written out rather than shared
+ * behind one helper. `role` is NOT NULL in the database, so a blank becomes a real member and
+ * the type stays non-optional. `catalogue_size` is nullable, so a blank becomes `undefined`
+ * and the route writes null.
+ */
+const blankToUndefined = (v: unknown) => (v === '' || v == null ? undefined : v)
+
 export const EnquirySchema = z.object({
   // Conditionally required. See the superRefine below, and GATE_SOURCE above for why.
   name: optionalText(120),
@@ -39,9 +53,11 @@ export const EnquirySchema = z.object({
     .trim()
     .toLowerCase()
     .email('That email address doesn’t look right'),
-  role: z.enum(ROLES),
+  // Both are now skippable. Only name and email are asked for up front; everything here
+  // lives behind an optional disclosure, so a blank is the expected case, not an error.
+  role: z.preprocess((v) => (v === '' || v == null ? 'other' : v), z.enum(ROLES)),
   company: optionalText(160),
-  catalogue_size: z.enum(CATALOGUE_SIZES).optional(),
+  catalogue_size: z.preprocess(blankToUndefined, z.enum(CATALOGUE_SIZES).optional()),
   target_languages: z
     .array(z.string().refine((c) => LANGUAGE_CODES.includes(c), 'Unknown language'))
     .max(8)

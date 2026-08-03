@@ -66,9 +66,12 @@ export function EnquiryForm({
     const body = {
       name: String(fd.get('name') ?? ''),
       email: String(fd.get('email') ?? ''),
-      role: String(fd.get('role') ?? 'other'),
+      // Blank rather than a guessed default. The schema maps an unanswered select to the
+      // right thing per column; inventing 'artist' or 'unsure' here would write a value the
+      // visitor never chose and it would read as fact in the inbox.
+      role: String(fd.get('role') ?? ''),
       company: String(fd.get('company') ?? ''),
-      catalogue_size: String(fd.get('catalogue_size') ?? 'unsure'),
+      catalogue_size: String(fd.get('catalogue_size') ?? ''),
       target_languages: fd.getAll('target_languages').map(String),
       message: String(fd.get('message') ?? ''),
       source,
@@ -106,6 +109,32 @@ export function EnquiryForm({
   const field = `w-full rounded-card border ${border} bg-transparent px-4 py-3 outline-none transition-colors focus-visible:border-indigo`
   const chip = `nudge inline-flex min-h-11 cursor-pointer items-center rounded-card border ${border} px-3 text-sm transition-colors has-checked:border-ember has-checked:text-ember`
 
+  /**
+   * Shared by both modes, in two different places.
+   *
+   * The gate shows it beside the email, because picking a language IS the request there. The
+   * full form files it with the other optional questions, where somebody has already decided
+   * to make contact and the languages can be settled in the reply.
+   */
+  const languages = (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="text-sm">Languages you&rsquo;re interested in</legend>
+      <div className="flex flex-wrap gap-2">
+        {LANGUAGES.filter((l) => l.code !== 'EN').map((l) => (
+          <label key={l.code} className={chip}>
+            <input
+              type="checkbox"
+              name="target_languages"
+              value={l.code}
+              className="sr-only"
+            />
+            {l.endonym}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+
   if (state === 'done') {
     return (
       <div>
@@ -128,8 +157,11 @@ export function EnquiryForm({
     >
       <input type="hidden" name="source" value={source} />
       <input type="hidden" name="elapsed_ms" value={9999} />
-      {/* Not asked for in compact mode, but the column and the schema both want a value. */}
-      {compact && <input type="hidden" name="role" value="other" />}
+      {/*
+        Compact mode never shows the role question. The schema now maps a missing role to
+        'other' itself, so there is nothing to send: an explicit hidden field here would be a
+        second place to keep that default in step.
+      */}
 
       {/* Honeypot: kept in the layout but visually hidden, so bots still fill it. */}
       <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden opacity-0">
@@ -157,63 +189,76 @@ export function EnquiryForm({
         />
       </label>
 
-      {!compact && (
-        <>
-          <label className="flex flex-col gap-2">
-            <span className="text-sm">You are</span>
-            <select name="role" required defaultValue="artist" className={field}>
-              {ROLES.map((r) => (
-                <option key={r} value={r} className="text-graphite">
-                  {ROLE_LABELS[r]}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-2">
-            <span className="text-sm">
-              Company <span className={muted}>(optional)</span>
+      {compact ? (
+        languages
+      ) : (
+        /*
+         * Everything optional, collapsed.
+         *
+         * A native <details> rather than a JavaScript disclosure, because this form has to
+         * submit with JavaScript disabled and inputs inside a CLOSED <details> are still
+         * submitted. Collapsing them costs nothing and the visitor first sees two inputs and
+         * a button instead of six fields.
+         */
+        <details className={`group border-y ${border}`}>
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-sm [&::-webkit-details-marker]:hidden">
+            <span>
+              Add more detail <span className={muted}>(optional)</span>
             </span>
-            <input name="company" autoComplete="organization" className={field} />
-          </label>
 
-          <label className="flex flex-col gap-2">
-            <span className="text-sm">How many songs?</span>
-            <select name="catalogue_size" defaultValue="unsure" className={field}>
-              <option value="1" className="text-graphite">One song</option>
-              <option value="2-10" className="text-graphite">2&ndash;10</option>
-              <option value="11-100" className="text-graphite">11&ndash;100</option>
-              <option value="100+" className="text-graphite">100+</option>
-              <option value="unsure" className="text-graphite">Not sure yet</option>
-            </select>
-          </label>
-        </>
-      )}
+            {/* A plus that becomes a minus. Two spans, not a rotated glyph, which sits
+                visibly off centre at this size. Matches the folds on /about. */}
+            <span
+              aria-hidden="true"
+              className="relative h-3 w-3 shrink-0 transition-transform duration-300 group-open:rotate-90"
+            >
+              <span className="absolute left-0 top-1/2 h-px w-3 -translate-y-1/2 bg-current" />
+              <span className="absolute left-1/2 top-0 h-3 w-px -translate-x-1/2 bg-current transition-opacity duration-300 group-open:opacity-0" />
+            </span>
+          </summary>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="text-sm">Languages you&rsquo;re interested in</legend>
-        <div className="flex flex-wrap gap-2">
-          {LANGUAGES.filter((l) => l.code !== 'EN').map((l) => (
-            <label key={l.code} className={chip}>
-              <input
-                type="checkbox"
-                name="target_languages"
-                value={l.code}
-                className="sr-only"
-              />
-              {l.endonym}
+          <div className="flex flex-col gap-5 pb-6">
+            <label className="flex flex-col gap-2">
+              <span className="text-sm">You are</span>
+              {/* Defaults to blank, not to 'artist'. A pre-selected answer nobody chose
+                  arrives in the inbox looking like something they told you. */}
+              <select name="role" defaultValue="" className={field}>
+                <option value="" className="text-graphite">
+                  Prefer not to say
+                </option>
+                {ROLES.map((r) => (
+                  <option key={r} value={r} className="text-graphite">
+                    {ROLE_LABELS[r]}
+                  </option>
+                ))}
+              </select>
             </label>
-          ))}
-        </div>
-      </fieldset>
 
-      {!compact && (
-        <label className="flex flex-col gap-2">
-          <span className="text-sm">
-            Anything else <span className={muted}>(optional)</span>
-          </span>
-          <textarea name="message" rows={4} className={field} />
-        </label>
+            <label className="flex flex-col gap-2">
+              <span className="text-sm">Company</span>
+              <input name="company" autoComplete="organization" className={field} />
+            </label>
+
+            <label className="flex flex-col gap-2">
+              <span className="text-sm">How many songs?</span>
+              <select name="catalogue_size" defaultValue="" className={field}>
+                <option value="" className="text-graphite">Prefer not to say</option>
+                <option value="1" className="text-graphite">One song</option>
+                <option value="2-10" className="text-graphite">2&ndash;10</option>
+                <option value="11-100" className="text-graphite">11&ndash;100</option>
+                <option value="100+" className="text-graphite">100+</option>
+                <option value="unsure" className="text-graphite">Not sure yet</option>
+              </select>
+            </label>
+
+            {languages}
+
+            <label className="flex flex-col gap-2">
+              <span className="text-sm">Anything else</span>
+              <textarea name="message" rows={4} className={field} />
+            </label>
+          </div>
+        </details>
       )}
 
       {state === 'error' && (

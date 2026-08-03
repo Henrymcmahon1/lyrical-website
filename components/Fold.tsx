@@ -53,7 +53,15 @@ export function Fold({
         </span>
       </summary>
 
-      <div className="pb-10">{children}</div>
+      {/*
+        Indented to sit under the summary text, not under the label beside it.
+
+        The summary is a two-column row from `sm` up: a 8rem label, a 1.25rem gap, then the
+        text. Left at zero the body started under the LABEL, so every fold read as slightly
+        broken alignment. 9.25rem is those two measurements added, and it stays at zero on a
+        phone where the label sits above rather than beside.
+      */}
+      <div className="pb-10 sm:pl-[9.25rem]">{children}</div>
     </details>
   )
 }

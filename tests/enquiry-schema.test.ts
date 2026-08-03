@@ -84,3 +84,56 @@ describe('the rest of the schema is unchanged', () => {
     expect(r.success).toBe(false)
   })
 })
+
+/**
+ * Everything except name and email is now behind an optional disclosure, so a blank is the
+ * expected submission, not an edge case. These pin the two things that could go wrong
+ * quietly: a skipped question being rejected as invalid, and a skipped question being filled
+ * in with a guess that then reads as fact in the inbox.
+ */
+describe('optional questions can actually be skipped', () => {
+  const named = { ...base, name: 'Jordan Brock' }
+
+  it('accepts an unanswered role and records it as "other"', () => {
+    const r = EnquirySchema.safeParse({ ...named, role: '' })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.role).toBe('other')
+  })
+
+  it('accepts a missing role entirely', () => {
+    // The gate submits no role at all, so absent has to behave the same as blank.
+    const r = EnquirySchema.safeParse({ ...named, role: undefined })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.role).toBe('other')
+  })
+
+  it('never guesses "artist" for somebody who did not answer', () => {
+    const r = EnquirySchema.safeParse({ ...named, role: '' })
+    expect(r.success && r.data.role).not.toBe('artist')
+  })
+
+  it('accepts an unanswered catalogue size and leaves it unset', () => {
+    const r = EnquirySchema.safeParse({ ...named, catalogue_size: '' })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.catalogue_size).toBeUndefined()
+  })
+
+  it('still rejects a role that is not a real option', () => {
+    const r = EnquirySchema.safeParse({ ...named, role: 'ceo' })
+    expect(r.success).toBe(false)
+  })
+
+  it('still requires an email', () => {
+    expect(EnquirySchema.safeParse({ ...named, email: undefined }).success).toBe(false)
+    expect(EnquirySchema.safeParse({ ...named, email: '' }).success).toBe(false)
+  })
+
+  it('still requires a name on a real enquiry', () => {
+    expect(EnquirySchema.safeParse({ ...base, name: '' }).success).toBe(false)
+  })
+
+  it('still lets the gate through without a name', () => {
+    const r = EnquirySchema.safeParse({ ...base, name: '', source: GATE_SOURCE })
+    expect(r.success).toBe(true)
+  })
+})

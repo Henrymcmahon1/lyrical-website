@@ -113,6 +113,32 @@ export function PinnedStepper({
             <i ref={barRef} />
           </div>
 
+          {/*
+            Which way this section advances.
+
+            A tester read the changing cards as a carousel and swiped sideways, which does
+            nothing. The cue answers that once and then leaves: it fades out for good as soon
+            as the reader reaches the second step, so it teaches the gesture without sitting
+            next to the copy for the whole hold.
+
+            Rendered only while `pinned`, which is already false under reduced motion, so
+            there is no case where a static arrow points at a section that does not move.
+            aria-hidden because scroll direction is not information a screen reader needs.
+          */}
+          {pinned && (
+            <div className="pin-cue" data-done={active > 0 || undefined} aria-hidden="true">
+              <svg viewBox="0 0 24 14" fill="none" className="h-3.5 w-6">
+                <path
+                  d="M2 2 L12 11 L22 2"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          )}
+
           <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 md:grid-cols-[minmax(0,22rem)_1fr] md:gap-20">
             <div className="hidden md:block">
               {heading}

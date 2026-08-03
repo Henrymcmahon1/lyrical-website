@@ -23,8 +23,35 @@ await page.goto(BASE + '/#enquire', { waitUntil: 'networkidle' })
 await page.addStyleTag({ content: 'nextjs-portal{display:none!important}' })
 
 const form = page.locator('form[action="/api/enquiry"]').last()
+
+/*
+ * Only name and email are asked for up front. Everything else lives inside a collapsed
+ * <details>, so the first thing to prove is that the visitor really is shown two inputs and
+ * a button, and that nothing optional carries `required`. A form that collapsed the fields
+ * but still refused to submit without them would be worse than the version it replaced.
+ */
+const optional = form.locator('details')
+check('the optional questions start collapsed', !(await optional.evaluate((d) => d.open)))
+check(
+  'only name and email are required',
+  (await form.locator('[required]').count()) === 2,
+  `${await form.locator('[required]').count()} required fields`,
+)
+for (const n of ['role', 'company', 'catalogue_size', 'message']) {
+  const req = await form.locator(`[name="${n}"]`).getAttribute('required')
+  check(`${n} is optional`, req === null)
+}
+check(
+  'role is not pre-answered on the visitor’s behalf',
+  (await form.locator('select[name="role"]').inputValue()) === '',
+)
+
 await form.locator('input[name="name"]').fill('Preflight Tester')
 await form.locator('input[name="email"]').fill('preflight@example.com')
+
+// Open the disclosure before touching anything inside it. Playwright will not act on a
+// hidden control, which is the correct behaviour and the reason this step is explicit.
+await optional.locator('summary').click()
 await form.locator('select[name="role"]').selectOption('label')
 await form.locator('input[name="company"]').fill('Example Records & Co')
 await form.locator('select[name="catalogue_size"]').selectOption('11-100')
