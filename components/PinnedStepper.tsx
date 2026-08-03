@@ -139,13 +139,25 @@ export function PinnedStepper({
             </div>
 
             <div>
-              {/* The compact label the heading hands over to, plus where the reader is. */}
+              {/*
+                What section am I in?
+
+                On a phone the full heading arrives above the track and scrolls away, so once
+                the panel takes over, this label is the only thing naming the section. At
+                11px and 45% opacity it was a caption, and readers reached the second step
+                without knowing what they were reading about.
+
+                Now it reads as a header: larger, full contrast, and separated by a rule so
+                it sits above the content rather than beside it. Desktop keeps the real
+                heading in the left column, which never scrolls away, so this stays mobile
+                only rather than saying it twice.
+              */}
               {eyebrow && (
-                <p className="mb-8 flex items-baseline justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/45 md:hidden">
+                <p className="mb-8 flex items-baseline justify-between gap-4 border-b border-graphite/15 pb-3 font-mono text-[13px] uppercase tracking-[0.16em] text-graphite md:hidden">
                   <span>{eyebrow}</span>
                   <span className="tabular-nums text-indigo">
                     {String(active + startAt).padStart(2, '0')}
-                    <span className="text-graphite/30">
+                    <span className="text-graphite/35">
                       {' / '}
                       {String(steps.length - 1 + startAt).padStart(2, '0')}
                     </span>
@@ -161,7 +173,9 @@ export function PinnedStepper({
                     data-active={pinned ? i === active : undefined}
                   >
                     {numbered && (
-                      <span className="font-mono text-xs tracking-[0.18em] text-indigo tabular-nums">
+                      // Desktop only: the persistent header above already carries the
+                      // position on a phone, and two copies of it on one screen is noise.
+                      <span className="hidden font-mono text-xs tracking-[0.18em] text-indigo tabular-nums md:inline">
                         {String(i + startAt).padStart(2, '0')}
                       </span>
                     )}

@@ -5,13 +5,17 @@ import S01Hero from '@/components/sections/S01Hero'
 import S02bAudience from '@/components/sections/S02bAudience'
 import S04Fidelity from '@/components/sections/S04Fidelity'
 import S05How from '@/components/sections/S05How'
-import S06Receive from '@/components/sections/S06Receive'
 import S09bNow from '@/components/sections/S09bNow'
 import S10Enquire from '@/components/sections/S10Enquire'
 
 /**
- * The funnel, deliberately short: hero, the audience turn, the proof, what stays the
- * same, how it works, what you get, the turn, the ask.
+ * The funnel, deliberately short: hero, the audience turn, the proof, what we do to the
+ * record, how it works for you, the turn, the ask.
+ *
+ * Two pinned sections, not three. They now split cleanly: `S04Fidelity` is the product,
+ * what happens to the record, and `S05How` is the commercial story, what the buyer does and
+ * what they receive. "What you receive" used to be a third pinned section and is folded into
+ * the last step of `S05How`, where it reads as the end of a journey rather than a topic.
  *
  * The thesis, the artist/label split, the rights position and the team all live on
  * /about now. They are the depth a visitor goes looking for once they are interested,
@@ -29,7 +33,6 @@ export default async function Home() {
       <HomeInteractive initiallyRequested={requested} />
       <S04Fidelity />
       <S05How />
-      <S06Receive />
       <S09bNow />
       <S10Enquire />
     </>

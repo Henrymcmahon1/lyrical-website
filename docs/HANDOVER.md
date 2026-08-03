@@ -46,7 +46,7 @@ Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineerin
 | | |
 |---|---|
 | Stack | Next.js 16.2, React 19, Tailwind 4, TypeScript |
-| Tests | **185**, all passing (`npm test`) |
+| Tests | **191**, all passing (`npm test`) |
 | Email host | **Zoho Mail**, US data centre. MX, SPF and DKIM live. `info@` is a GROUP reaching Jordan and Henry |
 | Sending | **Resend**, own account owned by `info@lyricalglobal.com`, domain verified. SPF lives on the `send.` subdomain so it does not collide with Zoho's at the apex |
 | Confirmation email | **LIVE.** `ENQUIRY_FROM_EMAIL` is `info@lyricalglobal.com`, so `canEmailStrangers()` turns it on |
@@ -62,8 +62,9 @@ Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineerin
 
 ### Verified end to end on production
 
-Submit → 200 → row in Supabase → email to `henry.jamcmahon@gmail.com` → visible on `/leads`
-→ CSV export contains it → mark handled moves it between views → sign out makes the export 404.
+Submit → 200 → row in Supabase → notification to **both founders** AND a confirmation to the
+enquirer, both `Delivered` → visible on `/leads` → CSV export contains it → mark handled moves
+it between views → sign out makes the export 404.
 
 ---
 
@@ -110,13 +111,16 @@ rather than at a literal copied into the script, so changing one cannot silently
   largest conversion lever on the site and the only one that cannot be faked. Blocked on rights.
 - **No social proof.** No client names, testimonials or case studies on any route.
 - **No pricing signal at all.**
-- Two open recommendations, still undecided: un-pin *What you receive* on desktop, and the
-  changed tagline. Raise them, do not action them.
+- **Settled 2026-08-03:** the tagline is **"Every song. Any language. Same soul."** Henry
+  confirmed the site's wording over the brand document's "One song". It appears in the hero,
+  the footer, the page title and the confirmation email, so change all four together.
+- **Resolved 2026-08-03 by restructure:** "un-pin *What you receive* on desktop" no longer
+  applies. That section was folded into the last step of *How it works*.
 - **Settled 2026-08-03:** the name is **Lyrical**, one L. Confirmed by Henry. The site already
   spelt it that way; the brand kit and README no longer carry it as an open question.
-- **Raised 2026-08-03, awaiting Henry:** rights-first on the home page and Jordan's
-  "$100 million" claim are both argued in the site review artifact, along with the missing
-  price signal and the language framing. Nothing was actioned.
+- **Raised 2026-08-03, awaiting Henry.** Two recommendations remain open, both argued in the
+  site review artifact along with the missing price signal and the language framing:
+  rights-first on the home page, and Jordan's "$100 million" claim. Nothing was actioned.
 - **Audio is still the blocker, and the rights answer is now known.** Henry confirmed nothing
   is cleared, and that a fully consented original could be commissioned. The production route
   was scoped and then deliberately parked. Two requirements that are painful to retrofit if it
@@ -209,6 +213,15 @@ certificate exists (`vercel certs ls` confirms), not a DNS fault. Force with `ve
 **`npm audit fix --force` wanted to install `next@9.3.3`.** It is not a fix. `sharp` and
 `postcss` are pinned via `overrides` in `package.json` instead, which cleared all 7 advisories.
 
+**An audit that hardcodes today's numbers fails tomorrow for the wrong reason.** Restructuring
+three pinned sections into two broke `audit-motion` twice, and neither failure was about
+motion. It asserted the literal track heights `[2.04, 2.3, 2.04]`, which encoded how many
+sections existed; and `mobile-pin-block` scrolled to a fixed `500px` to prove the panel holds,
+which with a three-step section is two pixels past the end of the hold, so a working pin read
+as broken. Both now derive from the live geometry: height is checked as `100vh + 26vh per
+step`, and the hold is sampled as a fraction of `track height - panel height`. Assert the rule,
+never a snapshot of it.
+
 **A Playwright locator re-resolves, and that will fool you.** `.pin-cue:visible` looked like a
 handle on one element. As the page scrolled it silently started describing the *next* section's
 cue, freshly visible at full opacity, so a fade that worked perfectly read as broken. When you
@@ -229,7 +242,7 @@ only real proof that a key works is a live send appearing in the Resend log.
 ## 6. How to verify anything
 
 ```bash
-npm test                                            # 185 tests
+npm test                                            # 191 tests
 npx eslint .                                        # must be silent
 npx tsc --noEmit                                    # must be silent
 npm run build                                       # must compile clean
@@ -269,6 +282,7 @@ values can be revealed there with the eye icon.
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Set (Preview + Production) |
 | `RESEND_API_KEY` | Set (Preview + Production). **Rotated 2026-08-03** to the new `lyricalglobal` account, key named `lyrical-website-prod`, sending access only |
 | `ENQUIRY_TO_EMAIL` | `jordan@lyricalglobal.com,henry@lyricalglobal.com` (all three environments). Comma separated |
+| DNS | DMARC added 2026-08-03: `v=DMARC1; p=none; rua=mailto:info@lyricalglobal.com; fo=1`. Monitor only. Reports are XML and land in the shared inbox |
 | `ENQUIRY_FROM_EMAIL` | `info@lyricalglobal.com` (all three). This is what makes the confirmation email live |
 | `GATE_SECRET` | Set (all three environments) |
 | `NEXT_PUBLIC_SITE_URL` | `https://lyricalglobal.com` (Production + Preview) |
@@ -299,7 +313,8 @@ who asked for examples would hold a valid admin session. A test asserts a gate t
 | `supabase/schema.sql` | Idempotent. Safe to re-run |
 | `content/about-folds.ts` | The four /about folds, as data. Edit words here, never in a component |
 | `components/FoldBody.tsx` | The one renderer those folds share. Holds no copy of its own |
-| `components/PinnedStepper.tsx` | The pinned sections, and the scroll cue all three inherit |
+| `components/PinnedStepper.tsx` | The two pinned sections, and the persistent mobile section label |
+| `components/ScrollCue.tsx` | One chevron, two modes: controlled by the caller, or self retiring on first scroll |
 
 **Audio drop-in:** `public/audio/{src}-{tgt}/{slug}.original.mp3` and `.translated.mp3`,
 lowercase pair folder, then set `hasAudio: true`. Adding a pair is a data change.

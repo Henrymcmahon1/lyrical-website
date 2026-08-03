@@ -148,8 +148,12 @@ await auditMobilePin({ browser, base: BASE, check })
     return {
       audienceVh: g('.audience-track'),
       turnVh: g('.turn-track'),
-      pinVh: [...document.querySelectorAll('.pin-track')].map(
-        (el) => Math.round(el.getBoundingClientRect().height / window.innerHeight * 100) / 100),
+      // Height AND the step count it was built from, so the assertion can check the rule
+      // rather than a snapshot of today's sections.
+      pinTracks: [...document.querySelectorAll('.pin-track')].map((el) => ({
+        vh: Math.round(el.getBoundingClientRect().height / window.innerHeight * 100) / 100,
+        steps: Number(getComputedStyle(el).getPropertyValue('--steps')) || null,
+      })),
       audiencePadding: getComputedStyle(document.querySelector('.audience-track')).paddingTop,
       panelPosition: getComputedStyle(document.querySelector('.pin-panel')).position,
       railsVisible: [...document.querySelectorAll('.pin-panel > .sticky')].filter(
@@ -162,8 +166,22 @@ await auditMobilePin({ browser, base: BASE, check })
   check('audience padding is still 0 on desktop', geo.audiencePadding === '0px', geo.audiencePadding)
   check('panels still pin', geo.panelPosition === 'sticky', geo.panelPosition)
   check('the mobile rail is hidden on desktop', geo.railsVisible === 0, `${geo.railsVisible} visible`)
-  check('pin tracks unchanged: 100vh + 26vh per step',
-    JSON.stringify(geo.pinVh) === JSON.stringify([2.04, 2.3, 2.04]), JSON.stringify(geo.pinVh))
+  /*
+   * The RULE, not a snapshot of it.
+   *
+   * This used to assert the literal [2.04, 2.3, 2.04], which encoded how many sections
+   * existed and how many steps each had. Restructuring the page then failed an audit about
+   * scroll geometry for reasons that had nothing to do with scroll geometry. What actually
+   * matters is that every pinned track is one viewport plus 26vh of travel per step.
+   */
+  const badTracks = geo.pinTracks.filter(
+    (t) => t.steps === null || Math.abs(t.vh - (1 + t.steps * 0.26)) > 0.02,
+  )
+  check(
+    'every pin track is 100vh + 26vh per step',
+    badTracks.length === 0,
+    JSON.stringify(geo.pinTracks),
+  )
 
   const desktopMorph = await sample(page, '.audience-track', [0, 250, 500, 750], READ_MORPH_DESKTOP)
   const dRots = desktopMorph.map((s) => s.rotate)

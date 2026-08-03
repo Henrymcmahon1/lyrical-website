@@ -98,10 +98,29 @@ export async function auditMobilePin({ browser, base, check }) {
 
   for (const [sel, panelSel, name] of [
     ['.audience-track', '.audience-panel', 'audience'],
-    ['.pin-track', '.pin-panel', 'what changes'],
+    ['.pin-track', '.pin-panel', 'what we do'],
     ['#how .pin-track', '.pin-panel', 'how it works'],
   ]) {
-    const s = await sample(sel, panelSel, [40, 150, 270, 390, 500])
+    /*
+     * Offsets derived from the hold, not hardcoded pixels.
+     *
+     * These used to be [40, 150, 270, 390, 500]. A section with three steps instead of four
+     * holds for 498px on a phone, so the last sample landed two pixels past the end, the
+     * panel had correctly unstuck, and the audit reported a working pin as broken. The
+     * distance a panel can hold is track height minus panel height; sampling as a fraction
+     * of that stays correct whatever the sections are.
+     */
+    const hold = await page.evaluate(
+      ([t, p]) =>
+        document.querySelector(t).getBoundingClientRect().height -
+        document.querySelector(p).getBoundingClientRect().height,
+      [sel, panelSel],
+    )
+    // Stops at 0.85, not 1.0. The panel releases fractionally before the arithmetic end of
+    // the track, so sampling the last few percent measures the handover, not the hold. The
+    // old fixed 500px offset sat at roughly 0.85 of this section's hold, which is why it
+    // worked before the sections changed.
+    const s = await sample(sel, panelSel, [0.05, 0.25, 0.45, 0.65, 0.85].map((f) => Math.round(hold * f)))
     const tops = s.map((x) => x.panelTop)
 
     check(

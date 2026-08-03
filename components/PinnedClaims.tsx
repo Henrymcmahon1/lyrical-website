@@ -115,12 +115,18 @@ export function PinnedClaims({
             </div>
 
             <div>
+              {/*
+                What section am I in? Same reasoning as PinnedStepper: on a phone the heading
+                scrolls away and this label is all that names the section, so it is sized and
+                weighted as a header rather than a caption. Desktop keeps the real heading in
+                the left column, which persists on its own.
+              */}
               {label && (
-                <p className="mb-8 flex items-baseline justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/45 md:hidden">
+                <p className="mb-8 flex items-baseline justify-between gap-4 border-b border-graphite/15 pb-3 font-mono text-[13px] uppercase tracking-[0.16em] text-graphite md:hidden">
                   <span>{label}</span>
                   <span className="tabular-nums text-indigo">
                     {String(active + 1).padStart(2, '0')}
-                    <span className="text-graphite/30">
+                    <span className="text-graphite/35">
                       {' / '}
                       {String(claims.length).padStart(2, '0')}
                     </span>
@@ -135,7 +141,9 @@ export function PinnedClaims({
                     className="pin-item"
                     data-active={pinned ? i === active : undefined}
                   >
-                    <span className="font-mono text-xs tracking-[0.18em] text-indigo">
+                    {/* Desktop only. On a phone the persistent header above already says
+                        01 / 03, and printing the number twice on one screen reads as noise. */}
+                    <span className="hidden font-mono text-xs tracking-[0.18em] text-indigo md:inline">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <h3 className="mt-3 font-brand text-2xl tracking-tight md:text-3xl">{c.h}</h3>
