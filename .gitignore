@@ -63,3 +63,8 @@ leads-e2e.mjs
 # Agent working directory. Holds session state and local settings, and is exactly the kind
 # of thing a `git add -A` sweeps into a PUBLIC repo without anyone reading it first.
 .claude/
+
+# Private listening audio. NOT committed: this repo is public and these are
+# recordings we do not hold a licence to distribute. See the README in that folder.
+public/audio/listen/*
+!public/audio/listen/README.md
