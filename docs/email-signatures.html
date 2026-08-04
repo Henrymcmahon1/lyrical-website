@@ -1,0 +1,165 @@
+<title>Lyrical email signatures</title>
+
+<style>
+  :root{
+    --ground:#F7EFE1; --ink:#1C1A19; --muted:#8A8073; --rule:#DCD3C2;
+    --raise:#FBF6EC; --accent:#4433D6; --warn:#EE4E22;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--ground:#1B1D1F; --ink:#EDEBE4; --muted:#98938A; --rule:#33373A;
+          --raise:#212426; --accent:#9AA6FF; --warn:#FF6B2C;}
+  }
+  :root[data-theme="dark"]{--ground:#1B1D1F; --ink:#EDEBE4; --muted:#98938A; --rule:#33373A;
+    --raise:#212426; --accent:#9AA6FF; --warn:#FF6B2C;}
+  :root[data-theme="light"]{--ground:#F7EFE1; --ink:#1C1A19; --muted:#8A8073; --rule:#DCD3C2;
+    --raise:#FBF6EC; --accent:#4433D6; --warn:#EE4E22;}
+
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);margin:0;
+    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6}
+  .wrap{max-width:46rem;margin:0 auto;padding:clamp(2rem,5vw,4rem) clamp(1.25rem,4vw,2rem) 5rem}
+  h1,h2{font-family:Georgia,'Times New Roman',serif;font-weight:600;margin:0;letter-spacing:-.01em}
+  h1{font-size:clamp(1.9rem,5vw,2.6rem);line-height:1.1}
+  h2{font-size:1.25rem;margin-top:2.75rem}
+  p{margin:.75rem 0 0;max-width:34rem}
+  .eyebrow{font-size:.6875rem;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);margin:0}
+  ol{max-width:34rem;padding-left:1.1rem}
+  li{margin:.4rem 0}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;
+    background:var(--raise);border:1px solid var(--rule);border-radius:2px;padding:.05em .35em}
+
+  /* The copyable region. Deliberately plain white so what you select looks like what
+     lands in a compose window, whichever theme this page is being read in. */
+  .sig{background:#ffffff;border:1px solid var(--rule);border-radius:2px;
+    padding:1.5rem;margin-top:.9rem;overflow-x:auto}
+  .hint{font-size:.8125rem;color:var(--muted);margin-top:.5rem}
+  .note{border-left:2px solid var(--warn);padding-left:1rem;margin-top:1.5rem}
+  details{margin-top:.75rem;border-top:1px solid var(--rule);padding-top:.75rem}
+  summary{cursor:pointer;font-size:.875rem;color:var(--muted)}
+  pre{background:var(--raise);border:1px solid var(--rule);border-radius:2px;
+    padding:1rem;overflow-x:auto;font-size:.75rem;line-height:1.5;margin-top:.75rem}
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Lyrical</p>
+  <h1>Email signatures</h1>
+  <p>Three signatures, matching the site and the automated emails Lyrical already sends. Built for email rather than for the web: tables, inline styles, and no webfonts, because Fraunces and Archivo do not exist in a mail client and a signature that falls back badly looks worse than one that never tried.</p>
+
+  <div class="note">
+    <p style="margin:0"><strong>The mark is the character <span style="font-family:Georgia,serif">&#8776;</span>, not an image.</strong> It always renders, needs nothing hosted, cannot become a grey placeholder box in a client that blocks images, and adds no attachment to every email you send. Your enquiry emails already do this, so all Lyrical mail matches.</p>
+  </div>
+
+  <h2>How to install in Zoho</h2>
+  <ol>
+    <li>Zoho Mail → <strong>Settings</strong> (the gear) → <strong>Signatures</strong>.</li>
+    <li><strong>New Signature</strong>, and name it.</li>
+    <li>Come back here, select the signature block below <em>from just above the <span style="font-family:Georgia,serif">&#8776;</span> to just below the last line</em>, and copy.</li>
+    <li>Paste into the Zoho editor. It keeps the formatting.</li>
+    <li>Set it to apply to new mail and to replies, then save.</li>
+  </ol>
+  <p class="hint">If pasting ever loses the styling, open the "raw HTML" panel under each signature and paste the code into Zoho's source view instead.</p>
+
+  <h2>Jordan</h2>
+  <div class="sig">
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;">
+<tr>
+<td style="padding-right:8px;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:22px;color:#4433D6;">&#8776;</td>
+<td style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:22px;color:#1C1A19;">lyrical<span style="font-size:9px;vertical-align:super;">&#8482;</span></td>
+</tr>
+<tr><td colspan="2" style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
+<tr><td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;">
+<div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;">Jordan Brock</div>
+<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;">Co-founder</div>
+<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;">
+<a href="mailto:jordan@lyricalglobal.com" style="color:#4433D6;text-decoration:none;">jordan@lyricalglobal.com</a>
+<span style="color:#C9C0B2;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+<a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;">lyricalglobal.com</a>
+</div>
+</td></tr>
+</table>
+  </div>
+  <details>
+    <summary>Raw HTML</summary>
+    <pre>&lt;table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;"&gt;
+&lt;tr&gt;
+&lt;td style="padding-right:8px;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:22px;color:#4433D6;"&gt;&amp;#8776;&lt;/td&gt;
+&lt;td style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:22px;color:#1C1A19;"&gt;lyrical&lt;span style="font-size:9px;vertical-align:super;"&gt;&amp;#8482;&lt;/span&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="height:10px;line-height:10px;font-size:0;"&gt;&amp;nbsp;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;"&gt;
+&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;"&gt;Jordan Brock&lt;/div&gt;
+&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;"&gt;Co-founder&lt;/div&gt;
+&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;"&gt;
+&lt;a href="mailto:jordan@lyricalglobal.com" style="color:#4433D6;text-decoration:none;"&gt;jordan@lyricalglobal.com&lt;/a&gt;
+&lt;span style="color:#C9C0B2;"&gt;&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;&lt;/span&gt;
+&lt;a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;"&gt;lyricalglobal.com&lt;/a&gt;
+&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</pre>
+  </details>
+
+  <h2>Henry</h2>
+  <div class="sig">
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;">
+<tr>
+<td style="padding-right:8px;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:22px;color:#4433D6;">&#8776;</td>
+<td style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:22px;color:#1C1A19;">lyrical<span style="font-size:9px;vertical-align:super;">&#8482;</span></td>
+</tr>
+<tr><td colspan="2" style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
+<tr><td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;">
+<div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;">Henry McMahon</div>
+<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;">Co-founder, engineering</div>
+<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;">
+<a href="mailto:henry@lyricalglobal.com" style="color:#4433D6;text-decoration:none;">henry@lyricalglobal.com</a>
+<span style="color:#C9C0B2;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+<a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;">lyricalglobal.com</a>
+</div>
+</td></tr>
+</table>
+  </div>
+  <details>
+    <summary>Raw HTML</summary>
+    <pre>&lt;table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;"&gt;
+&lt;tr&gt;
+&lt;td style="padding-right:8px;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:22px;color:#4433D6;"&gt;&amp;#8776;&lt;/td&gt;
+&lt;td style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:22px;color:#1C1A19;"&gt;lyrical&lt;span style="font-size:9px;vertical-align:super;"&gt;&amp;#8482;&lt;/span&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="height:10px;line-height:10px;font-size:0;"&gt;&amp;nbsp;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;"&gt;
+&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;"&gt;Henry McMahon&lt;/div&gt;
+&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;"&gt;Co-founder, engineering&lt;/div&gt;
+&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;"&gt;
+&lt;a href="mailto:henry@lyricalglobal.com" style="color:#4433D6;text-decoration:none;"&gt;henry@lyricalglobal.com&lt;/a&gt;
+&lt;span style="color:#C9C0B2;"&gt;&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;&lt;/span&gt;
+&lt;a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;"&gt;lyricalglobal.com&lt;/a&gt;
+&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</pre>
+  </details>
+
+  <h2>The shared inbox</h2>
+  <p>For mail sent from <code>info@lyricalglobal.com</code>, which reaches you both. You did not ask for this one, but a shared address signed with an individual's name confuses a reply, and signed with nothing looks unfinished.</p>
+  <div class="sig">
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;">
+<tr>
+<td style="padding-right:8px;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:22px;color:#4433D6;">&#8776;</td>
+<td style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:22px;color:#1C1A19;">lyrical<span style="font-size:9px;vertical-align:super;">&#8482;</span></td>
+</tr>
+<tr><td colspan="2" style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
+<tr><td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;">
+<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;">
+<a href="mailto:info@lyricalglobal.com" style="color:#4433D6;text-decoration:none;">info@lyricalglobal.com</a>
+<span style="color:#C9C0B2;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+<a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;">lyricalglobal.com</a>
+</div>
+</td></tr>
+</table>
+  </div>
+
+  <h2>What is deliberately not in here</h2>
+  <p>No tagline, no phone number and no rights line, as you chose. Worth knowing why that is the right call: a signature is read once and then skipped forever, so every line you add is a line that dilutes the ones that matter. Name, role, address, site is what a recipient actually needs in order to reply or to look you up.</p>
+  <p>No social icons either. They are images, they get blocked, and Lyrical has nothing to link to yet.</p>
+  <p class="hint">Colours are the locked brand tokens: indigo <code>#4433D6</code> for the mark and links, graphite <code>#1C1A19</code> for names, and a muted warm grey for roles. Georgia stands in for Fraunces and Helvetica for Archivo, which is exactly what your automated emails already do.</p>
+
+</div>
