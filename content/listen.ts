@@ -41,14 +41,14 @@ export const TRACKS: Track[] = [
     label: 'The original',
     note: 'The record as released, in English.',
     file: '/audio/listen/original.mp3',
-    hasAudio: false,
+    hasAudio: true,
   },
   {
     id: 'artist-spanish',
     label: 'The artist’s own Spanish release',
     note: 'A separately recorded, authorised Spanish version by the same artist. A professional benchmark, not a reference we produced.',
     file: '/audio/listen/artist-spanish.mp3',
-    hasAudio: false,
+    hasAudio: true,
   },
   {
     id: 'lyrical',
