@@ -16,12 +16,34 @@ import type { NextConfig } from 'next'
  * `base-uri 'self'` blocks a `<base>` tag hijacking every relative URL, and `object-src 'none'`
  * removes the plugin surface entirely.
  */
+/**
+ * Where the /listen recordings are served from.
+ *
+ * They live in a private Supabase bucket and are fetched over a signed URL, so media is
+ * CROSS-ORIGIN. Without a `media-src` of its own, media falls back to `default-src 'self'`
+ * and the browser refuses the file with "Media load rejected by URL safety check": players
+ * render, then sit at 0:00 with dead controls and nothing in the console until play is
+ * pressed, because `preload="none"` means nothing is fetched before then.
+ *
+ * Derived from `SUPABASE_URL` rather than written out, so it stays correct if the project
+ * ever moves. The wildcard fallback covers a build where that variable is absent: without
+ * it the audio silently stops working, and this grants media only, never script.
+ */
+const STORAGE_ORIGIN = (() => {
+  try {
+    return process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).origin : null
+  } catch {
+    return null
+  }
+})()
+
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
+  `media-src 'self' ${STORAGE_ORIGIN ?? 'https://*.supabase.co'}`,
   "connect-src 'self' https://vitals.vercel-insights.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
