@@ -1,74 +1,59 @@
 <title>Lyrical email signatures</title>
 
 <style>
-  :root{
-    --ground:#F7EFE1; --ink:#1C1A19; --muted:#8A8073; --rule:#DCD3C2;
-    --raise:#FBF6EC; --accent:#4433D6; --warn:#EE4E22;
-  }
-  @media (prefers-color-scheme:dark){
-    :root{--ground:#1B1D1F; --ink:#EDEBE4; --muted:#98938A; --rule:#33373A;
-          --raise:#212426; --accent:#9AA6FF; --warn:#FF6B2C;}
-  }
-  :root[data-theme="dark"]{--ground:#1B1D1F; --ink:#EDEBE4; --muted:#98938A; --rule:#33373A;
-    --raise:#212426; --accent:#9AA6FF; --warn:#FF6B2C;}
-  :root[data-theme="light"]{--ground:#F7EFE1; --ink:#1C1A19; --muted:#8A8073; --rule:#DCD3C2;
-    --raise:#FBF6EC; --accent:#4433D6; --warn:#EE4E22;}
-
+  :root{--ground:#F7EFE1;--ink:#1C1A19;--muted:#8A8073;--rule:#DCD3C2;--raise:#FBF6EC;--accent:#4433D6;--warn:#EE4E22}
+  @media (prefers-color-scheme:dark){:root{--ground:#1B1D1F;--ink:#EDEBE4;--muted:#98938A;--rule:#33373A;--raise:#212426;--accent:#9AA6FF;--warn:#FF6B2C}}
+  :root[data-theme="dark"]{--ground:#1B1D1F;--ink:#EDEBE4;--muted:#98938A;--rule:#33373A;--raise:#212426;--accent:#9AA6FF;--warn:#FF6B2C}
+  :root[data-theme="light"]{--ground:#F7EFE1;--ink:#1C1A19;--muted:#8A8073;--rule:#DCD3C2;--raise:#FBF6EC;--accent:#4433D6;--warn:#EE4E22}
   *{box-sizing:border-box}
-  body{background:var(--ground);color:var(--ink);margin:0;
-    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6}
+  body{background:var(--ground);color:var(--ink);margin:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6}
   .wrap{max-width:46rem;margin:0 auto;padding:clamp(2rem,5vw,4rem) clamp(1.25rem,4vw,2rem) 5rem}
   h1,h2{font-family:Georgia,'Times New Roman',serif;font-weight:600;margin:0;letter-spacing:-.01em}
   h1{font-size:clamp(1.9rem,5vw,2.6rem);line-height:1.1}
   h2{font-size:1.25rem;margin-top:2.75rem}
   p{margin:.75rem 0 0;max-width:34rem}
   .eyebrow{font-size:.6875rem;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);margin:0}
-  ol{max-width:34rem;padding-left:1.1rem}
-  li{margin:.4rem 0}
-  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;
-    background:var(--raise);border:1px solid var(--rule);border-radius:2px;padding:.05em .35em}
-
-  /* The copyable region. Deliberately plain white so what you select looks like what
-     lands in a compose window, whichever theme this page is being read in. */
-  .sig{background:#ffffff;border:1px solid var(--rule);border-radius:2px;
-    padding:1.5rem;margin-top:.9rem;overflow-x:auto}
+  ol{max-width:34rem;padding-left:1.1rem} li{margin:.4rem 0}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;background:var(--raise);border:1px solid var(--rule);border-radius:2px;padding:.05em .35em}
+  /* Checkerboard, so you can see the signature is opaque and does not depend on what is behind it. */
+  .sig{border:1px solid var(--rule);border-radius:2px;padding:1.5rem;margin-top:.9rem;overflow-x:auto;
+    background-color:#8f8f8f;
+    background-image:linear-gradient(45deg,#7a7a7a 25%,transparent 25%),linear-gradient(-45deg,#7a7a7a 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#7a7a7a 75%),linear-gradient(-45deg,transparent 75%,#7a7a7a 75%);
+    background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0}
   .hint{font-size:.8125rem;color:var(--muted);margin-top:.5rem}
   .note{border-left:2px solid var(--warn);padding-left:1rem;margin-top:1.5rem}
   details{margin-top:.75rem;border-top:1px solid var(--rule);padding-top:.75rem}
   summary{cursor:pointer;font-size:.875rem;color:var(--muted)}
-  pre{background:var(--raise);border:1px solid var(--rule);border-radius:2px;
-    padding:1rem;overflow-x:auto;font-size:.75rem;line-height:1.5;margin-top:.75rem}
+  pre{background:var(--raise);border:1px solid var(--rule);border-radius:2px;padding:1rem;overflow-x:auto;font-size:.75rem;line-height:1.5;margin-top:.75rem}
 </style>
 
 <div class="wrap">
 
   <p class="eyebrow">Lyrical</p>
   <h1>Email signatures</h1>
-  <p>Three signatures, matching the site and the automated emails Lyrical already sends. Built for email rather than for the web: tables, inline styles, and no webfonts, because Fraunces and Archivo do not exist in a mail client and a signature that falls back badly looks worse than one that never tried.</p>
+  <p>Three signatures, matching the site and the automated emails Lyrical already sends.</p>
 
   <div class="note">
-    <p style="margin:0"><strong>The logo is a real image, hosted at <code>lyricalglobal.com/brand/lyrical-lockup.png</code>.</strong> That matters more than it sounds: the image is the actual wordmark set in Fraunces, whereas a text version has to fall back to Georgia, because no mail client will load a webfont. The image is the only way a signature shows your real typography.</p>
-    <p style="margin:.6rem 0 0">The cost is that <strong>Outlook desktop blocks remote images by default</strong> for senders outside your organisation, so some recipients see the alt text until they click "Download pictures". Gmail, Apple Mail and most webmail load it without asking. A text-only fallback is at the bottom of this page if you would rather never risk it.</p>
+    <p style="margin:0"><strong>These carry their own cream background on purpose.</strong> Without it the signature broke in dark mode: the wordmark is graphite and your name is graphite, so on a dark compose window both disappeared entirely, and indigo links on a dark ground fail contrast, which your own brand rules already forbid.</p>
+    <p style="margin:.6rem 0 0">A signature cannot ask what colour the surrounding email is. So it brings its own ground, and every colour on it is then guaranteed. The grey checkerboard behind each block below is only there so you can see it is opaque; it is not part of the signature.</p>
   </div>
 
   <h2>How to install in Zoho</h2>
   <ol>
-    <li>Zoho Mail → <strong>Settings</strong> (the gear) → <strong>Signatures</strong>.</li>
-    <li><strong>New Signature</strong>, and name it.</li>
-    <li>Come back here, select the signature block below <em>from just above the logo to just below the last line</em>, and copy.</li>
-    <li>Paste into the Zoho editor. It keeps the formatting, and you should see the logo, not a wall of code. If you see code, you copied from the wrong box.</li>
-    <li>Set it to apply to new mail and to replies, then save.</li>
+    <li>Zoho Mail &rarr; <strong>Settings</strong> &rarr; <strong>Signatures</strong> &rarr; <strong>New Signature</strong>.</li>
+    <li>Come back here and select the signature itself: from just above the logo to just below the web address. <strong>The finished-looking block, not the code.</strong></li>
+    <li>Paste into the Zoho editor. You should see the logo. If you see a wall of code, you copied from a &ldquo;Raw HTML&rdquo; panel by mistake.</li>
+    <li>Fill in <strong>Associated From addresses</strong> for both new mail and replies, or the signature attaches to nothing.</li>
+    <li>Save.</li>
   </ol>
-  <p class="note" style="border-left-color:#EE4E22;padding-left:1rem;margin-top:1.25rem"><strong>Copy the signature itself, not the code.</strong> Select the block inside the white box, the one that looks like a finished signature. Zoho's signature editor has no HTML source view, so pasting the code from a "Raw HTML" panel puts the code on screen as text, which is exactly what it looks like it does.</p>
 
   <h2>Jordan</h2>
   <div class="sig">
-<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;">
-<tr>
-<td colspan="2" style="padding-bottom:2px;"><img src="https://lyricalglobal.com/brand/lyrical-lockup.png" width="160" height="39" alt="Lyrical" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" /></td>
-</tr>
-<tr><td colspan="2" style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
-<tr><td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;">
+<table cellpadding="0" cellspacing="0" border="0" bgcolor="#F7EFE1" style="border-collapse:collapse;background-color:#F7EFE1;">
+<tr><td style="padding:16px 20px 15px 20px;">
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+<tr><td style="padding-bottom:11px;"><img src="https://lyricalglobal.com/brand/lyrical-lockup.png" width="150" height="37" alt="Lyrical" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" /></td></tr>
+<tr><td style="border-top:1px solid #DCD3C2;padding-top:11px;">
 <div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;">Jordan Brock</div>
 <div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;">Co-founder</div>
 <div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;">
@@ -76,36 +61,34 @@
 <span style="color:#C9C0B2;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
 <a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;">lyricalglobal.com</a>
 </div>
-</td></tr>
-</table>
+</td></tr></table>
+</td></tr></table>
   </div>
   <details>
-    <summary>Raw HTML — not for Zoho. For a client that accepts HTML source.</summary>
-    <pre>&lt;table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;"&gt;
-&lt;tr&gt;
-&lt;td colspan="2" style="padding-bottom:2px;"&gt;&lt;img src="https://lyricalglobal.com/brand/lyrical-lockup.png" width="160" height="39" alt="Lyrical" style="display:block;border:0;outline:none;text-decoration:none;" /&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;&lt;td colspan="2" style="height:10px;line-height:10px;font-size:0;"&gt;&amp;nbsp;&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;"&gt;
-&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;"&gt;Jordan Brock&lt;/div&gt;
-&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;"&gt;Co-founder&lt;/div&gt;
-&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;"&gt;
-&lt;a href="mailto:jordan@lyricalglobal.com" style="color:#4433D6;text-decoration:none;"&gt;jordan@lyricalglobal.com&lt;/a&gt;
-&lt;span style="color:#C9C0B2;"&gt;&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;&lt;/span&gt;
-&lt;a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;"&gt;lyricalglobal.com&lt;/a&gt;
+    <summary>Raw HTML &mdash; not for Zoho. Only for a client with a real HTML source view.</summary>
+    <pre>&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; bgcolor=&quot;#F7EFE1&quot; style=&quot;border-collapse:collapse;background-color:#F7EFE1;&quot;&gt;
+&lt;tr&gt;&lt;td style=&quot;padding:16px 20px 15px 20px;&quot;&gt;
+&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;border-collapse:collapse;&quot;&gt;
+&lt;tr&gt;&lt;td style=&quot;padding-bottom:11px;&quot;&gt;&lt;img src=&quot;https://lyricalglobal.com/brand/lyrical-lockup.png&quot; width=&quot;150&quot; height=&quot;37&quot; alt=&quot;Lyrical&quot; style=&quot;display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;&quot; /&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&quot;border-top:1px solid #DCD3C2;padding-top:11px;&quot;&gt;
+&lt;div style=&quot;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;&quot;&gt;Jordan Brock&lt;/div&gt;
+&lt;div style=&quot;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;&quot;&gt;Co-founder&lt;/div&gt;
+&lt;div style=&quot;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;&quot;&gt;
+&lt;a href=&quot;mailto:jordan@lyricalglobal.com&quot; style=&quot;color:#4433D6;text-decoration:none;&quot;&gt;jordan@lyricalglobal.com&lt;/a&gt;
+&lt;span style=&quot;color:#C9C0B2;&quot;&gt;&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;&lt;/span&gt;
+&lt;a href=&quot;https://lyricalglobal.com&quot; style=&quot;color:#4433D6;text-decoration:none;&quot;&gt;lyricalglobal.com&lt;/a&gt;
 &lt;/div&gt;
-&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;</pre>
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</pre>
   </details>
 
   <h2>Henry</h2>
   <div class="sig">
-<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;">
-<tr>
-<td colspan="2" style="padding-bottom:2px;"><img src="https://lyricalglobal.com/brand/lyrical-lockup.png" width="160" height="39" alt="Lyrical" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" /></td>
-</tr>
-<tr><td colspan="2" style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
-<tr><td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;">
+<table cellpadding="0" cellspacing="0" border="0" bgcolor="#F7EFE1" style="border-collapse:collapse;background-color:#F7EFE1;">
+<tr><td style="padding:16px 20px 15px 20px;">
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+<tr><td style="padding-bottom:11px;"><img src="https://lyricalglobal.com/brand/lyrical-lockup.png" width="150" height="37" alt="Lyrical" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" /></td></tr>
+<tr><td style="border-top:1px solid #DCD3C2;padding-top:11px;">
 <div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;">Henry McMahon</div>
 <div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;">Co-founder, engineering</div>
 <div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;">
@@ -113,70 +96,62 @@
 <span style="color:#C9C0B2;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
 <a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;">lyricalglobal.com</a>
 </div>
-</td></tr>
-</table>
+</td></tr></table>
+</td></tr></table>
   </div>
   <details>
-    <summary>Raw HTML — not for Zoho. For a client that accepts HTML source.</summary>
-    <pre>&lt;table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;"&gt;
-&lt;tr&gt;
-&lt;td colspan="2" style="padding-bottom:2px;"&gt;&lt;img src="https://lyricalglobal.com/brand/lyrical-lockup.png" width="160" height="39" alt="Lyrical" style="display:block;border:0;outline:none;text-decoration:none;" /&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;&lt;td colspan="2" style="height:10px;line-height:10px;font-size:0;"&gt;&amp;nbsp;&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;"&gt;
-&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;"&gt;Henry McMahon&lt;/div&gt;
-&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;"&gt;Co-founder, engineering&lt;/div&gt;
-&lt;div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;"&gt;
-&lt;a href="mailto:henry@lyricalglobal.com" style="color:#4433D6;text-decoration:none;"&gt;henry@lyricalglobal.com&lt;/a&gt;
-&lt;span style="color:#C9C0B2;"&gt;&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;&lt;/span&gt;
-&lt;a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;"&gt;lyricalglobal.com&lt;/a&gt;
+    <summary>Raw HTML &mdash; not for Zoho. Only for a client with a real HTML source view.</summary>
+    <pre>&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; bgcolor=&quot;#F7EFE1&quot; style=&quot;border-collapse:collapse;background-color:#F7EFE1;&quot;&gt;
+&lt;tr&gt;&lt;td style=&quot;padding:16px 20px 15px 20px;&quot;&gt;
+&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;border-collapse:collapse;&quot;&gt;
+&lt;tr&gt;&lt;td style=&quot;padding-bottom:11px;&quot;&gt;&lt;img src=&quot;https://lyricalglobal.com/brand/lyrical-lockup.png&quot; width=&quot;150&quot; height=&quot;37&quot; alt=&quot;Lyrical&quot; style=&quot;display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;&quot; /&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&quot;border-top:1px solid #DCD3C2;padding-top:11px;&quot;&gt;
+&lt;div style=&quot;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;&quot;&gt;Henry McMahon&lt;/div&gt;
+&lt;div style=&quot;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;&quot;&gt;Co-founder, engineering&lt;/div&gt;
+&lt;div style=&quot;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;&quot;&gt;
+&lt;a href=&quot;mailto:henry@lyricalglobal.com&quot; style=&quot;color:#4433D6;text-decoration:none;&quot;&gt;henry@lyricalglobal.com&lt;/a&gt;
+&lt;span style=&quot;color:#C9C0B2;&quot;&gt;&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;&lt;/span&gt;
+&lt;a href=&quot;https://lyricalglobal.com&quot; style=&quot;color:#4433D6;text-decoration:none;&quot;&gt;lyricalglobal.com&lt;/a&gt;
 &lt;/div&gt;
-&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;</pre>
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</pre>
   </details>
 
   <h2>The shared inbox</h2>
-  <p>For mail sent from <code>info@lyricalglobal.com</code>, which reaches you both. You did not ask for this one, but a shared address signed with an individual's name confuses a reply, and signed with nothing looks unfinished.</p>
+  <p>For mail sent from <code>info@lyricalglobal.com</code>, which reaches you both. A shared address signed with one person's name confuses a reply.</p>
   <div class="sig">
-<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;">
-<tr>
-<td colspan="2" style="padding-bottom:2px;"><img src="https://lyricalglobal.com/brand/lyrical-lockup.png" width="160" height="39" alt="Lyrical" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" /></td>
-</tr>
-<tr><td colspan="2" style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
-<tr><td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;">
-<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;">
+<table cellpadding="0" cellspacing="0" border="0" bgcolor="#F7EFE1" style="border-collapse:collapse;background-color:#F7EFE1;">
+<tr><td style="padding:16px 20px 15px 20px;">
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+<tr><td style="padding-bottom:11px;"><img src="https://lyricalglobal.com/brand/lyrical-lockup.png" width="150" height="37" alt="Lyrical" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" /></td></tr>
+<tr><td style="border-top:1px solid #DCD3C2;padding-top:11px;">
+<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:0;">
 <a href="mailto:info@lyricalglobal.com" style="color:#4433D6;text-decoration:none;">info@lyricalglobal.com</a>
 <span style="color:#C9C0B2;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
 <a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;">lyricalglobal.com</a>
 </div>
-</td></tr>
-</table>
+</td></tr></table>
+</td></tr></table>
   </div>
-
-  <h2>If you would rather not use an image</h2>
-  <p>This version draws the mark as the character <span style="font-family:Georgia,serif">&#8776;</span> instead of loading a picture. It can never be blocked, never shows a placeholder, and adds nothing to the size of an email. The trade is that the wordmark is Georgia rather than Fraunces, because a mail client will not load a webfont. Swap the name, role and address for Jordan's as needed.</p>
-  <div class="sig">
-<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;">
-<tr>
-<td style="padding-right:8px;font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:22px;color:#4433D6;">&#8776;</td>
-<td style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:22px;color:#1C1A19;">lyrical<span style="font-size:9px;vertical-align:super;">&#8482;</span></td>
-</tr>
-<tr><td colspan="2" style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
-<tr><td colspan="2" style="border-top:1px solid #DCD3C2;padding-top:10px;">
-<div style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:19px;color:#1C1A19;font-weight:bold;">Henry McMahon</div>
-<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;color:#857E74;">Co-founder, engineering</div>
-<div style="font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:6px;">
-<a href="mailto:henry@lyricalglobal.com" style="color:#4433D6;text-decoration:none;">henry@lyricalglobal.com</a>
-<span style="color:#C9C0B2;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
-<a href="https://lyricalglobal.com" style="color:#4433D6;text-decoration:none;">lyricalglobal.com</a>
-</div>
-</td></tr>
-</table>
-  </div>
+  <details>
+    <summary>Raw HTML &mdash; not for Zoho. Only for a client with a real HTML source view.</summary>
+    <pre>&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; bgcolor=&quot;#F7EFE1&quot; style=&quot;border-collapse:collapse;background-color:#F7EFE1;&quot;&gt;
+&lt;tr&gt;&lt;td style=&quot;padding:16px 20px 15px 20px;&quot;&gt;
+&lt;table cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; border=&quot;0&quot; style=&quot;border-collapse:collapse;&quot;&gt;
+&lt;tr&gt;&lt;td style=&quot;padding-bottom:11px;&quot;&gt;&lt;img src=&quot;https://lyricalglobal.com/brand/lyrical-lockup.png&quot; width=&quot;150&quot; height=&quot;37&quot; alt=&quot;Lyrical&quot; style=&quot;display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;&quot; /&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style=&quot;border-top:1px solid #DCD3C2;padding-top:11px;&quot;&gt;
+&lt;div style=&quot;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:18px;padding-top:0;&quot;&gt;
+&lt;a href=&quot;mailto:info@lyricalglobal.com&quot; style=&quot;color:#4433D6;text-decoration:none;&quot;&gt;info@lyricalglobal.com&lt;/a&gt;
+&lt;span style=&quot;color:#C9C0B2;&quot;&gt;&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;&lt;/span&gt;
+&lt;a href=&quot;https://lyricalglobal.com&quot; style=&quot;color:#4433D6;text-decoration:none;&quot;&gt;lyricalglobal.com&lt;/a&gt;
+&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</pre>
+  </details>
 
   <h2>What is deliberately not in here</h2>
-  <p>No tagline, no phone number and no rights line, as you chose. A signature is read once and then skipped forever, so every line you add dilutes the ones that matter. Name, role, address and site is what a recipient needs in order to reply or to look you up.</p>
-  <p>No social icons either. They are separate images, they are the ones that most often break, and Lyrical has nothing to link to yet.</p>
-  <p class="hint">Colours are the locked brand tokens: indigo <code>#4433D6</code> for links, graphite <code>#1C1A19</code> for names, and a muted warm grey for roles. The logo is served from <code>lyricalglobal.com</code>, so the URL is ours and will not disappear.</p>
+  <p>No tagline, no phone number and no rights line, as you chose. A signature is read once and skipped forever, so every line you add dilutes the ones that matter.</p>
+  <p>No social icons. They are more images to block, and Lyrical has nothing to link to yet.</p>
+  <p class="hint">Locked brand tokens throughout: cream <code>#F7EFE1</code> ground, graphite <code>#1C1A19</code> names, indigo <code>#4433D6</code> links, and a muted warm grey for roles. The logo is served from <code>lyricalglobal.com</code>, so the URL is ours and will not move.</p>
 
 </div>
