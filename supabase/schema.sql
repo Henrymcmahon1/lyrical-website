@@ -42,3 +42,16 @@ create index if not exists enquiries_handled_idx
 alter table public.enquiries enable row level security;
 
 -- Deliberately NOT unique on email: the same person may legitimately enquire twice.
+
+-- ── Private audio for /listen ─────────────────────────────────────────────────
+-- Recordings shared privately for evaluation. They were briefly in `public/`, which was
+-- wrong twice: they vanished from production the first time a deploy ran from anywhere
+-- other than the machine holding them, and while they were there anyone could fetch
+-- /audio/listen/original.mp3 without the password. The page was gated; the files were not.
+--
+-- `public => false`, and NO storage policy is created, so nothing can read this bucket
+-- except the server using the service role key. The /listen page mints a short-lived signed
+-- URL per object, and only after the password check has passed.
+insert into storage.buckets (id, name, public)
+values ('listen', 'listen', false)
+on conflict (id) do update set public = false;

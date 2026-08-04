@@ -3,6 +3,7 @@ import { Mark } from '@/components/Mark'
 import { Trademark } from '@/components/Trademark'
 import { hasDemoSession } from '@/lib/demo-session'
 import { LISTEN_INTRO, LISTEN_TITLE, TRACKS } from '@/content/listen'
+import { signListenTracks } from '@/lib/listen-audio'
 import { lock, unlock } from './actions'
 
 /**
@@ -85,7 +86,16 @@ export default async function Listen({
   const [unlocked, params] = await Promise.all([hasDemoSession(), searchParams])
   if (!unlocked) return <Gate error={params.error} />
 
-  const anyAudio = TRACKS.some((t) => t.hasAudio)
+  /*
+   * Signed AFTER the password check, never before.
+   *
+   * These URLs are the actual capability: anyone holding one can fetch the recording without
+   * the password. Minting them for a visitor who has not unlocked the page would hand the
+   * audio to whoever loaded the URL, which is what the gate exists to prevent.
+   */
+  const signed = await signListenTracks(TRACKS.map((t) => t.key))
+  const urlFor = new Map(signed.map((s) => [s.key, s.url]))
+  const anyAudio = signed.some((s) => s.url)
 
   return (
     <main className="min-h-screen bg-dark-ground text-dark-ink">
@@ -114,9 +124,9 @@ export default async function Listen({
             role="status"
             className="mt-10 rounded-card border border-dark-ink/20 px-5 py-4 text-sm leading-relaxed text-dark-ink/60"
           >
-            No recordings are loaded yet. Drop the files into{' '}
-            <code className="font-mono text-dark-ink/80">public/audio/listen/</code> and set{' '}
-            <code className="font-mono text-dark-ink/80">hasAudio</code> to true in{' '}
+            No recordings are loaded yet. Upload them to the{' '}
+            <code className="font-mono text-dark-ink/80">listen</code> bucket in Supabase
+            Storage, named exactly as in{' '}
             <code className="font-mono text-dark-ink/80">content/listen.ts</code>.
           </p>
         )}
@@ -140,7 +150,7 @@ export default async function Listen({
 
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-dark-ink/60">{t.note}</p>
 
-              {t.hasAudio ? (
+              {urlFor.get(t.key) ? (
                 /*
                  * Native controls, deliberately.
                  *
@@ -153,7 +163,7 @@ export default async function Listen({
                 <audio
                   controls
                   preload="none"
-                  src={t.file}
+                  src={urlFor.get(t.key) ?? undefined}
                   className="mt-5 w-full"
                   aria-label={t.label}
                 />

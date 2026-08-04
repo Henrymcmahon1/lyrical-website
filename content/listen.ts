@@ -10,11 +10,10 @@
  * shows what an authorised human version of it sounds like, and ours comes last so it is
  * heard against both rather than in isolation.
  *
- * `hasAudio` follows the same convention as `content/demos.json`: drop the file in, flip the
- * flag. It is not inferred from the filesystem on purpose, because `public/` is served from
- * the CDN and is not reliably readable from a serverless function, so an existence check
- * would report "missing" for a file that is in fact live. An explicit flag cannot be wrong
- * in a way nobody notices.
+ * `key` is an object in the PRIVATE `listen` bucket in Supabase Storage, not a path in
+ * `public/`. There is deliberately no `hasAudio` flag: availability is derived at render time
+ * from whether storage can sign the object. A declared flag is a second source of truth, and
+ * this one had already gone stale once and left the page serving players that 404ed.
  */
 
 export type Track = {
@@ -22,10 +21,8 @@ export type Track = {
   label: string
   /** One line on what this recording is and why it is here. */
   note: string
-  /** Path under `public/`. */
-  file: string
-  /** Flip to true once the file is actually in the repo. */
-  hasAudio: boolean
+  /** Object key in the private `listen` bucket. */
+  key: string
   /** Marks the row as Lyrical's own work, which is styled to stand apart. */
   ours?: boolean
 }
@@ -40,22 +37,19 @@ export const TRACKS: Track[] = [
     id: 'original',
     label: 'The original',
     note: 'The record as released, in English.',
-    file: '/audio/listen/original.mp3',
-    hasAudio: true,
+    key: 'original.mp3',
   },
   {
     id: 'artist-spanish',
     label: 'The artist’s own Spanish release',
     note: 'A separately recorded, authorised Spanish version by the same artist. A professional benchmark, not a reference we produced.',
-    file: '/audio/listen/artist-spanish.mp3',
-    hasAudio: true,
+    key: 'artist-spanish.mp3',
   },
   {
     id: 'lyrical',
     label: 'Ours',
     note: 'The English master, re-sung in Spanish. Same melody, same phrasing, the original backing untouched.',
-    file: '/audio/listen/lyrical-spanish.mp3',
-    hasAudio: false,
+    key: 'lyrical-spanish.mp3',
     ours: true,
   },
 ]

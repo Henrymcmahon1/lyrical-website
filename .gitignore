@@ -64,7 +64,7 @@ leads-e2e.mjs
 # of thing a `git add -A` sweeps into a PUBLIC repo without anyone reading it first.
 .claude/
 
-# Private listening audio. NOT committed: this repo is public and these are
-# recordings we do not hold a licence to distribute. See the README in that folder.
-public/audio/listen/*
-!public/audio/listen/README.md
+# Private listening audio is NOT in this repo and NOT in public/ any more. It lives in the
+# private `listen` bucket in Supabase Storage, because anything under public/ is world
+# readable and is only on production for as long as somebody deploys from the machine
+# holding it. See lib/listen-audio.ts.
