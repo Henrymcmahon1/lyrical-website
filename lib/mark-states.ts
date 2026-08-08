@@ -32,7 +32,7 @@ const LOWER: Seg[] = [
  * bar is 9 x 50 units, a 1:5.5 sliver that doesn't read as a pause symbol; at 30 units it
  * is roughly 1:3, which does. Point count is set by SAMPLES and is unaffected by length,
  * so the morph still works — and the bars growing outward into the waves reads as the
- * catalogue opening up, which is the point of the animation.
+ * catalog opening up, which is the point of the animation.
  */
 const BAR_TOP: Seg[] = [
   [{ x: 17, y: 20 }, { x: 27, y: 20 }, { x: 37, y: 20 }, { x: 47, y: 20 }],

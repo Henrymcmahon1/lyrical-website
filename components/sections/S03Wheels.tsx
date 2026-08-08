@@ -28,7 +28,7 @@ export default function S03Wheels({
         </span>
 
         <h2 className="mt-5 font-brand text-4xl leading-tight tracking-tight text-balance sm:text-5xl">
-          There are no borders on your catalogue.
+          There are no borders on your catalog.
         </h2>
 
         <p className="mt-6 max-w-xl leading-relaxed text-dark-ink/70">

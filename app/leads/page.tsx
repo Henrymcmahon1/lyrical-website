@@ -43,7 +43,7 @@ const SHELL = 'mx-auto w-full max-w-4xl px-6'
 const PAGE_SIZE = 500
 
 /**
- * Readable form of the catalogue-size answer.
+ * Readable form of the catalog-size answer.
  *
  * The raw values are form option keys, so rendering `${value} songs` produced "unsure songs",
  * which reads as though somebody is unsure what a song is.
@@ -243,7 +243,7 @@ export default async function LeadsPage({
                 )}
                 {l.catalogue_size && (
                   <div className="flex gap-2">
-                    <dt className="sr-only">Catalogue</dt>
+                    <dt className="sr-only">Catalog</dt>
                     <dd>{CATALOGUE_LABEL[l.catalogue_size] ?? l.catalogue_size}</dd>
                   </div>
                 )}

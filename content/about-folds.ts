@@ -33,8 +33,8 @@ export const ABOUT_FOLDS: AboutFold[] = [
     label: 'Why it matters',
     summary: 'What a master recording actually is, and why it is the safest place to start.',
     paragraphs: [
-      'A master recording is not a finished product. It is the foundation for everything that comes next, and most catalogues treat it as an archive rather than an asset that can still grow.',
-      'Music went global. Catalogues did not. The best songs in the world are still largely confined to the language they were written in, and that is one of the last real barriers between a great song and the audience it was always going to find.',
+      'A master recording is not a finished product. It is the foundation for everything that comes next, and most catalogs treat it as an archive rather than an asset that can still grow.',
+      'Music went global. Catalogs did not. The best songs in the world are still largely confined to the language they were written in, and that is one of the last real barriers between a great song and the audience it was always going to find.',
       'Starting from a record that already works is the lowest risk version of expansion there is. The song has proven it connects. What changes is who can understand it.',
     ],
   },
@@ -65,7 +65,7 @@ export const ABOUT_FOLDS: AboutFold[] = [
   },
   {
     label: 'Ways in',
-    summary: 'One flagship release, or catalogue infrastructure. They are different jobs.',
+    summary: 'One flagship release, or catalog infrastructure. They are different jobs.',
     paragraphs: [
       'Most conversations start one of two ways, and it is worth knowing which one you are having before we talk.',
     ],
@@ -75,8 +75,8 @@ export const ABOUT_FOLDS: AboutFold[] = [
         p: 'For artists and managers. Open a song to a new market without re-recording it. Artist approved, delivered ready for release, and yours to mix.',
       },
       {
-        h: 'A catalogue programme',
-        p: 'For labels and catalogue owners. Selected high performing songs, priority territories, authorised asset creation, and reporting that feeds the next round of decisions.',
+        h: 'A catalog program',
+        p: 'For labels and catalog owners. Selected high performing songs, priority territories, authorized asset creation, and reporting that feeds the next round of decisions.',
       },
     ],
     actions: [{ label: 'Start the conversation', href: '#enquire' }],

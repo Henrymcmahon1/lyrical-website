@@ -157,6 +157,22 @@ Dark treatment (listening sections only): ground `#1B1D1F`, ink `#EDEBE4`, accen
 - **"Solutions"** as a nav label.
 - **No em-dashes** in visitor-facing copy.
 - **No artist names.**
+- **US spelling, from 2026-08-09.** Henry's call, made while setting up a LinkedIn page with
+  a US location: a US headquarters next to "authorised" and "catalogue" is the kind of
+  inconsistency a label's legal team notices. `authorized`, `catalog`, `program`.
+
+  **The boundary that matters: copy changed, identifiers did not.** `catalogue_size` is a
+  live Supabase column, the `name` attribute on the form select, and a CSV header, so it
+  still renders in the page source and must stay that way until someone writes a migration.
+  `centre` and `sampleCentreline` in `lib/mark.ts` are geometry variables, not words.
+  No test enforces the spelling, because a test that scanned for "centre" would fail on the
+  Bézier code. Proof was a grep of the RENDERED html on `/`, `/about` and `/hear`: the only
+  survivor is `name="catalogue_size"`.
+
+  **Still British on purpose, pending a decision: "enquiry".** The visitor-facing instances
+  are the submit button, the confirmation email subject and its first line. The rest of the
+  surface is identifiers: the `/api/enquiry` route, the `enquiries` Supabase table, every
+  `#enquire` anchor, and the component and file names. Raised with Henry, not actioned.
 
 ### Stated assumption, on the record
 

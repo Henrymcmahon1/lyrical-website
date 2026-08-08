@@ -10,8 +10,8 @@ export default function S08Rights() {
         holder&rsquo;s permission.
       </h2>
       <p className="mt-6 leading-relaxed text-graphite/75">
-        Every version is authorised before it is made, and reviewed by ear before it is
-        delivered. Voice models are built only from catalogues we have permission to use.
+        Every version is authorized before it is made, and reviewed by ear before it is
+        delivered. Voice models are built only from catalogs we have permission to use.
         You provide the finished master and the approval; we provide the recreation and the
         stems.
       </p>

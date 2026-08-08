@@ -25,7 +25,7 @@ export default function S10Enquire() {
 
           <Reveal delay={120}>
             <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-cream/60">
-              One song, or a whole catalogue. Tell us what you have and where you want it to
+              One song, or a whole catalog. Tell us what you have and where you want it to
               reach, and we&rsquo;ll come back with what a first release would look like:
               what it takes, what you&rsquo;d receive, and how long it runs.
             </p>
@@ -48,8 +48,8 @@ export default function S10Enquire() {
         >
           <EnquiryForm source="footer" tone="dark" />
           <p className="mt-8 text-sm leading-relaxed text-cream/55">
-            Every version is authorised before it is made. Voice models are built only from
-            catalogues we have permission to use.
+            Every version is authorized before it is made. Voice models are built only from
+            catalogs we have permission to use.
           </p>
           {/*
             Read from CONTACT_EMAIL rather than written out. This line held a hardcoded

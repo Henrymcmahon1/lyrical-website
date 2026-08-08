@@ -27,7 +27,7 @@ const ease = (x: number) => 1 - Math.pow(1 - x, 3)
 /**
  * The Unlock — the one sanctioned animation of the mark.
  *
- *   Beat 1  ‖   two vertical bars     the catalogue, paused at a language border
+ *   Beat 1  ‖   two vertical bars     the catalog, paused at a language border
  *   Beat 2  =   rotated to horizontal "equals" — naive translation
  *   Beat 3  ≈   bars bend into waves  what Lyrical actually delivers
  *

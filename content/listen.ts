@@ -7,7 +7,7 @@
  * that names somebody.
  *
  * Order is fixed and matters. The original establishes the voice, the artist's own release
- * shows what an authorised human version of it sounds like, and ours comes last so it is
+ * shows what an authorized human version of it sounds like, and ours comes last so it is
  * heard against both rather than in isolation.
  *
  * `key` is an object in the PRIVATE `listen` bucket in Supabase Storage, not a path in
@@ -30,7 +30,7 @@ export type Track = {
 export const LISTEN_TITLE = 'One song, three recordings'
 
 export const LISTEN_INTRO =
-  'The same song in three versions. The original, the artist’s own authorised Spanish release, and ours. Same order every time, so the only thing that changes between them is what you are listening for.'
+  'The same song in three versions. The original, the artist’s own authorized Spanish release, and ours. Same order every time, so the only thing that changes between them is what you are listening for.'
 
 export const TRACKS: Track[] = [
   {
@@ -42,7 +42,7 @@ export const TRACKS: Track[] = [
   {
     id: 'artist-spanish',
     label: 'The artist’s own Spanish release',
-    note: 'A separately recorded, authorised Spanish version by the same artist. A professional benchmark, not a reference we produced.',
+    note: 'A separately recorded, authorized Spanish version by the same artist. A professional benchmark, not a reference we produced.',
     key: 'artist-spanish.mp3',
   },
   {

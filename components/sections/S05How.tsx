@@ -20,18 +20,18 @@ import { PinnedStepper, type Step } from '../PinnedStepper'
  * engineer and meaningless to everybody else, so nothing was lost by removing it.
  *
  * Numbering is legitimate here: this is a real sequence. Permission is step 00 rather than a
- * footnote, because for a rights holder authorisation is not a disclaimer at the bottom of a
+ * footnote, because for a rights holder authorization is not a disclaimer at the bottom of a
  * page, it is the precondition for everything after it. Putting it first is the difference
  * between reassuring them and reminding them to worry.
  */
 const STEPS: Step[] = [
   {
     h: 'It starts with permission',
-    p: 'Nothing is made without the artist’s or rights holder’s approval, and voice models are built only from catalogues we are allowed to use. Authorisation comes first, before any work begins.',
+    p: 'Nothing is made without the artist’s or rights holder’s approval, and voice models are built only from catalogs we are allowed to use. Authorization comes first, before any work begins.',
   },
   {
     h: 'You send one song',
-    p: 'The finished master, and the languages you want it in. One song is the usual first step, and nothing commits you to a second. A catalogue programme runs the same way, at scale.',
+    p: 'The finished master, and the languages you want it in. One song is the usual first step, and nothing commits you to a second. A catalog program runs the same way, at scale.',
   },
   {
     h: 'You get the assets',

@@ -20,6 +20,10 @@ Dark sections only: ground #1B1D1F · ink #EDEBE4 · accent #FF6B2C
 - Fonts: Fraunces (brand voice) + Archivo (product voice), self-hosted. Never a CDN.
 - Banned copy: "AI-generated", "6.4x", "2.38B", "Solutions".
   Say: recreated, re-sung, performed, transcreation.
+- US spelling in all visitor-facing copy: authorized, catalog, program, not authorised,
+  catalogue, programme. IDENTIFIERS KEEP THE OLD SPELLING. `catalogue_size` is a live
+  Supabase column, a form field name and a CSV header; renaming it needs a migration.
+  Same for `centre`/`centreline` in lib/mark.ts, which are geometry variables.
 - All motion off under prefers-reduced-motion.
 - The site must be readable and the form submittable with JavaScript disabled.
 - Reveal animations must stay scoped to `.js-motion`, or no-JS visitors see blank sections.

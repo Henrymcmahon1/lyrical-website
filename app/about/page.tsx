@@ -8,7 +8,7 @@ import S10Enquire from '@/components/sections/S10Enquire'
 export const metadata = {
   title: 'About',
   description:
-    'Lyrical expands catalogues that already work, with authorised, artist-approved versions for audiences that could not hear them properly before.',
+    'Lyrical expands catalogs that already work, with authorized, artist-approved versions for audiences that could not hear them properly before.',
 }
 
 /**
@@ -36,10 +36,10 @@ export default function About() {
         </h1>
 
         <p className="mt-10 text-lg leading-relaxed text-graphite/75">
-          Lyrical exists because the catalogue that already works in one language is the
+          Lyrical exists because the catalog that already works in one language is the
           safest place to start in another. We don&rsquo;t manufacture demand for unknown
           songs. We take records that have already proven they connect, and make an
-          authorised version for an audience that couldn&rsquo;t hear them properly before.
+          authorized version for an audience that couldn&rsquo;t hear them properly before.
         </p>
 
         <p className="mt-6 text-lg leading-relaxed text-graphite/75">

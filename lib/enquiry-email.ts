@@ -246,7 +246,7 @@ export function confirmationText(d: EnquiryEmailFields): string {
     '',
     'One thing worth saying up front, because it is the part most people want to know:',
     'nothing is ever made without the rights holder or artist approval, and voice models are',
-    'built only from catalogues we are permitted to use. Authorisation comes first, before any',
+    'built only from catalogs we are permitted to use. Authorization comes first, before any',
     'work begins.',
     '',
     'When we reply we will ask which song you want to start with and which language, so have',
@@ -286,7 +286,7 @@ reply within one working day.
 <p style="${para}">
 One thing worth saying up front, because it is the part most people want to know: nothing is
 ever made without the rights holder or artist approval, and voice models are built only from
-catalogues we are permitted to use. Authorisation comes first, before any work begins.
+catalogs we are permitted to use. Authorization comes first, before any work begins.
 </p>
 
 <p style="${para}">

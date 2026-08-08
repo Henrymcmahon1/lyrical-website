@@ -11,7 +11,7 @@ import { entryProgress } from '@/lib/scroll-progress'
  * action. Both halves run at every width.
  *
  * Framed as the cost of inaction stated as fact, not as pressure. No figure is quoted:
- * quantifying what a catalogue is "missing" walks back into the population-multiplier
+ * quantifying what a catalog is "missing" walks back into the population-multiplier
  * claim the Monetization Thesis rules out, and a buyer deciding whether to trust us with
  * masters gets more cautious under pressure, not less.
  */
@@ -86,7 +86,7 @@ export default function S09bNow() {
   }, [])
 
   return (
-    <section aria-label="Your catalogue today">
+    <section aria-label="Your catalog today">
       <div ref={trackRef} className="turn-track">
         <div className="turn-panel">
           <div className="mx-auto max-w-4xl px-6 text-center">
@@ -94,7 +94,7 @@ export default function S09bNow() {
               ref={lineRef}
               className="turn-line font-brand text-4xl leading-[1.1] tracking-tight text-balance sm:text-5xl lg:text-6xl"
             >
-              Your catalogue is already working.
+              Your catalog is already working.
               <br />
               In only one language.
             </h2>
