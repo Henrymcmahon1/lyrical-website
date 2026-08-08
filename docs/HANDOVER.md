@@ -1,6 +1,6 @@
 # Lyrical website — handover
 
-**Date:** 2026-08-03 · **Live:** https://lyricalglobal.com ·
+**Date:** 2026-08-04 · **Live:** https://lyricalglobal.com ·
 **Repo:** https://github.com/Henrymcmahon1/lyrical-website · **Vercel team:** `hjam`
 
 Read this before touching anything. Most of what follows was learned by breaking something,
@@ -46,7 +46,7 @@ Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineerin
 | | |
 |---|---|
 | Stack | Next.js 16.2, React 19, Tailwind 4, TypeScript |
-| Tests | **191**, all passing (`npm test`) |
+| Tests | **216**, all passing (`npm test`) |
 | Email host | **Zoho Mail**, US data centre. MX, SPF and DKIM live. `info@` is a GROUP reaching Jordan and Henry |
 | Sending | **Resend**, own account owned by `info@lyricalglobal.com`, domain verified. SPF lives on the `send.` subdomain so it does not collide with Zoho's at the apex |
 | Confirmation email | **LIVE.** `ENQUIRY_FROM_EMAIL` is `info@lyricalglobal.com`, so `canEmailStrangers()` turns it on |
@@ -179,6 +179,69 @@ tempted to "fix" this heading back to an outcome, it is a decision, not drift.
 
 ---
 
+## 4b. Session 3 (2026-08-04). What changed, and what is still unproven.
+
+### Shipped and verified on production
+
+| | |
+|---|---|
+| Nav | **About + Get started only**, one label at every width. "Hear it" removed because it pointed at a page with nothing to play; "How it works" removed as an anchor into a page that is now two sections |
+| Nav bar | **White**, opaque, no backdrop blur. White is outside the four locked tokens: Henry's call, recorded |
+| Trademark | `components/Trademark.tsx`, on the nav and footer lockups. **™ NEVER ®** |
+| Home page | Three pinned sections became **two**: `S04Fidelity` = "Our technology", `S05How` = "How it works". Three points each, titles pinned and indigo, numbering base 1 |
+| `/leads` | **Delete** with a confirm step, and the 500-row cap now says "Newest 500 of N" instead of hiding rows silently |
+| `/listen` | New private page. See below |
+| Email signatures | `docs/email-signatures.html`, and the logo at `public/brand/lyrical-lockup.png` |
+| Mobile | The audience section stopped clipping its last paragraph on short screens |
+
+### `/listen`, the private demo page
+
+Not linked from anywhere. Password gated, `noindex`, disallowed in robots, absent from the
+sitemap.
+
+- `DEMO_PASSWORD` is **separate** from `ADMIN_PASSWORD`, and the session namespace is
+  `listen:` against `admin:`. `GATE_SECRET` now signs three things, so without namespacing a
+  prospect handed the listening password would hold a valid **admin session for the enquiry
+  inbox**. Tests assert each rejects the others' tokens.
+- Sessions last **4 hours**, against 12 for admin, because this password goes to people
+  outside the company and onto devices that are not theirs.
+- Audio lives in a **private Supabase bucket** (`listen`), NOT in `public/` and NOT in git.
+  Signed URLs are minted per render, and only after the password check.
+- There is no `hasAudio` flag. Availability is derived from whether storage can sign the
+  object, because the flag went stale once and left the page lying about what it had.
+- Two of three tracks are uploaded. The third, our own Spanish version, is still pending.
+
+⚠️ **UNVERIFIED.** After the CSP fix below, nobody has confirmed the players actually play for
+a real visitor. The in-app browser blocks signed URLs by its own safety filter, so it cannot
+be tested from an agent session. **Ask Henry to load `/listen` in his own Chrome and press
+play before building anything else on that page.**
+
+### Gotchas from this session
+
+**A cross-origin move needs a CSP change, and it fails silently.** Moving the audio to
+Supabase broke playback: there was no `media-src`, so it fell back to `default-src 'self'`.
+The page rendered three players, the console was empty because `preload="none"` fetches
+nothing until play, and the controls just sat dead at 0:00. `media-src` is now derived from
+`SUPABASE_URL` in `next.config.ts`.
+
+**`vercel --prod` uploads gitignored files; a redeploy from anywhere else does not.** The
+audio briefly lived in `public/`, reached production only because the CLI uploads the working
+directory, and vanished the first time a deployment came from elsewhere. Tested, not assumed.
+This is why the audio is in storage now.
+
+**Zoho's signature editor has no HTML source view.** Pasting raw HTML puts the code on screen
+as text. Copy the rendered block.
+
+**An email signature cannot do dark mode.** No `<head>` for `color-scheme`, and Zoho strips
+`<style>`, so no media query. The only reliable answer is to give it its own opaque
+background, which is why the signature is a white card and the logo PNG is white-backed
+rather than transparent.
+
+**`file_upload` in the browser tools only accepts chat attachments.** Not a repo path, not the
+scratchpad, and granting folder access does not change it. Henry has to drag files in himself.
+
+---
+
 ## 5. Gotchas that cost real time
 
 **Two scroll clocks, and they are not interchangeable.** `lib/scroll-progress.ts` exports
@@ -256,7 +319,7 @@ only real proof that a key works is a live send appearing in the Resend log.
 ## 6. How to verify anything
 
 ```bash
-npm test                                            # 191 tests
+npm test                                            # 216 tests
 npx eslint .                                        # must be silent
 npx tsc --noEmit                                    # must be silent
 npm run build                                       # must compile clean
