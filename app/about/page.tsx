@@ -9,6 +9,7 @@ export const metadata = {
   title: 'About',
   description:
     'Lyrical expands catalogs that already work, with authorized, artist-approved versions for audiences that could not hear them properly before.',
+  alternates: { canonical: '/about' },
 }
 
 /**

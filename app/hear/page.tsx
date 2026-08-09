@@ -7,6 +7,7 @@ export const metadata = {
   title: 'Hear it',
   description:
     'Choose a language pair and hear an original recording against the recreated version.',
+  alternates: { canonical: '/hear' },
 }
 
 export default async function Hear() {
