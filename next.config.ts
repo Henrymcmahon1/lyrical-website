@@ -25,17 +25,25 @@ import type { NextConfig } from 'next'
  * render, then sit at 0:00 with dead controls and nothing in the console until play is
  * pressed, because `preload="none"` means nothing is fetched before then.
  *
- * Derived from `SUPABASE_URL` rather than written out, so it stays correct if the project
- * ever moves. The wildcard fallback covers a build where that variable is absent: without
- * it the audio silently stops working, and this grants media only, never script.
+ * Derived rather than written out, so it stays correct if the project ever moves. The
+ * wildcard fallback covers a build where the variable is absent: without it the audio
+ * silently stops working, and this grants media only, never script.
+ *
+ * Reads the PUBLIC variable first, added 2026-08-09 for the portal. The browser now talks to
+ * Supabase directly for auth and for uploads, and the origin it uses comes from
+ * `NEXT_PUBLIC_SUPABASE_URL`. `SUPABASE_URL` stays as the fallback so a build that only has
+ * the server-side variable still emits a correct `media-src` for /listen.
  */
-const STORAGE_ORIGIN = (() => {
+const SUPABASE_ORIGIN = (() => {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
   try {
-    return process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).origin : null
+    return raw ? new URL(raw).origin : null
   } catch {
     return null
   }
 })()
+
+const SUPABASE_SRC = SUPABASE_ORIGIN ?? 'https://*.supabase.co'
 
 const CSP = [
   "default-src 'self'",
@@ -43,8 +51,16 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  `media-src 'self' ${STORAGE_ORIGIN ?? 'https://*.supabase.co'}`,
-  "connect-src 'self' https://vitals.vercel-insights.com",
+  `media-src 'self' ${SUPABASE_SRC}`,
+  /*
+    Supabase added 2026-08-09. The portal signs in and uploads from the BROWSER, so those
+    requests are cross-origin XHR. Without this they are refused by `default-src 'self'` and
+    the failure is the same shape as the media-src one that cost a session: the form renders,
+    the button does nothing, and the only clue is a console line nobody reads until they think
+    to look. Uploads especially, since a 60MB PUT that never leaves the page looks like a slow
+    network rather than a policy refusal.
+  */
+  `connect-src 'self' https://vitals.vercel-insights.com ${SUPABASE_SRC}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

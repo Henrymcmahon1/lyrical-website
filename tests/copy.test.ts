@@ -105,8 +105,25 @@ describe('no secret ever reaches the browser', () => {
 
   it('exposes nothing secret through a NEXT_PUBLIC_ variable', () => {
     // NEXT_PUBLIC_ is inlined into the client bundle by design, so a secret given that prefix
-    // is published rather than configured. Only the site URL is legitimately public.
-    const ALLOWED = new Set(['NEXT_PUBLIC_SITE_URL'])
+    // is published rather than configured.
+    //
+    // Widened on 2026-08-09 for the portal, from one name to three. Each addition is a
+    // deliberate decision, not a convenience:
+    //
+    //   SITE_URL    the origin. Public by definition.
+    //   SUPABASE_URL   the project endpoint. Discoverable from any request the browser makes.
+    //   SUPABASE_ANON_KEY   designed to ship in the browser. It carries the `anon` role and
+    //     can only reach what the RLS policies in supabase/schema.sql permit.
+    //
+    // ⚠️ SUPABASE_SERVICE_ROLE_KEY must NEVER appear here. It bypasses every policy, and with
+    // this prefix it would be published in the bundle rather than kept on the server. The
+    // guard below is the thing that would catch that, so widen this set one name at a time and
+    // never by pattern.
+    const ALLOWED = new Set([
+      'NEXT_PUBLIC_SITE_URL',
+      'NEXT_PUBLIC_SUPABASE_URL',
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    ])
     const found = new Set<string>()
 
     for (const f of files) {
