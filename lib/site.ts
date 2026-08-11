@@ -17,14 +17,16 @@
  * the meta description is a signal a crawler can only read as carelessness, and this is the
  * exact drift the enquiry addresses already got caught by once.
  *
- * "AI music translation" leads it on Henry's instruction, 2026-08-09. See the copy rules in
- * CLAUDE.md: "AI" as a category label is allowed, the hyphenated machine-made pairing is not,
- * and `tests/copy.test.ts` still fails the build on it.
+ * "AI" was removed from this description later the same day, 2026-08-09, after Jordan's
+ * feedback that the site read like a technology company explaining itself rather than a
+ * product for rights holders. "Music translation" keeps the searchable half of the phrase.
+ * The word survives ONLY on `/ai-music-translation`, which exists to catch the search and is
+ * deliberately a different job from this one.
  */
 export const SITE_DESCRIPTION =
-  'AI music translation for rights holders. lyrical re-sings a finished record in another ' +
-  'language, in the artist’s own voice, over the untouched original backing. Melody, rhythm ' +
-  'and feel kept intact.'
+  'Music translation for rights holders. lyrical re-sings a finished record in another ' +
+  'language, in the artist’s own voice, over the untouched original backing. No upfront ' +
+  'cost, and nothing is released without your approval.'
 
 export const SITE_URL: string =
   process.env.NEXT_PUBLIC_SITE_URL ||

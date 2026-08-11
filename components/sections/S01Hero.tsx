@@ -19,11 +19,32 @@ export default function S01Hero() {
         Same soul.
       </h1>
 
+      {/*
+        Product first, technology nowhere.
+
+        This paragraph opened "lyrical is AI music translation for rights holders" for a few
+        hours on 2026-08-09 and was changed back the same day: Jordan read it as a technology
+        company explaining itself rather than a product for people who own recordings. The
+        searchable half of the phrase, "music translation", survives in the page title and on
+        `/ai-music-translation`, which is a different job on a different page.
+      */}
       <p className="mt-8 max-w-xl text-lg leading-relaxed text-graphite/75">
-        lyrical is AI music translation for rights holders. We recreate a finished record in
-        another language so it sounds like the artist genuinely recorded it that way. The
-        melody, the rhythm and the feel are kept intact, sung in the artist&rsquo;s own
-        voice, over the untouched original backing.
+        Turn the music you already own into music for audiences around the world. We recreate
+        a finished record in another language so it sounds like the artist genuinely recorded
+        it that way. The melody, the rhythm and the feel are kept intact, sung in the
+        artist&rsquo;s own voice, over the untouched original backing.
+      </p>
+
+      {/*
+        The three terms, stated before the reader has to ask.
+
+        "No risk" was in the draft and is not here on purpose: handing over a master and a
+        voice likeness carries risk, and an absolute like that reads to a lawyer as either
+        naive or evasive. "Nothing is released without your approval" is the stronger line
+        because it is specific, true today, and the thing they actually want to know.
+      */}
+      <p className="mt-7 max-w-xl text-sm leading-relaxed text-graphite/60">
+        No upfront cost. You stay in control. Nothing is released without your approval.
       </p>
 
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">

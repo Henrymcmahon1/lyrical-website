@@ -6,6 +6,7 @@ import S02bAudience from '@/components/sections/S02bAudience'
 import S04Fidelity from '@/components/sections/S04Fidelity'
 import S05How from '@/components/sections/S05How'
 import S09bNow from '@/components/sections/S09bNow'
+import S09cTerms from '@/components/sections/S09cTerms'
 import S10Enquire from '@/components/sections/S10Enquire'
 
 /**
@@ -34,6 +35,12 @@ export default async function Home() {
       <S04Fidelity />
       <S05How />
       <S09bNow />
+      {/*
+        Placed between the turn and the ask on purpose. The turn states the cost of doing
+        nothing; this answers "what does trying cost me"; the form follows immediately. It is
+        the last objection before the ask, so it sits directly before it.
+      */}
+      <S09cTerms />
       <S10Enquire />
     </>
   )

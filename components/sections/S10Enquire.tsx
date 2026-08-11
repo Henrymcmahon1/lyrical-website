@@ -17,7 +17,7 @@ export default function S10Enquire() {
         <div className="text-center">
           <Reveal>
             <h2 className="font-brand text-5xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
-              Send us one song.
+              Send us any song.
               <br />
               We&rsquo;ll show you.
             </h2>

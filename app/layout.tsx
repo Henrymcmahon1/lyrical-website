@@ -19,7 +19,7 @@ export const metadata: Metadata = {
       carry it. Google gives roughly sixty characters here and spends them left to right, so
       a title opening "lyrical |" spends the most valuable space on a word nobody searches.
     */
-    default: 'AI music translation, in the artist’s own voice | lyrical',
+    default: 'Music translation for rights holders, in the artist’s own voice | lyrical',
     template: '%s | lyrical',
   },
   description: DESCRIPTION,
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   // cannot advertise the production URL as its own canonical.
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'AI music translation, in the artist’s own voice | lyrical',
+    title: 'Music translation for rights holders, in the artist’s own voice | lyrical',
     description: DESCRIPTION,
     type: 'website',
     url: SITE,
