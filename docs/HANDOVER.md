@@ -373,9 +373,12 @@ or column drop anywhere in it. Read it before clicking through, but it is expect
 **Henry sets these; I do not transcribe keys.** The anon key is safe in the client bundle, the
 service role key is not and must never appear in a `NEXT_PUBLIC_` variable.
 
-⚠️ `tests/env.test.ts` fails the build if any `NEXT_PUBLIC_` variable other than the site URL
-exists. That guardrail is deliberate. Widen it to exactly these two names, with a comment
-saying why, rather than deleting it.
+⚠️ **`tests/copy.test.ts`, the test named "exposes nothing secret through a `NEXT_PUBLIC_`
+variable", fails the build if any such variable other than the site URL appears in the
+source.** Its `ALLOWED` set holds exactly one name today. Widen it to exactly the two new
+names, with a comment saying why, rather than deleting the guardrail. It exists because
+`NEXT_PUBLIC_` is inlined into the client bundle, so a secret given that prefix is published
+rather than configured.
 
 ---
 
