@@ -35,15 +35,31 @@ export function safePath(raw: string | null): string {
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
+  const tokenHash = url.searchParams.get('token_hash')
   const code = url.searchParams.get('code')
   const next = safePath(url.searchParams.get('next'))
 
-  if (!code) {
+  if (!tokenHash && !code) {
     return NextResponse.redirect(`${SITE_URL}/studio/sign-in?error=missing`)
   }
 
   const supabase = await supabaseServer()
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+  /**
+   * Two shapes, because two things mint links.
+   *
+   * `token_hash` is ours, from `app/studio/sign-in/actions.ts`. It carries no PKCE verifier, so
+   * it verifies in ANY browser: request the link on a laptop, open it on a phone, and it works.
+   * That is the whole reason we took this over from Supabase's mailer.
+   *
+   * `code` is the old PKCE path. It is kept because links live in inboxes: somebody who asked
+   * for one before this changed would otherwise be handed an error for a link that was fine
+   * when it was sent. It can be deleted once no unexpired link of that shape can exist, which
+   * is an hour after this deploys, but the cost of leaving it is four lines.
+   */
+  const { data, error } = tokenHash
+    ? await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' })
+    : await supabase.auth.exchangeCodeForSession(code!)
 
   if (error) {
     // Most often an expired or already-used link. The sign-in page says so in plain words

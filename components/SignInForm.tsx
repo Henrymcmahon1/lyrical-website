@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabaseBrowser } from '@/lib/supabase-client'
+import { requestSignInLink } from '@/app/studio/sign-in/actions'
 
 /**
  * Magic link sign in.
@@ -14,6 +14,12 @@ import { supabaseBrowser } from '@/lib/supabase-client'
  * The success state does NOT say whether the address is already registered. Signing in and
  * signing up look identical from here, which is what stops this page being used to find out
  * which labels have accounts.
+ *
+ * ⚠️ The link is minted and sent by `app/studio/sign-in/actions.ts`, on the server, and NOT by
+ * `supabaseBrowser().auth.signInWithOtp` any more. The old version built the link's host from
+ * `window.location.origin`, which is right on production and silently wrong everywhere else: on
+ * 2026-08-11 a link requested from a dev server left running on localhost went out pointing at
+ * localhost. Deciding the host on the server makes that impossible rather than unlikely.
  */
 const field =
   'w-full rounded-card border border-graphite/20 bg-cream px-4 py-3 text-graphite outline-none transition-colors focus:border-indigo'
@@ -28,21 +34,11 @@ export function SignInForm({ next }: { next?: string }) {
     setState('sending')
 
     try {
-      const redirect = new URL('/auth/callback', window.location.origin)
-      if (next) redirect.searchParams.set('next', next)
+      const result = await requestSignInLink(email, next)
 
-      const { error } = await supabaseBrowser().auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: redirect.toString() },
-      })
-
-      if (error) {
+      if (!result.ok) {
         setState('error')
-        setMessage(
-          error.message.toLowerCase().includes('rate')
-            ? 'Too many links requested. Wait a minute and try again.'
-            : 'We could not send the link. Try again in a moment.',
-        )
+        setMessage(result.error ?? 'We could not send the link. Try again in a moment.')
         return
       }
       setState('sent')
