@@ -80,6 +80,42 @@ describe('the things email clients force on us', () => {
   })
 })
 
+describe('the logo at the top', () => {
+  const html = renderEmailHtml(doc)
+
+  it('is the real mark, served from our own domain', () => {
+    expect(html).toContain('/brand/lyrical-email.png')
+    // Absolute, because an email has no page to be relative to.
+    expect(html).toMatch(/src="https?:\/\/[^"]+\/brand\/lyrical-email\.png"/)
+  })
+
+  it('falls back to the brand name when images are blocked', () => {
+    /**
+     * The important one. Plenty of clients block remote images by default and Outlook desktop
+     * still does, so for a good share of readers the alt text IS the logo. Replacing a text
+     * wordmark with an image is only safe because this reads identically when it fails.
+     *
+     * Lowercase, like everywhere else a person reads the name.
+     */
+    expect(html).toContain('alt="lyrical"')
+    expect(html).not.toContain('alt="Lyrical"')
+    expect(html).not.toMatch(/alt="(logo|image|)"/i)
+  })
+
+  it('reserves its space with width and height ATTRIBUTES, not just CSS', () => {
+    // Outlook ignores CSS sizing on images and obeys only the attributes, and without them a
+    // client that has not loaded the image yet reflows the whole email when it arrives.
+    expect(html).toMatch(/<img[^>]+width="132"[^>]*/)
+    expect(html).toMatch(/<img[^>]+height="34"[^>]*/)
+  })
+
+  it('is the only image in the message', () => {
+    // Every extra remote image is another thing that can fail to load and another request that
+    // tells a tracker the message was opened.
+    expect(html.match(/<img/g)?.length).toBe(1)
+  })
+})
+
 describe('the brand rules survive the trip', () => {
   const html = renderEmailHtml(doc)
 
