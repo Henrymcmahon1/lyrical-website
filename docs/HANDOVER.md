@@ -337,6 +337,48 @@ this was checked. Raised with Henry; the LinkedIn page name was still open at th
 
 ---
 
+## 4d. Song portal. Live infrastructure, applied 2026-08-09.
+
+Applied by me directly in the Supabase dashboard, and each one verified by querying the live
+database afterwards rather than trusting the success message.
+
+| | |
+|---|---|
+| Auth Site URL | **Changed from `http://localhost:3000` to `https://lyricalglobal.com`.** It had never been set. Every magic link would have pointed at localhost, and it fails silently |
+| Redirect URLs | `https://lyricalglobal.com/**` and `http://localhost:3000/**` |
+| Email provider | **Already enabled.** Henry could not find a switch because there was never one to flip. Signups on, confirm email on |
+| Schema | `supabase/schema.sql` run in full. Verified: 4 tables, 2 private buckets, 7 table policies, 2 storage policies |
+| `enquiries` policies | **0, and that is correct.** RLS on with no policy means service-role only. Do not "fix" this |
+
+**How to paste a large file into the Supabase SQL editor.** Do not type it. The editor is
+Monaco and it auto-closes brackets and quotes, so typed SQL arrives corrupted. Instead set the
+model value directly, and fetch the file rather than embedding it, so what runs is byte-exact:
+
+```js
+const sql = await (await fetch('https://raw.githubusercontent.com/Henrymcmahon1/lyrical-website/main/supabase/schema.sql')).text()
+window.monaco.editor.getModels()[0].setValue(sql)
+```
+
+Monaco takes about fifteen seconds to appear on that page; `window.monaco` is undefined before
+then and there is no visible spinner once the shell has rendered.
+
+⚠️ **Supabase warns "This query includes destructive operations" on this file.** It is the
+`drop policy if exists` lines, which is the idempotent pattern: each drops a policy name that
+this file also creates on the following line. There is no `drop table`, `delete`, `truncate`
+or column drop anywhere in it. Read it before clicking through, but it is expected.
+
+### Still needed before auth works
+
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, in `.env.local` and in Vercel.
+**Henry sets these; I do not transcribe keys.** The anon key is safe in the client bundle, the
+service role key is not and must never appear in a `NEXT_PUBLIC_` variable.
+
+⚠️ `tests/env.test.ts` fails the build if any `NEXT_PUBLIC_` variable other than the site URL
+exists. That guardrail is deliberate. Widen it to exactly these two names, with a comment
+saying why, rather than deleting it.
+
+---
+
 ## 5. Gotchas that cost real time
 
 **Two scroll clocks, and they are not interchangeable.** `lib/scroll-progress.ts` exports
