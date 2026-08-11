@@ -4,7 +4,6 @@ import S03Wheels from '@/components/sections/S03Wheels'
 import S04Fidelity from '@/components/sections/S04Fidelity'
 import S05How from '@/components/sections/S05How'
 import S09bNow from '@/components/sections/S09bNow'
-import S09cTerms from '@/components/sections/S09cTerms'
 import S10Start from '@/components/sections/S10Start'
 
 /**
@@ -30,11 +29,15 @@ export default function Home() {
       <S05How />
       <S09bNow />
       {/*
-        Placed between the turn and the ask on purpose. The turn states the cost of doing
-        nothing; this answers "what does trying cost me"; the form follows immediately. It is
-        the last objection before the ask, so it sits directly before it.
+        `S09cTerms` used to sit here, between the turn and the ask: three headings saying no
+        upfront cost, you stay in control, nothing is released without your approval. Removed
+        2026-08-11 on Henry's instruction, and it cost the page almost nothing, because all
+        three sentences were already on it. The hero states them in its third paragraph, the
+        closing section restates them under the button, `S05How` carries the permission promise
+        in step one and now the cost in step two, and `S08Rights` argues the rights position at
+        length on /about. A whole screen to repeat what the page has already said twice is a
+        screen between a reader and the ask.
       */}
-      <S09cTerms />
       <S10Start />
     </>
   )

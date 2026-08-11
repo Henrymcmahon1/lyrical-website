@@ -55,6 +55,30 @@ for (const vp of VIEWPORTS) {
     await page.goto(BASE + route, { waitUntil: 'networkidle' })
     await page.waitForTimeout(500)
 
+    /**
+     * 0. Words fused together by JSX eating a space.
+     *
+     * Added 2026-08-11 after "you have it within 48hours" shipped to production. The SOURCE
+     * had a space in it. JSX strips the space between a `{...}` expression and the text after
+     * it when that text wraps to the next line, so the defect exists only in the output, and
+     * tsc, eslint and 317 unit tests were all green.
+     *
+     * ⚠️ It cannot be caught by a unit test. A first attempt rendered the component under
+     * vitest and PASSED with the bug present, because vitest's compiler and Next's do not
+     * treat that whitespace the same way. The only thing that can catch it is the real build,
+     * which is what this script drives. Checked once per route rather than once per viewport,
+     * since the markup does not change with the viewport.
+     */
+    if (vp === VIEWPORTS[0]) {
+      const fused = await page.evaluate(() => {
+        const text = document.body.innerText
+        // A digit run straight into a word is nearly always this bug: real copy writes
+        // "48 hours". Four letters or more, to skip legitimate forms like "3rd" and "1080p".
+        return [...new Set(text.match(/\d+[A-Za-z]{4,}/g) ?? [])]
+      })
+      if (fused.length) note(route, 'all', 'fused-words', fused.join(', '))
+    }
+
     // 1. Horizontal overflow, and what causes it.
     const overflow = await page.evaluate(() => {
       const doc = document.documentElement

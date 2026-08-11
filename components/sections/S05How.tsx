@@ -31,7 +31,13 @@ const STEPS: Step[] = [
   },
   {
     h: 'You send one song',
-    p: 'The finished master, and the languages you want it in. One song is the usual first step, and nothing commits you to a second. A catalog program runs the same way, at scale.',
+    /*
+     * The cost line lives here since 2026-08-11, when the standalone terms section was removed.
+     * This is the step where the question actually occurs to a reader: the moment they are
+     * asked to hand something over is the moment they wonder what it will cost them. Answering
+     * it in the same breath is worth more than a section of its own three screens later.
+     */
+    p: 'The finished master, and the languages you want it in. One song is the usual first step, nothing commits you to a second, and there is no invoice for finding out what it becomes. A catalog program runs the same way, at scale.',
   },
   {
     h: 'You get the assets',

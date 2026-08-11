@@ -36,9 +36,21 @@ export default function S10Start() {
 
         <Reveal delay={120}>
           <p className="mx-auto mt-7 max-w-xl leading-relaxed text-cream/70">
+            {/*
+              `&nbsp;` and not a plain space, for two reasons.
+
+              It renders. JSX strips the space between a `{...}` expression and the text that
+              follows it when that text wraps to the next line, so this shipped to production
+              reading "within 48hours". Caught by looking at a screenshot, which is the only
+              way it can be caught: the source has a space in it.
+
+              And it keeps the figure with its unit. "48" alone at the end of a line, with
+              "hours" on the next, is the one number on this page a rights holder is reading
+              for.
+            */}
             Upload the stems, or the full mix if that is what you have. We confirm we can take
-            it on, and from that moment you have it within {TURNAROUND_HOURS} hours, sung in
-            the artist&rsquo;s own voice over your untouched original backing.
+            it on, and from that moment you have it within {TURNAROUND_HOURS}&nbsp;hours, sung
+            in the artist&rsquo;s own voice over your untouched original backing.
           </p>
         </Reveal>
 
@@ -67,9 +79,11 @@ export default function S10Start() {
 
         <Reveal delay={280}>
           {/*
-            The three terms restated at the point of commitment, in one line rather than three
-            headings. `S09cTerms` argues them; by the time somebody reaches the button they need
-            reminding, not persuading.
+            The three terms at the point of commitment, in one line rather than three headings.
+            They used to be argued at length by `S09cTerms` a screen further up; that section
+            was removed on 2026-08-11 and this line is now the last place they are said, which
+            makes it load bearing rather than a reminder. If the offer ever changes, this line,
+            the hero's third paragraph and the confirmation email change together.
           */}
           <p className="mx-auto mt-9 max-w-lg text-sm leading-relaxed text-cream/55">
             No upfront cost. Nothing is released without your approval, and every version is
