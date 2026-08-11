@@ -1,5 +1,5 @@
 import { CONTACT_EMAIL } from './enquiry-email'
-import { SITE_URL } from './site'
+import { SITE_DESCRIPTION, SITE_URL } from './site'
 
 /**
  * JSON-LD for the home page.
@@ -32,9 +32,9 @@ import { SITE_URL } from './site'
  */
 export const PROFILES: string[] = []
 
-const DESCRIPTION =
-  'Lyrical recreates a finished record in another language, in the artist’s own voice, ' +
-  'over the untouched original backing. Melody, rhythm and feel kept intact.'
+// One source, shared with the page metadata and the Open Graph card. Structured data that
+// disagrees with the visible description is a signal a crawler reads as carelessness.
+const DESCRIPTION = SITE_DESCRIPTION
 
 export function organizationLd(origin: string = SITE_URL) {
   return {

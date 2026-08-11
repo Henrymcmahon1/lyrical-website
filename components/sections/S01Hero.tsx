@@ -20,9 +20,10 @@ export default function S01Hero() {
       </h1>
 
       <p className="mt-8 max-w-xl text-lg leading-relaxed text-graphite/75">
-        We recreate a finished record in another language so it sounds like the artist
-        genuinely recorded it that way. The melody, the rhythm and the feel are kept
-        intact, sung in the artist&rsquo;s own voice, over the untouched original backing.
+        Lyrical is AI music translation for rights holders. We recreate a finished record in
+        another language so it sounds like the artist genuinely recorded it that way. The
+        melody, the rhythm and the feel are kept intact, sung in the artist&rsquo;s own
+        voice, over the untouched original backing.
       </p>
 
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">

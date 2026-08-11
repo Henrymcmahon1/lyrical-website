@@ -174,6 +174,31 @@ Dark treatment (listening sections only): ground `#1B1D1F`, ink `#EDEBE4`, accen
   surface is identifiers: the `/api/enquiry` route, the `enquiries` Supabase table, every
   `#enquire` anchor, and the component and file names. Raised with Henry, not actioned.
 
+### Changed decision, on the record — 2026-08-09. "AI" is now allowed.
+
+Henry asked for the site to rank for "AI music translation" and named four more phrases:
+music language translation, voice language translation, convert song from one language to
+another, AI music language translation. The trade-off was put to him first, that you cannot
+rank for a phrase you refuse to write and that the ban exists because a rights holder's lawyer
+reads these pages. He confirmed. This is a decision, not drift.
+
+**The line drawn, and it is narrow.** "AI" appears as a **category label** only: the page
+title, the meta description, the hero paragraph and the new `/ai-music-translation` page.
+**"AI-generated" is still banned and `tests/copy.test.ts` still fails on it**, because that
+phrase implies the recording is fabricated, which is the actual claim the rule existed to
+prevent. Nothing anywhere says the output is synthetic. Do not widen this to "AI-generated",
+"AI-powered vocals" or anything implying the master is not a real performance.
+
+⚠️ **The page title no longer carries the tagline.** It is now
+`AI music translation, in the artist's own voice | Lyrical`. That is one of the four places
+§3.3 says to change together; the hero, the footer and the confirmation email still carry it.
+Flagged to Henry rather than done silently, because Google spends roughly sixty title
+characters left to right and opening with "Lyrical |" wastes them.
+
+`/ai-music-translation` is a real page, not a doorway. If a future session is tempted to thin
+it out to chase a ranking, delete it instead. A thin page drags on how the whole domain is
+judged and this site has only three others to carry it.
+
 ### Stated assumption, on the record
 
 The site claims **8 languages**. The internal capability document proves **Spanish ↔ English**

@@ -11,7 +11,9 @@ import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 
 const BASE = process.argv[2] ?? 'http://localhost:3000'
-const ROUTES = ['/', '/hear', '/about']
+// Every public route in the sitemap. A new page that nothing audits is a page that silently
+// clips on a phone: this list has to grow with app/sitemap.ts, not lag behind it.
+const ROUTES = ['/', '/ai-music-translation', '/hear', '/about']
 const VIEWPORTS = [
   { name: 'iphone-se', width: 375, height: 667, mobile: true },
   { name: 'iphone-15', width: 393, height: 852, mobile: true },

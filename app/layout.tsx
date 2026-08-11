@@ -5,17 +5,21 @@ import { Nav } from '@/components/Nav'
 import { Footer } from '@/components/Footer'
 import { SmoothScroll } from '@/components/SmoothScroll'
 import './globals.css'
-import { SITE_URL as SITE } from '@/lib/site'
+import { SITE_DESCRIPTION as DESCRIPTION, SITE_URL as SITE } from '@/lib/site'
 import { ldJson, organizationLd, websiteLd } from '@/lib/structured-data'
-
-const DESCRIPTION =
-  'Lyrical recreates a finished record in another language, in the artist’s own voice, ' +
-  'over the untouched original backing. Melody, rhythm and feel kept intact.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: 'Lyrical | Every song. Any language. Same soul.',
+    /*
+      The keyword leads, on Henry's instruction 2026-08-09.
+
+      ⚠️ This is one of the FOUR places the locked tagline appears, and the tagline is no
+      longer in it. The other three, the hero, the footer and the confirmation email, still
+      carry it. Google gives roughly sixty characters here and spends them left to right, so
+      a title opening "Lyrical |" spends the most valuable space on a word nobody searches.
+    */
+    default: 'AI music translation, in the artist’s own voice | Lyrical',
     template: '%s | Lyrical',
   },
   description: DESCRIPTION,
@@ -23,7 +27,7 @@ export const metadata: Metadata = {
   // cannot advertise the production URL as its own canonical.
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Lyrical | Every song. Any language. Same soul.',
+    title: 'AI music translation, in the artist’s own voice | Lyrical',
     description: DESCRIPTION,
     type: 'website',
     url: SITE,

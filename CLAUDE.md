@@ -20,6 +20,12 @@ Dark sections only: ground #1B1D1F · ink #EDEBE4 · accent #FF6B2C
 - Fonts: Fraunces (brand voice) + Archivo (product voice), self-hosted. Never a CDN.
 - Banned copy: "AI-generated", "6.4x", "2.38B", "Solutions".
   Say: recreated, re-sung, performed, transcreation.
+- "AI" ON ITS OWN IS ALLOWED, since 2026-08-09, on Henry's explicit instruction after the
+  trade-off was put to him. It appears as a CATEGORY LABEL, in the page title, the meta
+  description, the hero paragraph and `/ai-music-translation`, because every phrase a buyer
+  searches contains it. "AI-generated" is still banned and `tests/copy.test.ts` still enforces
+  it: that phrase implies the recording is fabricated, which is the claim the rule exists to
+  prevent. Nothing on the site says the output is synthetic.
 - US spelling in all visitor-facing copy: authorized, catalog, program, not authorised,
   catalogue, programme. IDENTIFIERS KEEP THE OLD SPELLING. `catalogue_size` is a live
   Supabase column, a form field name and a CSV header; renaming it needs a migration.
