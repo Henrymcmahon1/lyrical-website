@@ -58,7 +58,7 @@ Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineerin
 | Enquiry form | **Working.** Live POST returns 200, row written, notification email sent |
 | `/leads` | **Working.** Password gated, list, mark handled, CSV export |
 | Analytics | Vercel Web Analytics live (`window.vam === 'production'`) |
-| Deploy | **Manual only.** GitHub is NOT connected to Vercel. `git push` does nothing on its own |
+| Deploy | ⚠️ **`git push origin main` DEPLOYS TO PRODUCTION.** GitHub IS connected to Vercel. This entry said the opposite until 2026-08-09 and it was wrong. See §5 |
 
 ### Verified end to end on production
 
@@ -423,6 +423,23 @@ timeout samples mid-flight and gave false readings twice.
 
 **Network Solutions' account area renders blank under browser automation.** Do not try to drive
 it. DNS is at Vercel now anyway.
+
+**`git push origin main` IS a production deploy. This document said otherwise for weeks.**
+
+GitHub is connected to Vercel. A push to `main` builds and promotes to production on its own,
+and the resulting deployment carries the alias `lyrical-website-git-main-hjam.vercel.app`,
+which is how to tell a git deploy from a CLI one:
+
+```bash
+npx vercel inspect <deployment-url> | grep git-main
+```
+
+On 2026-08-09 I pushed a commit intending only to share code, and it shipped a set of copy
+changes Henry had explicitly asked me to hold. Nothing broke, but it went live an hour early
+and neither of us expected it, because §2 of this file asserted the opposite.
+
+**Consequence: there is no such thing as "commit and push but do not deploy" on this repo.**
+If work must not go live, keep it on a branch. Pushing `main` is shipping.
 
 **`vercel --prod` can print "Not authorized" and deploy anyway.** Twice on 2026-08-09 the CLI
 ended with a JSON blob reading `"status": "error"`, `"reason": "deploy_failed"`,
