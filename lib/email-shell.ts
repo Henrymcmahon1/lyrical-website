@@ -1,0 +1,201 @@
+/**
+ * One shell every email lyrical sends is rendered through, in HTML and in plain text.
+ *
+ * Five templates now share this: the founder notification, the submission confirmation, the
+ * welcome, the acceptance and the delivery. Before it existed there were two, each with its
+ * own hand-rolled markup, and adding three more would have meant five places where a brand
+ * decision could quietly disagree with the other four.
+ *
+ * ## Why the HTML looks like 2003
+ *
+ * Email clients are not browsers. Outlook renders through Word, Gmail strips `<style>` blocks
+ * and anything in `<head>`, and roughly none of them support flexbox, grid, custom properties
+ * or webfonts reliably. So: nested tables, inline styles on every element, absolute pixel
+ * widths, no classes. This is not cargo cult, it is the actual constraint.
+ *
+ * ## Why there is no dark mode
+ *
+ * There is no `<head>` to put `color-scheme` in, and no `<style>` to hold a media query. The
+ * only thing that survives everywhere is an OPAQUE background painted onto the elements
+ * themselves, which is why every surface here declares cream explicitly rather than inheriting
+ * it. The same lesson the email signature taught, recorded in HANDOVER 4b: a transparent
+ * design becomes unreadable the moment a client inverts it.
+ *
+ * ## Fonts
+ *
+ * Fraunces and Archivo are self-hosted woff2 and cannot be loaded in mail. Georgia stands in
+ * for Fraunces and Helvetica for Archivo, which is the closest either gets on a stock machine.
+ * The brand voice survives as the serif/sans split, not as the exact faces.
+ *
+ * ## What must never appear
+ *
+ * No storage path, no signed URL, no bucket name, no filename. `tests/song-job-email.test.ts`
+ * enforces it across every template built here. Email is forwarded, archived and searched by
+ * systems nobody at lyrical controls, so a link to an unreleased master in an inbox IS the
+ * master, for anyone who ever sees that inbox.
+ */
+
+import { CONTACT_EMAIL } from './enquiry-email'
+
+// The locked tokens. Repeated as literals rather than read from CSS because an email is
+// assembled on the server and never sees a stylesheet.
+export const CREAM = '#F7EFE1'
+export const GRAPHITE = '#1C1A19'
+export const INDIGO = '#4433D6'
+export const EMBER = '#EE4E22'
+
+/** Hairline rules and muted text, as rgba so they sit on cream without a second token. */
+const HAIRLINE = 'rgba(28,26,25,0.14)'
+
+/**
+ * Escape text destined for HTML.
+ *
+ * Every value that reaches a template is attacker-influenced: a song title, an artist name, a
+ * free-text note. Escaping happens HERE, once, at the point of rendering, rather than being
+ * remembered at each call site.
+ */
+export function esc(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/**
+ * The pieces an email can be built from.
+ *
+ * Deliberately small. A template picks blocks and writes words; it never writes markup, so it
+ * cannot invent a style that disagrees with the rest of the system.
+ */
+export type EmailBlock =
+  | { type: 'paragraph'; text: string }
+  | { type: 'rows'; rows: [string, string][] }
+  | { type: 'cta'; label: string; href: string }
+  | { type: 'note'; text: string }
+
+export type EmailDoc = {
+  /**
+   * The grey line an inbox shows after the subject.
+   *
+   * Worth caring about: it is the second thing a person reads and the last chance to earn the
+   * open. Left out, clients fall back to whatever text comes first, which here would be the
+   * word "lyrical" from the wordmark.
+   */
+  preheader: string
+  /** Small uppercase label above the heading. Optional, and usually the state of a job. */
+  eyebrow?: string
+  heading: string
+  blocks: EmailBlock[]
+}
+
+// ── HTML ──────────────────────────────────────────────────────────────────────
+
+const FONT_SERIF = 'Georgia,"Times New Roman",serif'
+const FONT_SANS = 'Helvetica,Arial,sans-serif'
+
+function htmlBlock(block: EmailBlock): string {
+  switch (block.type) {
+    case 'paragraph':
+      return `<p style="margin:0 0 16px;font-family:${FONT_SANS};font-size:15px;line-height:1.65;color:${GRAPHITE};">${esc(block.text)}</p>`
+
+    case 'rows':
+      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:0 0 20px;">${block.rows
+        .map(
+          ([k, v]) =>
+            `<tr><td style="padding:5px 18px 5px 0;font-family:${FONT_SANS};font-size:13px;color:${GRAPHITE};opacity:.55;white-space:nowrap;">${esc(k)}</td>` +
+            `<td style="padding:5px 0;font-family:${FONT_SANS};font-size:14px;color:${GRAPHITE};">${esc(v)}</td></tr>`,
+        )
+        .join('')}</table>`
+
+    case 'cta':
+      /**
+       * Ember fill, cream label, 17px bold.
+       *
+       * Ember on cream is 3.2:1, which fails AA for body text and passes for large text, which
+       * is exactly why the brand rule says fills and large type only. 17px bold clears the
+       * large-text threshold; dropping this below that size would break the rule the site is
+       * tested against. `mso-padding-alt` and the nested table are what give Outlook a button
+       * shape instead of a bare underlined link.
+       */
+      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;margin:4px 0 22px;">
+        <tr><td style="border-radius:10px;background:${EMBER};mso-padding-alt:16px 28px;">
+          <a href="${esc(block.href)}" style="display:inline-block;padding:16px 28px;font-family:${FONT_SANS};font-size:17px;font-weight:bold;line-height:1;color:${CREAM};text-decoration:none;border-radius:10px;">${esc(block.label)}</a>
+        </td></tr>
+      </table>`
+
+    case 'note':
+      return `<p style="margin:0 0 14px;font-family:${FONT_SANS};font-size:13px;line-height:1.6;color:${GRAPHITE};opacity:.62;">${esc(block.text)}</p>`
+  }
+}
+
+export function renderEmailHtml(doc: EmailDoc): string {
+  const eyebrow = doc.eyebrow
+    ? `<p style="margin:0 0 10px;font-family:${FONT_SANS};font-size:11px;letter-spacing:2.2px;text-transform:uppercase;color:${GRAPHITE};opacity:.5;">${esc(doc.eyebrow)}</p>`
+    : ''
+
+  return `<div style="margin:0;padding:0;background:${CREAM};">
+  <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:${CREAM};opacity:0;">${esc(doc.preheader)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CREAM};border-collapse:collapse;">
+    <tr>
+      <td align="center" style="padding:32px 16px 40px;background:${CREAM};">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;border-collapse:collapse;background:${CREAM};">
+          <tr><td style="padding:0 0 26px;">
+            <span style="font-family:${FONT_SERIF};font-size:21px;letter-spacing:-0.3px;color:${GRAPHITE};">lyrical</span>
+          </td></tr>
+          <tr><td style="padding:0;">
+            ${eyebrow}
+            <h1 style="margin:0 0 20px;font-family:${FONT_SERIF};font-size:27px;line-height:1.25;font-weight:normal;color:${GRAPHITE};">${esc(doc.heading)}</h1>
+            ${doc.blocks.map(htmlBlock).join('\n            ')}
+          </td></tr>
+          <tr><td style="padding:26px 0 0;border-top:1px solid ${HAIRLINE};">
+            <p style="margin:0;font-family:${FONT_SANS};font-size:13px;line-height:1.6;color:${GRAPHITE};opacity:.6;">
+              Questions? Reply to this message, or write to <a href="mailto:${CONTACT_EMAIL}" style="color:${INDIGO};">${CONTACT_EMAIL}</a>.
+            </p>
+            <p style="margin:14px 0 0;font-family:${FONT_SANS};font-size:12px;line-height:1.6;color:${GRAPHITE};opacity:.45;">
+              lyrical. Every song. Any language. Same soul.
+            </p>
+          </td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>`
+}
+
+// ── Plain text ────────────────────────────────────────────────────────────────
+
+function textBlock(block: EmailBlock): string {
+  switch (block.type) {
+    case 'paragraph':
+      return block.text
+    case 'rows': {
+      // Pad the labels so the values line up in a monospaced viewer without a table.
+      const width = Math.max(...block.rows.map(([k]) => k.length))
+      return block.rows.map(([k, v]) => `${(k + ':').padEnd(width + 2)}${v}`).join('\n')
+    }
+    case 'cta':
+      return `${block.label}: ${block.href}`
+    case 'note':
+      return block.text
+  }
+}
+
+/**
+ * The same document as text, built from the same blocks.
+ *
+ * Rendered from one source rather than written twice on purpose. The enquiry email learned
+ * this the hard way: two hand-maintained versions of the same message drift, and the half that
+ * drifts is always the one nobody reads until an inbox rule stops matching it.
+ */
+export function renderEmailText(doc: EmailDoc): string {
+  return [
+    doc.heading,
+    '',
+    doc.blocks.map(textBlock).join('\n\n'),
+    '',
+    `Questions? Reply to this message, or write to ${CONTACT_EMAIL}.`,
+    '',
+    'lyrical',
+  ].join('\n')
+}

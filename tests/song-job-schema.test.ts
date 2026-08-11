@@ -88,16 +88,42 @@ describe('language pairs', () => {
     }
   })
 
-  it('promises a number only where the pair is guaranteed', () => {
-    // The important half. An offered-but-unguaranteed pair still works, it just declines to
-    // name a figure, which is true and costs nothing.
-    expect(turnaroundNote('EN', 'ES')).toMatch(/48 hours/)
-    expect(isGuaranteed('EN', 'ES')).toBe(true)
-
-    const ungurantee = turnaroundNote('JA', 'KO')
-    if (!isGuaranteed('JA', 'KO')) {
-      expect(ungurantee).not.toMatch(/\d+ hours/)
-      expect(ungurantee).toMatch(/confirm timing/i)
+  it('guarantees every pair it lets somebody submit', () => {
+    /**
+     * Henry's decision, 2026-08-11, taken after the trade-off was put to him twice: every
+     * offered pair carries the turnaround promise, not just English and Spanish.
+     *
+     * This test is the honest statement of that. The version it replaced asserted the
+     * unguaranteed branch behind `if (!isGuaranteed(...))`, which under this decision is never
+     * entered, so it passed by doing nothing. A test that cannot fail is not a guardrail, and
+     * one that quietly stops checking when a decision changes is worse than no test, because
+     * the green tick is read as coverage.
+     *
+     * What this now protects: adding a language to `lib/languages.ts` widens the promise to
+     * every pair involving it. That is the intended behaviour and it should be a deliberate
+     * act, so it is written down where a diff will show it.
+     */
+    for (const from of OFFERED) {
+      for (const to of OFFERED) {
+        if (from === to) continue
+        expect(isGuaranteed(from, to)).toBe(true)
+      }
     }
+    expect(GUARANTEED.length).toBe(OFFERED.length * (OFFERED.length - 1))
+  })
+
+  it('still declines to name a figure for a pair it does not guarantee', () => {
+    // The branch is no longer reachable through the form, and it is kept alive on purpose:
+    // narrowing GUARANTEED again must not require rediscovering how the other half reads.
+    // A same-language pair is unsubmittable and ungaranteed, so it exercises it honestly.
+    const unguaranteed = turnaroundNote('EN', 'EN')
+    expect(isGuaranteed('EN', 'EN')).toBe(false)
+    expect(unguaranteed).not.toMatch(/\d+ hours/)
+    expect(unguaranteed).toMatch(/confirm timing/i)
+  })
+
+  it('promises a number for a pair it does guarantee', () => {
+    expect(turnaroundNote('EN', 'ES')).toMatch(/48 hours/)
+    expect(turnaroundNote('JA', 'KO')).toMatch(/48 hours/)
   })
 })

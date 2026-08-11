@@ -113,8 +113,7 @@ create table if not exists public.song_jobs (
   rights_warranted_at timestamptz not null default now(),
   approved_at       timestamptz,
   delivered_at      timestamptz,
-  -- Staff only. Never selectable by the customer: see the policy below, which lists columns
-  -- rather than granting the whole row.
+  -- Staff only. See the column grant further down, which is what actually enforces that.
   internal_notes    text
 );
 
@@ -133,7 +132,25 @@ create policy song_jobs_own_insert on public.song_jobs
 
 -- Deliberately NO customer update or delete policy. A submitted job is a record of what
 -- somebody asserted and when. Staff move it through using the service role key, which
--- bypasses RLS entirely, exactly as /leads already does.
+-- bypasses RLS entirely, exactly as /queue already does.
+
+-- ── internal_notes is staff only, and RLS is NOT what makes it so ─────────────
+--
+-- Corrected 2026-08-11. This file used to claim the select policy above "lists columns rather
+-- than granting the whole row". It does not, and no Postgres RLS policy can: a policy decides
+-- WHICH ROWS are visible, never which columns. `song_jobs_own_select` hands the owner the
+-- entire row, so a signed in customer could read our internal notes about their own job
+-- straight off the REST API with `?select=internal_notes`. Nothing in the app did that, which
+-- is exactly why it went unnoticed.
+--
+-- Column-level privileges are the real control, and they are checked independently of RLS.
+-- Revoked from both roles: `anon` because the anon key is public and discoverable, and
+-- `authenticated` because that is the role a customer's own session runs as.
+--
+-- ⚠️ This means no customer-facing query may `select *` on song_jobs: PostgREST will return a
+-- permission error rather than silently dropping the column. `app/studio/page.tsx` names its
+-- columns for that reason. Keep it that way.
+revoke select (internal_notes) on public.song_jobs from anon, authenticated;
 
 create table if not exists public.song_job_assets (
   id           uuid primary key default gen_random_uuid(),

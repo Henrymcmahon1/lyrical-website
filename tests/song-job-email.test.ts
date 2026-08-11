@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import {
+  jobAcceptedHtml,
+  jobAcceptedSubject,
+  jobAcceptedText,
   jobConfirmationHtml,
+  jobConfirmationSubject,
   jobConfirmationText,
+  jobDeliveredHtml,
+  jobDeliveredSubject,
+  jobDeliveredText,
   jobNotificationHtml,
   jobNotificationText,
   timingLine,
   type SongJobEmailFields,
 } from '@/lib/song-job-email'
+import { welcomeHtml, welcomeSubject, welcomeText } from '@/lib/welcome-email'
 
 const base: SongJobEmailFields = {
   title: 'Test Song',
@@ -18,22 +26,86 @@ const base: SongJobEmailFields = {
   submitterEmail: 'someone@label.example',
 }
 
-describe('what a submission email must never contain', () => {
-  it('never carries a storage path, a signed URL, or a bucket name', () => {
+/**
+ * Every template lyrical sends, rendered both ways.
+ *
+ * Collected in one list so that a new template is covered by every rule below the moment it is
+ * added to it, rather than being covered by whichever rules its author happened to remember.
+ */
+const EVERY_TEMPLATE = (d: SongJobEmailFields) => [
+  jobNotificationText(d),
+  jobNotificationHtml(d),
+  jobConfirmationText(d),
+  jobConfirmationHtml(d),
+  jobAcceptedText(d),
+  jobAcceptedHtml(d),
+  jobDeliveredText(d),
+  jobDeliveredHtml(d),
+  welcomeText(),
+  welcomeHtml(),
+]
+
+const EVERY_SUBJECT = (d: SongJobEmailFields) => [
+  jobConfirmationSubject(d),
+  jobAcceptedSubject(d),
+  jobDeliveredSubject(d),
+  welcomeSubject(),
+]
+
+describe('what an email must never contain', () => {
+  it('never carries a storage path, a signed URL, a bucket name or a filename', () => {
     // Email is forwarded, archived and searched by systems nobody here controls. A link to an
     // unreleased master in an inbox is the master, for anyone who ever sees that inbox.
     const withFiles = { ...base, notes: 'nothing special' }
-    const all = [
-      jobNotificationText(withFiles),
-      jobNotificationHtml(withFiles),
-      jobConfirmationText(withFiles),
-      jobConfirmationHtml(withFiles),
-    ].join('\n')
+    const all = EVERY_TEMPLATE(withFiles).join('\n')
 
     expect(all).not.toMatch(/submissions\//)
     expect(all).not.toMatch(/supabase\.co/)
     expect(all).not.toMatch(/\.wav|\.flac|\.aiff/i)
     expect(all).not.toMatch(/token=|sign\/|X-Amz/i)
+  })
+
+  it('never uses an em-dash, including in the ones sent to customers', () => {
+    // The standing style rule. Email is the copy nobody reviews on the way out.
+    for (const rendered of EVERY_TEMPLATE(base)) {
+      expect(rendered).not.toMatch(/—|&mdash;/)
+    }
+  })
+
+  it('never claims the recording is generated', () => {
+    // The same ban the site is held to. "AI-generated" implies the master is fabricated, which
+    // is the claim the rule exists to prevent.
+    for (const rendered of EVERY_TEMPLATE(base)) {
+      expect(rendered).not.toMatch(/AI[-\s]generated/i)
+    }
+  })
+})
+
+describe('the brand renders lowercase, everywhere a person reads it', () => {
+  it('never capitalises the name in a subject line', () => {
+    for (const subject of EVERY_SUBJECT(base)) {
+      expect(subject).not.toMatch(/Lyrical/)
+    }
+  })
+
+  it('signs off in lowercase', () => {
+    for (const rendered of EVERY_TEMPLATE(base)) {
+      expect(rendered).not.toMatch(/Lyrical/)
+    }
+  })
+})
+
+describe('the delivery email, which has no player behind it', () => {
+  it('says the files are coming, and does not tell anyone to go and press play', () => {
+    /**
+     * There is no delivery bucket and no player in the studio: Henry's call on 2026-08-11 was
+     * status plus email, with the audio going across by hand. An email that says "listen here"
+     * pointing at a page that cannot is the `/hear` mistake one layer deeper, and this is the
+     * test that stops a later session adding the link before the player exists.
+     */
+    const text = jobDeliveredText(base)
+    expect(text).toMatch(/sending the files across/i)
+    expect(text).not.toMatch(/log in|sign in|press play|listen here|in the studio/i)
   })
 })
 
@@ -42,12 +114,19 @@ describe('the timing promise', () => {
     expect(timingLine('EN', 'ES')).toMatch(/48 hours/)
   })
 
+  it('names it for every pair the portal accepts, since 2026-08-11', () => {
+    // Henry widened GUARANTEED to all 56 pairs. The email is where that promise actually
+    // reaches a person, so it is asserted here as well as at the source.
+    expect(timingLine('JA', 'KO')).toMatch(/48 hours/)
+    expect(timingLine('PT', 'FR')).toMatch(/48 hours/)
+  })
+
   it('says nothing about hours for a pair we have not committed to', () => {
-    const line = timingLine('JA', 'KO')
-    if (!/48 hours/.test(line)) {
-      expect(line).not.toMatch(/\d+\s*hours/)
-      expect(line).toMatch(/confirm timing/i)
-    }
+    // Unreachable through the form today, deliberately still tested: this is the wording that
+    // comes back if the promise is ever narrowed, and it must not rot in the meantime.
+    const line = timingLine('EN', 'EN')
+    expect(line).not.toMatch(/\d+\s*hours/)
+    expect(line).toMatch(/confirm timing/i)
   })
 
   it('counts from acceptance, not from submission', () => {

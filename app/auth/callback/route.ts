@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import { mailCustomer } from '@/lib/mailer'
 import { supabaseServer } from '@/lib/supabase-server'
 import { SITE_URL } from '@/lib/site'
+import { welcomeHtml, welcomeSubject, welcomeText } from '@/lib/welcome-email'
 
 /**
  * Where a magic link lands. Exchanges the one-time code for a session cookie.
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
   }
 
   const supabase = await supabaseServer()
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
     // Most often an expired or already-used link. The sign-in page says so in plain words
@@ -49,5 +51,54 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${SITE_URL}/studio/sign-in?error=link`)
   }
 
+  const user = data.user
+  if (user && (await claimFirstSignIn(supabase, user.id))) {
+    await mailCustomer(
+      {
+        to: user.email ?? '',
+        subject: welcomeSubject(),
+        text: welcomeText(),
+        html: welcomeHtml(),
+      },
+      'welcome',
+    )
+  }
+
   return NextResponse.redirect(`${SITE_URL}${next}`)
+}
+
+/**
+ * True exactly once per account, on the first magic link they ever open.
+ *
+ * Sign-in is passwordless, so "signed up" and "signed in" are the same click and there is no
+ * separate signup event to hook. The profile row is used as the marker instead: inserting with
+ * `ignoreDuplicates` returns the row only when it did not already exist, which makes "is this
+ * their first time" a single atomic write rather than a read followed by a write. Two links
+ * opened at the same moment therefore cannot both win, and nobody gets two welcomes.
+ *
+ * Written with the USER's client, not the admin one, so the `profiles_self_upsert` policy has
+ * to pass as well. There is no reason for this path to hold service-role power.
+ *
+ * Never throws. A welcome email is worth strictly less than a working sign-in, so any failure
+ * here is swallowed and the person still lands in the studio.
+ */
+async function claimFirstSignIn(
+  supabase: Awaited<ReturnType<typeof supabaseServer>>,
+  userId: string,
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert({ id: userId }, { onConflict: 'id', ignoreDuplicates: true })
+      .select('id')
+
+    if (error) {
+      console.error('[auth] could not claim first sign-in', error)
+      return false
+    }
+    return (data?.length ?? 0) > 0
+  } catch (e) {
+    console.error('[auth] profile claim threw', e)
+    return false
+  }
 }

@@ -1,8 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { Resend } from 'resend'
-import { canEmailStrangers, enquiryRecipients } from '@/lib/enquiry-email'
+import { mailCustomer, mailFounders } from '@/lib/mailer'
 import { SongJobSchema } from '@/lib/song-job-schema'
 import {
   jobConfirmationHtml,
@@ -25,45 +24,27 @@ import { currentUser, supabaseServer } from '@/lib/supabase-server'
  * and a lost master. Email is the least reliable thing in this path and it is treated as such.
  */
 async function notify(fields: SongJobEmailFields): Promise<void> {
-  const key = process.env.RESEND_API_KEY
-  const from = process.env.ENQUIRY_FROM_EMAIL
-  const to = enquiryRecipients(process.env.ENQUIRY_TO_EMAIL)
-
-  if (!key || !from || !to.length) {
-    console.warn('[song-job] Resend not configured; job saved, nobody was told')
-    return
-  }
-
-  const resend = new Resend(key)
-
-  try {
-    await resend.emails.send({
-      from,
-      to,
+  await mailFounders(
+    {
       replyTo: fields.submitterEmail,
       subject: jobNotificationSubject(fields),
       text: jobNotificationText(fields),
       html: jobNotificationHtml(fields),
-    })
-  } catch (e) {
-    console.error('[song-job] founder notification failed', e)
-  }
+    },
+    'job-notification',
+  )
 
-  // Same gate as the enquiry confirmation: only mail a stranger from a verified domain, never
-  // from an @resend.dev sender, which lands in spam and looks like a scam to a rights holder.
-  if (!canEmailStrangers(from)) return
-
-  try {
-    await resend.emails.send({
-      from,
+  // The stranger gate lives in `mailCustomer`: only mail a rights holder from a verified
+  // domain, never from an @resend.dev sender, which lands in spam and reads like a scam.
+  await mailCustomer(
+    {
       to: fields.submitterEmail,
       subject: jobConfirmationSubject(fields),
       text: jobConfirmationText(fields),
       html: jobConfirmationHtml(fields),
-    })
-  } catch (e) {
-    console.error('[song-job] confirmation to submitter failed', e)
-  }
+    },
+    'job-confirmation',
+  )
 }
 
 /**

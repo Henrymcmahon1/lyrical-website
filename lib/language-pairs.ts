@@ -37,13 +37,27 @@ export const pairKey = (from: LanguageCode, to: LanguageCode): PairKey => `${fro
  * ⚠️ HENRY SETS THIS LIST. It is the only thing in the codebase that makes a promise about
  * delivery time to somebody who has already handed over a master.
  *
- * It defaults to the pairs the internal capability document actually supports, English and
- * Spanish in both directions, because understating is the safe failure and overstating is not.
- * Widen it as capability is confirmed, one pair at a time. A pair listed here MUST be
- * deliverable in `TURNAROUND_HOURS`; a test asserts every entry is also offered, but no test
- * can tell you whether it is true.
+ * **Changed 2026-08-11, on Henry's explicit instruction after the trade-off was put to him
+ * twice.** It was English and Spanish in both directions, matching the internal capability
+ * document, on the principle that understating is the safe failure. It is now EVERY offered
+ * pair in both directions: 56 of them.
+ *
+ * What that means in practice, stated plainly because the next person to read this file needs
+ * to know what it costs. A rights holder can now select any two of the eight languages, upload
+ * an unreleased master, and receive a written promise of delivery within `TURNAROUND_HOURS`.
+ * That promise is made in `timingLine()` and lands in their inbox.
+ *
+ * The brake is that the clock starts at ACCEPTANCE, not at submission. A job sits at
+ * `submitted` until a human moves it, and nothing is promised until they do. So the control on
+ * an undeliverable pair is the accept button in `/queue`, which is why that button names the
+ * pair and the promise it is about to start. Read it before clicking it.
+ *
+ * Derived rather than written out as 56 literals, so adding a language to `lib/languages.ts`
+ * cannot leave this list silently half-updated.
  */
-export const GUARANTEED: readonly PairKey[] = ['EN>ES', 'ES>EN']
+export const GUARANTEED: readonly PairKey[] = OFFERED.flatMap((from) =>
+  OFFERED.filter((to) => to !== from).map((to) => pairKey(from, to)),
+)
 
 export function isGuaranteed(from: LanguageCode, to: LanguageCode): boolean {
   return GUARANTEED.includes(pairKey(from, to))

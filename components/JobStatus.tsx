@@ -20,7 +20,7 @@ const STEPS: { key: Status; label: string; blurb: string }[] = [
   { key: 'submitted', label: 'Received', blurb: 'With us. Waiting on us to accept it.' },
   { key: 'approved', label: 'Accepted', blurb: 'Taken on. The clock starts here.' },
   { key: 'in_progress', label: 'Being made', blurb: 'In the studio.' },
-  { key: 'delivered', label: 'Delivered', blurb: 'Yours to listen to and approve.' },
+  { key: 'delivered', label: 'Delivered', blurb: 'Finished. The files are on their way to you.' },
 ]
 
 /** Steps that are still moving. `delivered` and `rejected` are endings, so they do not pulse. */
@@ -31,8 +31,14 @@ export function JobStatus({ status }: { status: string }) {
     return (
       <div className="flex items-center gap-2.5">
         <span className="status-dot bg-graphite/35" data-live="false" aria-hidden="true" />
+        {/*
+          Corrected 2026-08-11. This used to read "We will have been in touch about why", and
+          nobody will have been: rejection sends no email at all, on Henry's instruction. A
+          status line that claims contact the system never makes is worse than a blunt one,
+          because the customer waits for a message that is not coming.
+        */}
         <span className="text-sm text-graphite/70">
-          Not taken on. We will have been in touch about why.
+          Not taken on this time. Write to us if you would like to know why.
         </span>
       </div>
     )
