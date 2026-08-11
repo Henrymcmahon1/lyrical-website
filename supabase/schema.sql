@@ -144,13 +144,34 @@ create policy song_jobs_own_insert on public.song_jobs
 -- is exactly why it went unnoticed.
 --
 -- Column-level privileges are the real control, and they are checked independently of RLS.
--- Revoked from both roles: `anon` because the anon key is public and discoverable, and
+-- Applied to both roles: `anon` because the anon key is public and discoverable, and
 -- `authenticated` because that is the role a customer's own session runs as.
 --
--- ⚠️ This means no customer-facing query may `select *` on song_jobs: PostgREST will return a
--- permission error rather than silently dropping the column. `app/studio/page.tsx` names its
--- columns for that reason. Keep it that way.
-revoke select (internal_notes) on public.song_jobs from anon, authenticated;
+-- ⚠️ THE OBVIOUS VERSION OF THIS DOES NOTHING, SILENTLY. Writing
+--
+--     revoke select (internal_notes) on public.song_jobs from anon, authenticated;
+--
+-- runs without error and changes nothing at all, because Postgres cannot subtract a single
+-- column from a TABLE-level grant: the table grant keeps covering every column, including the
+-- one just named. It was run against production first and `information_schema.column_privileges`
+-- still showed SELECT for both roles, which is the only reason it was caught.
+--
+-- The shape that works is to drop the table-level SELECT and re-grant the columns we do want.
+-- Verified on production 2026-08-11: anon and authenticated hold 12 selectable columns and
+-- internal_notes is not among them, while service_role still holds all 13.
+--
+-- ⚠️ A consequence worth keeping in mind: no customer-facing query may `select *` on song_jobs,
+-- because PostgREST returns a permission error rather than quietly dropping the column.
+-- `app/studio/page.tsx` names its columns for that reason. Keep it that way. And a new column
+-- added to this table will NOT be readable by customers until it is added to the grant below,
+-- which is the safe direction for that mistake to fail in.
+revoke select on public.song_jobs from anon, authenticated;
+
+grant select (
+  id, created_at, user_id, title, primary_artist,
+  source_language, target_language, notes, status,
+  rights_warranted_at, approved_at, delivered_at
+) on public.song_jobs to anon, authenticated;
 
 create table if not exists public.song_job_assets (
   id           uuid primary key default gen_random_uuid(),

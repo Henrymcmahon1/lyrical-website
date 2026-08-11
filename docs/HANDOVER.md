@@ -46,7 +46,7 @@ Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineerin
 | | |
 |---|---|
 | Stack | Next.js 16.2, React 19, Tailwind 4, TypeScript |
-| Tests | **216**, all passing (`npm test`) |
+| Tests | **306**, all passing (`npm test`) |
 | Email host | **Zoho Mail**, US data centre. MX, SPF and DKIM live. `info@` is a GROUP reaching Jordan and Henry |
 | Sending | **Resend**, own account owned by `info@lyricalglobal.com`, domain verified. SPF lives on the `send.` subdomain so it does not collide with Zoho's at the apex |
 | Confirmation email | **LIVE.** `ENQUIRY_FROM_EMAIL` is `info@lyricalglobal.com`, so `canEmailStrangers()` turns it on |
@@ -56,7 +56,7 @@ Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineerin
 | DNS | Nameservers moved to Vercel, so **all DNS is CLI-manageable** (`vercel dns add`) |
 | Database | **Working.** Supabase `enquiries` table exists, RLS on, no anon policy |
 | Enquiry form | **Working.** Live POST returns 200, row written, notification email sent |
-| `/leads` | **Working.** Password gated, list, mark handled, CSV export |
+| `/queue` | **Working.** Password gated. Songs and Enquiries tabs, accept/reject, CSV export. `/leads` redirects into it |
 | Analytics | Vercel Web Analytics live (`window.vam === 'production'`) |
 | Deploy | ⚠️ **`git push origin main` DEPLOYS TO PRODUCTION.** GitHub IS connected to Vercel. This entry said the opposite until 2026-08-09 and it was wrong. See §5 |
 
@@ -106,9 +106,11 @@ rather than at a literal copied into the script, so changing one cannot silently
 
 ### 3.3 Still open, no decision yet
 
-- **No audio anywhere.** Every `hasAudio` in `content/demos.json` is `false`. The hero says
-  "Hear a before and after" and leads to a page with nothing to play. This is the single
+- **No audio anywhere.** Every `hasAudio` in `content/demos.json` is `false`. This is the single
   largest conversion lever on the site and the only one that cannot be faked. Blocked on rights.
+  **Resolved 2026-08-11, one half of it:** the hero no longer says "Hear a before and after"
+  pointing at a section with nothing to play. It sends a song instead. The promise comes back
+  the day real audio publishes, and `/hear` is the first page that should get it.
 - **No social proof.** No client names, testimonials or case studies on any route.
 - **No pricing signal at all.**
 - **Settled 2026-08-03:** the tagline is **"Every song. Any language. Same soul."** Henry
@@ -203,6 +205,26 @@ judged and this site has only three others to carry it.
 
 The site claims **8 languages**. The internal capability document proves **Spanish ↔ English**
 only. Raised with Henry three times and confirmed. Do not reopen without being asked.
+
+### Changed decision, on the record — 2026-08-11. All 56 pairs now carry the 48 hours.
+
+`GUARANTEED` in `lib/language-pairs.ts` was `EN>ES` and `ES>EN`. It is now **every offered pair
+in both directions, 56 of them**. Henry's instruction, given after the trade-off was put to him
+twice, the second time with the contradiction against this very section named.
+
+**What it means in practice.** A rights holder can select any two of the eight languages, upload
+an unreleased master, and receive a written promise of delivery within 48 hours. That promise is
+made by `timingLine()` and it lands in their inbox.
+
+**The brake, and it is the only one.** The clock starts at **acceptance**, not submission. A job
+sits at `submitted` until a human moves it, and nothing is promised until they do. So the control
+on an undeliverable pair is the Accept button in `/queue`, which names the pair and the promise it
+is about to start. **Whoever clicks Accept is the last check that the pair is deliverable.**
+
+`tests/song-job-schema.test.ts` and `tests/song-job-email.test.ts` assert the new rule directly.
+The tests they replaced hid the unguaranteed branch behind `if (!isGuaranteed(...))`, which under
+this decision is never entered, so they passed by doing nothing. A test that quietly stops
+checking when a decision changes is worse than no test, because the green tick reads as coverage.
 
 ### Changed decision, on the record — 2026-08-03
 
@@ -382,6 +404,58 @@ rather than configured.
 
 ---
 
+## 4e. The queue and the funnel. Session 5, 2026-08-11.
+
+### Shipped to production and read back live
+
+| | |
+|---|---|
+| `/queue` | Two tabs, Songs and Enquiries. `/leads` and `/leads/export` are 308 redirects into it |
+| Songs | Accept, Start work, Mark delivered, Reject. Accept stamps `approved_at` and starts the clock; the console shows what is left on it |
+| Hearing a submission | `/queue/audio?asset=<id>` looks the path up in the database and signs for **10 minutes**. **No signed URL is ever rendered into the page.** A test asserts the markup contains no path, bucket or token |
+| Emails | Welcome on first sign-in, Accepted, Delivered. All five templates now share `lib/email-shell.ts`. Rejection sends **nothing**, deliberately |
+| Home | Studio-first. `S10Start` closes `/`, `/about`, `/hear`, `/ai-music-translation` |
+| `/contact` | New. The enquiry form lives here and nowhere else. In the sitemap and `llms.txt` |
+| Hero | The ember button no longer says "Hear a before and after". It sends a song |
+| `/hear` | Repointed, not redirected. Now "Languages". Its description no longer promises playback |
+| Scorecard | In the studio, under the customer's songs. Seven criteria, **no numbers**, method only |
+| Tests | **306**, from 241 |
+
+⚠️ **The `/queue` session cookie is scoped to `/queue`, not `/leads`.** Everyone signs in once
+more with the same `ADMIN_PASSWORD`. No new secret was invented.
+
+### Two things found while building, both worth reading
+
+**`internal_notes` was readable by the customer, and the schema comment said it was not.**
+`supabase/schema.sql` claimed the select policy "lists columns rather than granting the whole
+row". No Postgres RLS policy can do that: a policy decides which ROWS are visible, never which
+columns. `song_jobs_own_select` handed the owner the entire row, so a signed in customer could
+have read our internal notes with `?select=internal_notes`. Nothing in the app ever did, which
+is exactly why it survived.
+
+⚠️ **And the obvious fix does nothing, silently.** `revoke select (internal_notes) on
+public.song_jobs from anon, authenticated` runs without error and changes nothing, because
+Postgres cannot subtract one column from a TABLE-level grant. It was run against production
+first and `information_schema.column_privileges` still showed SELECT for both roles, which is
+the only reason it was caught. The working shape is `revoke select on <table>` followed by
+`grant select (<the columns you want>)`. Applied and verified on production: anon and
+authenticated hold 12 selectable columns, service_role holds 13.
+
+**A consequence to remember:** a new column on `song_jobs` will not be readable by customers
+until it is added to that grant, and no customer-facing query may `select *` on it.
+
+### Still open after this session
+
+- **`/listen` playback has still never been verified by a human.** Oldest open item.
+- **No audio anywhere.** `S03Wheels` on the home page still carries the eyebrow "Hear it" above
+  the language wheel. It was left alone because that section delivers what it offers, a request
+  for examples by email, but it is the last "hear" on the site without a player behind it.
+- **Delivery is status plus email only.** There is no delivery bucket, no player in the studio
+  and no signed URL that would be safe in an inbox. `jobDeliveredText` therefore says the files
+  are coming separately, and a test stops a later session adding a link before a player exists.
+- **`auth.admin.listUsers` in `SongsTab` is capped at 1000 accounts.** Past that the tail renders
+  "unknown sender", which is the right failure, but it wants paging or a denormalised column.
+
 ## 5. Gotchas that cost real time
 
 **Two scroll clocks, and they are not interchangeable.** `lib/scroll-progress.ts` exports
@@ -484,7 +558,7 @@ only real proof that a key works is a live send appearing in the Resend log.
 ## 6. How to verify anything
 
 ```bash
-npm test                                            # 216 tests
+npm test                                            # 306 tests
 npx eslint .                                        # must be silent
 npx tsc --noEmit                                    # must be silent
 npm run build                                       # must compile clean
@@ -494,7 +568,7 @@ node scripts/preflight-enquiry.mjs                  # which env vars exist, what
 node scripts/preflight-enquiry.mjs --smoke          # sends ONE real labelled test enquiry
 node scripts/audit-responsive.mjs <url>             # overflow, blank screens, tap targets
 node scripts/audit-motion.mjs <url>                 # proves the motion MOVES, 31 assertions
-node scripts/audit-enquiry.mjs http://localhost:3000 # the 503 path and the mailto fallback
+node scripts/audit-enquiry.mjs http://localhost:3000 # the 503 path and the mailto fallback, on /contact
 ```
 
 `audit-enquiry` asserts the **unconfigured** branch, so run it against a local server with no
