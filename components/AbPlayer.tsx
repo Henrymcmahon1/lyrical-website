@@ -54,15 +54,18 @@ export function AbPlayer({
           A before-and-after for this pair isn&rsquo;t published yet.
         </p>
         {/*
-          `/contact` rather than `#enquire`, since the form left the page this sits on. An
-          in-page anchor to a section that is no longer rendered scrolls nowhere at all, which
-          reads as a broken button rather than a missing one.
+          "Ask to hear this pair" went on 2026-08-11 with the rest of the examples flow. It was
+          the same promise as the button Henry removed, hiding on a component that only renders
+          when there is no audio, which is exactly where an unwanted promise survives a cleanup.
+
+          What replaces it is the site's one ask. Somebody looking at an unpublished pair is
+          better served by sending us their own song than by joining a list for a sample.
         */}
         <a
-          href="/contact"
+          href="/studio"
           className="nudge mt-4 inline-block rounded-card border border-dark-accent px-5 py-3 text-sm text-dark-accent transition-colors hover:bg-dark-accent hover:text-dark-ground"
         >
-          Ask to hear this pair
+          Make your song multilingual
         </a>
       </div>
     )

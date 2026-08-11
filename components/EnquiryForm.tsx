@@ -5,17 +5,18 @@ import { CONTACT_EMAIL, enquiryMailto } from '@/lib/enquiry-email'
 import { ROLES } from '@/lib/enquiry-schema'
 import { LANGUAGES } from '@/lib/languages'
 
-/**
- * Why somebody is writing. Two answers, because there are two conversations.
+/*
+ * The "what can we help with?" radio is gone, 2026-08-11.
  *
- * `examples` sets `unlocked_audio`, the column that has always recorded "this person asked to
- * hear examples". Reusing it means the choice is visible on /leads and in the notification
- * with no migration and no second source of truth.
+ * Its two options were "I'd like to hear examples" and "I'd like to talk about a project", and
+ * the first one was the same promise as the "Send me before and afters" button Henry removed.
+ * Leaving it here would have meant the site still offering samples on the one page most likely
+ * to be read by somebody deciding whether to trust us.
+ *
+ * `unlocked_audio` stays in the database and on the CSV export. It holds real history from
+ * every enquiry made while that question existed, and dropping the column would destroy it to
+ * tidy up a form. Nothing writes `true` to it any more.
  */
-const INTENTS = [
-  { value: 'examples', label: 'I’d like to hear examples' },
-  { value: 'project', label: 'I’d like to talk about a project' },
-] as const
 
 const ROLE_LABELS: Record<(typeof ROLES)[number], string> = {
   artist: 'An artist',
@@ -34,19 +35,10 @@ export function EnquiryForm({
   source,
   onSuccess,
   tone = 'light',
-  compact = false,
 }: {
   source: string
   onSuccess?: () => void
   tone?: 'light' | 'dark'
-  /**
-   * Two fields: email, and the languages. Used by the "send me examples" overlay.
-   *
-   * Somebody asking to hear a sample is browsing, not buying. Published form research puts a
-   * seven-field form near 11% against roughly 23% at three, and the five fields dropped here
-   * are all questions the reply can ask instead. The full form keeps them.
-   */
-  compact?: boolean
 }) {
   // Set in an effect, not during render: Date.now() is impure and would give the server
   // and the client different values, risking a hydration mismatch.
@@ -87,10 +79,9 @@ export function EnquiryForm({
       target_languages: fd.getAll('target_languages').map(String),
       message: String(fd.get('message') ?? ''),
       source,
-      // The gate IS an examples request, so it stays true there regardless. On the full form
-      // it is whatever they picked, and an unanswered choice stays false, which is not a
-      // guess: false records that they did not ask for examples, which is exactly true.
-      unlocked_audio: source === 'gate' || fd.get('intent') === 'examples',
+      // Always false since the examples request was removed. Sent explicitly rather than
+      // omitted so the server keeps validating a boolean it has always received.
+      unlocked_audio: false,
       website: String(fd.get('website') ?? ''),
       // If the ref somehow never initialised, don't let a real person be treated as a bot.
       elapsed_ms: mountedAt.current ? Date.now() - mountedAt.current : 10_000,
@@ -125,11 +116,11 @@ export function EnquiryForm({
   const chip = `nudge inline-flex min-h-11 cursor-pointer items-center rounded-card border ${border} px-3 text-sm transition-colors has-checked:border-ember has-checked:text-ember`
 
   /**
-   * Shared by both modes, in two different places.
+   * Filed with the other optional questions.
    *
-   * The gate shows it beside the email, because picking a language IS the request there. The
-   * full form files it with the other optional questions, where somebody has already decided
-   * to make contact and the languages can be settled in the reply.
+   * It used to be rendered twice, because the removed examples overlay put it beside the email
+   * where picking a language WAS the request. There is one form now, and somebody filling it in
+   * has already decided to make contact, so the languages can be settled in the reply.
    */
   const languages = (
     <fieldset className="flex flex-col gap-3">
@@ -172,12 +163,6 @@ export function EnquiryForm({
     >
       <input type="hidden" name="source" value={source} />
       <input type="hidden" name="elapsed_ms" value={9999} />
-      {/*
-        Compact mode never shows the role question. The schema now maps a missing role to
-        'other' itself, so there is nothing to send: an explicit hidden field here would be a
-        second place to keep that default in step.
-      */}
-
       {/* Honeypot: kept in the layout but visually hidden, so bots still fill it. */}
       <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden opacity-0">
         <label>
@@ -186,35 +171,10 @@ export function EnquiryForm({
         </label>
       </div>
 
-      {!compact && (
-        <>
-          {/*
-            First, because it frames everything under it and it is the one question whose
-            answer changes what the reply should say. It replaced two buttons that both
-            pointed at things already on the same screen.
-
-            Radios, not a select: two options are faster to read side by side than to open.
-            Neither is pre-selected, and nothing here is required. An unanswered choice
-            records `unlocked_audio: false`, which is a true statement rather than a guess.
-          */}
-          <fieldset className="flex flex-col gap-3">
-            <legend className="text-sm">What can we help with?</legend>
-            <div className="flex flex-wrap gap-2">
-              {INTENTS.map((i) => (
-                <label key={i.value} className={chip}>
-                  <input type="radio" name="intent" value={i.value} className="sr-only" />
-                  {i.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <label className="flex flex-col gap-2">
-            <span className="text-sm">Your name</span>
-            <input name="name" required minLength={2} autoComplete="name" className={field} />
-          </label>
-        </>
-      )}
+      <label className="flex flex-col gap-2">
+        <span className="text-sm">Your name</span>
+        <input name="name" required minLength={2} autoComplete="name" className={field} />
+      </label>
 
       <label className="flex flex-col gap-2">
         <span className="text-sm">Email</span>
@@ -227,9 +187,7 @@ export function EnquiryForm({
         />
       </label>
 
-      {compact ? (
-        languages
-      ) : (
+      {
         /*
          * Everything optional, collapsed.
          *
@@ -297,7 +255,7 @@ export function EnquiryForm({
             </label>
           </div>
         </details>
-      )}
+      }
 
       {state === 'error' && (
         <div role="alert" className="flex flex-col gap-3">
@@ -324,7 +282,7 @@ export function EnquiryForm({
         disabled={state === 'sending'}
         className="nudge self-start rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
       >
-        {state === 'sending' ? 'Sending…' : compact ? 'Send me examples' : 'Send enquiry'}
+        {state === 'sending' ? 'Sending…' : 'Send enquiry'}
       </button>
     </form>
   )

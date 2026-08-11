@@ -5,7 +5,7 @@ import {
   signAdminSession,
   verifyAdminSession,
 } from '@/lib/admin-auth'
-import { signGate } from '@/lib/gate'
+import { createHmac } from 'node:crypto'
 
 const SECRET = 'a'.repeat(64)
 const NOW = 1_800_000_000_000
@@ -61,11 +61,11 @@ describe('the admin session token', () => {
     expect(verifyAdminSession(undefined, NOW)).toBe(false)
   })
 
-  it('will NOT accept a visitor gate token as an admin session', () => {
-    // Both are HMACed with GATE_SECRET. If the payloads were not namespaced, anybody who
-    // asked for audio examples would hold a token that opened the leads page.
-    const visitorToken = signGate('someone@example.com')
-    expect(verifyAdminSession(visitorToken, NOW)).toBe(false)
+  it('will NOT accept an unnamespaced token as an admin session', () => {
+    // GATE_SECRET signs more than one thing, and all of them are HMACs of arbitrary text under
+    // one key. Without the `admin:` prefix, any other token signed with it would open /queue.
+    expect(verifyAdminSession(unnamespacedToken('someone@example.com'), NOW)).toBe(false)
+    expect(verifyAdminSession(unnamespacedToken('1754870000000'), NOW)).toBe(false)
   })
 
   it('fails closed when GATE_SECRET is missing rather than throwing', () => {
@@ -104,3 +104,20 @@ describe('the admin password check', () => {
     expect(checkAdminPassword(undefined)).toBe(false)
   })
 })
+
+/**
+ * An unnamespaced token, signed with the same GATE_SECRET.
+ *
+ * This used to be `signGate` from `lib/gate.ts`, the visitor "asked for examples" cookie. That
+ * module was deleted on 2026-08-11 when the examples flow was removed, and the property it let
+ * us test did NOT go with it: GATE_SECRET still signs more than one thing, and every one of
+ * them is an HMAC of arbitrary text under one key. Without a namespace prefix, any token is a
+ * valid token for any of them.
+ *
+ * Minted here rather than imported, so the guard keeps being exercised by the shape of the
+ * threat rather than by whichever feature happened to produce it last.
+ */
+function unnamespacedToken(payload: string): string {
+  const mac = createHmac('sha256', SECRET).update(payload).digest('hex')
+  return `${Buffer.from(payload).toString('base64url')}.${mac}`
+}

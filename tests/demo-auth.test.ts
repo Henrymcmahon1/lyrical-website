@@ -6,7 +6,7 @@ import {
   verifyDemoSession,
 } from '@/lib/demo-auth'
 import { ADMIN_MAX_AGE_MS, signAdminSession, verifyAdminSession } from '@/lib/admin-auth'
-import { signGate } from '@/lib/gate'
+import { createHmac } from 'node:crypto'
 
 const SECRET = 'a'.repeat(64)
 const NOW = 1_800_000_000_000
@@ -56,9 +56,10 @@ describe('the /listen session token', () => {
 })
 
 /**
- * GATE_SECRET signs three different things: the visitor audio-gate cookie, the admin session
- * and the listening session. All three are HMACs of arbitrary text under one key, so without
- * a namespace prefix any one of them would be a valid token for the others.
+ * GATE_SECRET signs the admin session and the listening session, and it used to sign a third
+ * thing, the visitor examples cookie, which was removed on 2026-08-11. All of them are HMACs of
+ * arbitrary text under one key, so without a namespace prefix any one would be valid for the
+ * others.
  *
  * This is the part that actually matters. The listening password is handed to people outside
  * the company, and it is deliberately memorable so it can be read out on a call. If that
@@ -74,10 +75,13 @@ describe('the three session types cannot be swapped for one another', () => {
     expect(verifyAdminSession(signDemoSession(NOW), NOW)).toBe(false)
   })
 
-  it('a visitor GATE token opens neither', () => {
-    const gate = signGate('stranger@example.com')
-    expect(verifyDemoSession(gate, NOW)).toBe(false)
-    expect(verifyAdminSession(gate, NOW)).toBe(false)
+  it('an UNNAMESPACED token opens neither', () => {
+    // The general form of the threat, and the reason the prefixes exist. Kept after the
+    // examples cookie was deleted, because the next thing signed with this key will be minted
+    // by somebody who has not read this file.
+    const raw = unnamespacedToken('stranger@example.com')
+    expect(verifyDemoSession(raw, NOW)).toBe(false)
+    expect(verifyAdminSession(raw, NOW)).toBe(false)
   })
 })
 
@@ -104,3 +108,20 @@ describe('the /listen password', () => {
     expect(checkDemoPassword('anything at all')).toBe(false)
   })
 })
+
+/**
+ * An unnamespaced token, signed with the same GATE_SECRET.
+ *
+ * This used to be `signGate` from `lib/gate.ts`, the visitor "asked for examples" cookie. That
+ * module was deleted on 2026-08-11 when the examples flow was removed, and the property it let
+ * us test did NOT go with it: GATE_SECRET still signs more than one thing, and every one of
+ * them is an HMAC of arbitrary text under one key. Without a namespace prefix, any token is a
+ * valid token for any of them.
+ *
+ * Minted here rather than imported, so the guard keeps being exercised by the shape of the
+ * threat rather than by whichever feature happened to produce it last.
+ */
+function unnamespacedToken(payload: string): string {
+  const mac = createHmac('sha256', SECRET).update(payload).digest('hex')
+  return `${Buffer.from(payload).toString('base64url')}.${mac}`
+}

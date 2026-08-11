@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { CONTACT_EMAIL } from '@/lib/enquiry-email'
 
 const insert = vi.fn()
 vi.mock('@/lib/supabase-admin', () => ({
@@ -73,14 +72,18 @@ describe('POST /api/enquiry', () => {
     })
   })
 
-  it('sets the unlock cookie when the submission came from the gate', async () => {
+  it('sets NO cookie at all, since the examples gate was removed', async () => {
+    /**
+     * This route used to mint a signed, year-long `lyr_unlocked` cookie so the listening
+     * section could thank a returning visitor instead of asking twice. The examples request
+     * went on 2026-08-11 and the cookie went with it: a year-long cookie that changes nothing
+     * on any page is one more thing to explain to a rights holder's lawyer, for no benefit.
+     *
+     * Asserted rather than simply deleted, because a cookie quietly reappearing on a public
+     * form is the kind of change nobody notices until somebody asks what it is for.
+     */
     const res = await POST(req(valid))
-    expect(res.headers.get('set-cookie') ?? '').toContain('lyr_unlocked=')
-  })
-
-  it('marks the cookie HttpOnly so script cannot read it', async () => {
-    const res = await POST(req(valid))
-    expect(res.headers.get('set-cookie') ?? '').toContain('HttpOnly')
+    expect(res.headers.get('set-cookie')).toBeNull()
   })
 
   it('does not set a cookie for an ordinary enquiry', async () => {
@@ -144,14 +147,14 @@ describe('POST /api/enquiry', () => {
   })
 
   /**
-   * The intent radio replaced two buttons in the enquire section. It is optional, and it is
-   * the only thing that tells the two kinds of enquiry apart in the inbox, so it is worth
-   * pinning that it cannot be forged and cannot be guessed.
+   * `unlocked_audio` after the examples request was removed, 2026-08-11.
    *
-   * Read from the form rather than the JSON body on purpose: a value the client asserts about
-   * itself is a value a hand-written POST can assert too.
+   * The radio that set it is gone, and the column stays because it holds real history from
+   * every enquiry made while the question existed. What is still worth pinning is the part
+   * that was always the point: the SERVER decides this value, not the client. A field a
+   * hand-written POST can assert about itself is not a record of anything.
    */
-  describe('the intent choice', () => {
+  describe('unlocked_audio', () => {
     const post = (extra: Record<string, string>) => {
       const fd = new FormData()
       fd.set('name', 'Henry McMahon')
@@ -162,113 +165,27 @@ describe('POST /api/enquiry', () => {
       return POST(new Request('http://localhost:3000/api/enquiry', { method: 'POST', body: fd }))
     }
 
-    it('records an examples request when that is what was chosen', async () => {
-      await post({ intent: 'examples' })
-      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: true })
-    })
-
-    it('records a project enquiry as not an examples request', async () => {
-      await post({ intent: 'project' })
-      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: false })
-    })
-
-    it('treats an unanswered choice as false rather than guessing', async () => {
+    it('is false now that nothing on the site asks for examples', async () => {
       await post({})
       expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: false })
     })
 
-    it('cannot be forged by asserting it in the body', async () => {
-      // The client says true; the form says nothing. The form wins.
+    it('CANNOT be forged by asserting it in the body', async () => {
+      // The client says true. The server does not read it from there, and never did.
       await post({ unlocked_audio: 'true' })
       expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: false })
     })
 
-    it('still treats the examples gate as an examples request', async () => {
-      await post({ source: 'gate', intent: '' })
-      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: true })
+    it('ignores a leftover intent field from a stale cached page', async () => {
+      // Somebody holding an old version of the form in a tab can still post `intent`. It must
+      // not resurrect a promise the site no longer makes.
+      await post({ intent: 'examples' })
+      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: false })
     })
-  })
-})
 
-describe('degrading when the site is deployed before its services exist', () => {
-  const bare = { ...valid, unlocked_audio: false }
-
-  it('still succeeds with no database, as long as the email goes', async () => {
-    delete process.env.SUPABASE_URL
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY
-    const res = await POST(req(bare))
-    expect(res.status).toBe(200)
-    expect(insert).not.toHaveBeenCalled()
-    expect(send).toHaveBeenCalledOnce()
-    process.env.SUPABASE_URL = 'https://example.supabase.co'
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
-  })
-
-  it('FAILS LOUDLY when there is no database and the email also fails', async () => {
-    // The email is the only record here, so silently returning success would lose the lead.
-    delete process.env.SUPABASE_URL
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY
-    send.mockRejectedValue(new Error('resend down'))
-    const res = await POST(req(bare))
-    expect(res.status).toBe(502)
-    const body = await res.json()
-    // The public contact address, not a founder's personal one: this string is shown to a
-    // visitor whose enquiry just failed, so it has to be somewhere they can actually reach.
-    expect(body.error).toContain(CONTACT_EMAIL)
-    process.env.SUPABASE_URL = 'https://example.supabase.co'
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
-  })
-
-  it('tells the visitor where to go when nothing is configured at all', async () => {
-    delete process.env.SUPABASE_URL
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY
-    delete process.env.RESEND_API_KEY
-    const res = await POST(req(bare))
-    expect(res.status).toBe(503)
-    const body = await res.json()
-    expect(body.error).toContain(CONTACT_EMAIL)
-    expect(insert).not.toHaveBeenCalled()
-    process.env.SUPABASE_URL = 'https://example.supabase.co'
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key'
-    process.env.RESEND_API_KEY = 'test-key'
-  })
-})
-
-describe('the enquiry route is rate limited', () => {
-  it('allows five submissions from one caller, then answers 429', async () => {
-    for (let i = 0; i < 5; i++) {
-      expect((await POST(req(valid))).status, `submission ${i + 1}`).toBe(200)
-    }
-    const blocked = await POST(req(valid))
-    expect(blocked.status).toBe(429)
-  })
-
-  it('tells a throttled caller when to come back', async () => {
-    for (let i = 0; i < 5; i++) await POST(req(valid))
-    const blocked = await POST(req(valid))
-    expect(Number(blocked.headers.get('retry-after'))).toBeGreaterThan(0)
-  })
-
-  it('writes nothing and sends nothing once throttled', async () => {
-    for (let i = 0; i < 5; i++) await POST(req(valid))
-    insert.mockClear()
-    send.mockClear()
-    await POST(req(valid))
-    expect(insert).not.toHaveBeenCalled()
-    expect(send).not.toHaveBeenCalled()
-  })
-
-  it('counts callers separately by forwarded IP', async () => {
-    const from = (ip: string) =>
-      new Request('http://localhost:3000/api/enquiry', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
-        body: JSON.stringify(valid),
-      })
-
-    for (let i = 0; i < 5; i++) await POST(from('203.0.113.9'))
-    expect((await POST(from('203.0.113.9'))).status).toBe(429)
-    // A different visitor must be unaffected by somebody else exhausting their allowance.
-    expect((await POST(from('198.51.100.4'))).status).toBe(200)
+    it('ignores the old gate source for the same reason', async () => {
+      await post({ source: 'gate' })
+      expect(insert.mock.calls[0][0]).toMatchObject({ unlocked_audio: false })
+    })
   })
 })

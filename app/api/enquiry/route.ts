@@ -12,7 +12,6 @@ import {
 } from '@/lib/enquiry-email'
 import { EnquirySchema, MIN_ELAPSED_MS, resolveName } from '@/lib/enquiry-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { GATE_COOKIE, signGate } from '@/lib/gate'
 import { clientKey, consume } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
@@ -62,10 +61,10 @@ export async function POST(request: Request) {
       ...Object.fromEntries(fd.entries()),
       target_languages: fd.getAll('target_languages').map(String),
       elapsed_ms: Number(fd.get('elapsed_ms') ?? MIN_ELAPSED_MS),
-      // Derived here rather than trusted from the body, so a hand-crafted POST cannot claim
-      // it. The gate is an examples request by definition; on the full form it is the intent
-      // radio, which is optional and defaults to false when nobody picked.
-      unlocked_audio: fd.get('source') === 'gate' || fd.get('intent') === 'examples',
+      // Always false since the examples request was removed on 2026-08-11. Derived here
+      // rather than trusted from the body, so a hand-crafted POST cannot claim otherwise, and
+      // set explicitly so the schema keeps validating the boolean it has always received.
+      unlocked_audio: false,
     }
   } else {
     raw = await request.json().catch(() => null)
@@ -216,16 +215,16 @@ export async function POST(request: Request) {
     )
   }
 
+  /*
+   * The signed "this visitor asked for examples" cookie is gone, 2026-08-11.
+   *
+   * It existed to remember somebody across visits so the listening section could thank them
+   * instead of asking twice. With the examples request removed there is nothing to remember,
+   * and a year-long cookie that changes nothing on any page is a year-long cookie we would
+   * have to keep explaining. `GATE_SECRET` itself stays: it still signs the admin session and
+   * the /listen session, which are unrelated and namespaced apart.
+   */
   const extra: Record<string, string> = {}
-  if (d.unlocked_audio) {
-    try {
-      extra['set-cookie'] =
-        `${GATE_COOKIE}=${signGate(d.email)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000` +
-        (process.env.NODE_ENV === 'production' ? '; Secure' : '')
-    } catch (e) {
-      console.error('[enquiry] could not sign gate cookie', e)
-    }
-  }
 
   if (isFormPost) {
     return new Response(null, {
