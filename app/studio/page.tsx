@@ -25,8 +25,12 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: 'Not taken on',
 }
 
-export default async function Studio() {
-  const user = await currentUser()
+export default async function Studio({
+  searchParams,
+}: {
+  searchParams: Promise<{ submitted?: string }>
+}) {
+  const [user, params] = await Promise.all([currentUser(), searchParams])
   if (!user) redirect('/studio/sign-in?next=/studio')
 
   const supabase = await supabaseServer()
@@ -58,9 +62,25 @@ export default async function Studio() {
 
       <p className="mt-4 text-sm text-graphite/55">Signed in as {user.email}</p>
 
+      {params.submitted && (
+        <p
+          role="status"
+          className="mt-8 rounded-card border-l-[3px] border-indigo bg-indigo/5 px-5 py-4 leading-relaxed"
+        >
+          That is with us. We will confirm we can take it, and nothing is made until we do.
+        </p>
+      )}
+
+      <a
+        href="/studio/new"
+        className="nudge mt-8 inline-flex rounded-card bg-ember px-7 py-4 text-cream"
+      >
+        Send a song <span className="shift-arrow">&rarr;</span>
+      </a>
+
       {!jobs?.length ? (
         <p className="mt-12 leading-relaxed text-graphite/75">
-          Nothing here yet. The submission form is being built and will appear here next.
+          Nothing here yet.
         </p>
       ) : (
         <ul className="mt-12 border-t border-graphite/12">
