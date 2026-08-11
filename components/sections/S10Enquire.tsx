@@ -1,36 +1,67 @@
+import Link from 'next/link'
 import { EnquiryForm } from '../EnquiryForm'
 import { Reveal } from '../Reveal'
 import { CONTACT_EMAIL } from '@/lib/enquiry-email'
 
 /**
- * The ask. Two ways in, because the two audiences convert differently: an artist or
- * manager usually wants to hear it first, a label wants to start a conversation.
+ * The enquiry, which since 2026-08-11 lives on `/contact` and nowhere else.
  *
- * The headline asks for the smallest possible commitment on purpose. "Send us one song"
- * is a request somebody can say yes to without a meeting, and the scale ambition is
- * demoted to a line underneath rather than being the opening demand.
+ * It used to close every public route. It was replaced there by `S10Start`, which sends people
+ * to the studio, because Henry's decision was that submitting a song is the primary conversion
+ * and the enquiry is the secondary path.
+ *
+ * ⚠️ Do not delete this. A label with five thousand tracks will never upload WAVs one at a
+ * time, and the studio is a terrible shape for that conversation. This is the funnel for the
+ * buyer who needs to talk before they hand anything over, and the copy below is now written for
+ * that person specifically rather than for everybody.
+ *
+ * ⚠️ `scripts/audit-enquiry.mjs` drives this form and asserts the 503 degradation path. It
+ * points at `/contact`. If this section moves again, move the audit with it, or it fails for
+ * a reason that has nothing to do with what it is testing.
  */
 export default function S10Enquire() {
   return (
     <section id="enquire" className="bg-graphite py-24 text-cream sm:py-28">
       <div className="mx-auto max-w-5xl px-6">
+        {/*
+          A modest heading, not a second hero.
+
+          `/contact` already opens with an h1 saying what the page is for. This section used to
+          carry a 6xl headline of its own, and stacked under that one it read as the same
+          sentence said twice in two type sizes. The page states the ask; this states what the
+          form is.
+        */}
         <div className="text-center">
           <Reveal>
-            <h2 className="font-brand text-5xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
-              Send us any song.
-              <br />
-              We&rsquo;ll show you.
+            <h2 className="font-brand text-3xl leading-snug tracking-tight text-balance sm:text-4xl">
+              Send us a message.
             </h2>
           </Reveal>
 
           <Reveal delay={120}>
-            <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-cream/60">
-              One song, or a whole catalog. Tell us what you have and where you want it to
-              reach, and we&rsquo;ll come back with what a first release would look like:
-              what it takes, what you&rsquo;d receive, and how long it runs.
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-cream/60">
+              Tell us what you own and where you want it to reach, and we&rsquo;ll come back
+              with what a first release would look like: what it takes, what you&rsquo;d
+              receive, and how long it runs.
             </p>
           </Reveal>
 
+          <Reveal delay={180}>
+            {/*
+              The faster path, offered rather than hidden. Somebody with one song in mind should
+              not fill in a form and wait for a human when they could have the thing itself.
+            */}
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-cream/45">
+              Just have one song?{' '}
+              <Link
+                href="/studio"
+                className="nudge inline-flex min-h-11 items-center text-cream underline decoration-cream/30 underline-offset-4 transition-colors hover:decoration-cream"
+              >
+                Send it to us directly
+              </Link>{' '}
+              and skip this form.
+            </p>
+          </Reveal>
         </div>
 
         {/*

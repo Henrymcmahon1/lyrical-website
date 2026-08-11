@@ -13,7 +13,16 @@ import { mkdirSync } from 'node:fs'
 const BASE = process.argv[2] ?? 'http://localhost:3000'
 // Every public route in the sitemap. A new page that nothing audits is a page that silently
 // clips on a phone: this list has to grow with app/sitemap.ts, not lag behind it.
-const ROUTES = ['/', '/ai-music-translation', '/hear', '/about']
+/**
+ * Every public route. `/contact` joined on 2026-08-11 when the enquiry form moved off the home
+ * page: it carries the only form on the site, which is the thing most likely to overflow a
+ * narrow screen or ship a tap target under 44px, so leaving it out would have quietly retired
+ * the check that matters most.
+ *
+ * Gated routes are deliberately absent. They need a session this script does not have, and a
+ * 200 from a login page would tell you nothing about the page behind it.
+ */
+const ROUTES = ['/', '/ai-music-translation', '/hear', '/about', '/contact']
 const VIEWPORTS = [
   { name: 'iphone-se', width: 375, height: 667, mobile: true },
   { name: 'iphone-15', width: 393, height: 852, mobile: true },

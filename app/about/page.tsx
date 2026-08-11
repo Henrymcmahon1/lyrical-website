@@ -3,7 +3,7 @@ import { FoldBody } from '@/components/FoldBody'
 import { ABOUT_FOLDS } from '@/content/about-folds'
 import S08Rights from '@/components/sections/S08Rights'
 import S09Team from '@/components/sections/S09Team'
-import S10Enquire from '@/components/sections/S10Enquire'
+import S10Start from '@/components/sections/S10Start'
 
 export const metadata = {
   title: 'About',
@@ -72,7 +72,7 @@ export default function About() {
 
       <S09Team detail />
       <S08Rights />
-      <S10Enquire />
+      <S10Start />
     </>
   )
 }

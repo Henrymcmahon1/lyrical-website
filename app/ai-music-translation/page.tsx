@@ -1,4 +1,4 @@
-import S10Enquire from '@/components/sections/S10Enquire'
+import S10Start from '@/components/sections/S10Start'
 import { LANGUAGES } from '@/lib/languages'
 
 /**
@@ -107,7 +107,7 @@ export default function AiMusicTranslation() {
         </section>
       </div>
 
-      <S10Enquire />
+      <S10Start />
     </>
   )
 }

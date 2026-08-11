@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { JobStatus } from '@/components/JobStatus'
+import { Scorecard } from '@/components/Scorecard'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { signOut } from './actions'
 
@@ -90,6 +91,12 @@ export default async function Studio({
           ))}
         </ul>
       )}
+
+      {/*
+        Under the songs, not above them. Somebody arriving to check on a job wants the job
+        first; the method is what they read once they have.
+      */}
+      <Scorecard />
     </section>
   )
 }

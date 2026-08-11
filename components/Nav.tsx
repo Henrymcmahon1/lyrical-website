@@ -55,10 +55,17 @@ export function Nav() {
           >
             About
           </Link>
-          {/* One label at both widths. It used to read "Get started" on a phone and
-              "Start a conversation" on desktop, which is two voices for one button. */}
+          {/*
+            One label at both widths. It used to read "Get started" on a phone and "Start a
+            conversation" on desktop, which is two voices for one button.
+
+            It pointed at `/#enquire` until 2026-08-11 and now points at the studio: the nav
+            action and the hero action have to agree about what the site wants, and what it
+            wants is a song. `/contact` is one click further on, from the closing section of
+            every page and from the hero's second button.
+          */}
           <Link
-            href="/#enquire"
+            href="/studio"
             className="inline-flex min-h-11 items-center rounded-card bg-indigo px-4 text-cream transition-colors hover:bg-graphite"
           >
             Get started

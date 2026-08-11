@@ -7,7 +7,7 @@ import S04Fidelity from '@/components/sections/S04Fidelity'
 import S05How from '@/components/sections/S05How'
 import S09bNow from '@/components/sections/S09bNow'
 import S09cTerms from '@/components/sections/S09cTerms'
-import S10Enquire from '@/components/sections/S10Enquire'
+import S10Start from '@/components/sections/S10Start'
 
 /**
  * The funnel, deliberately short: hero, the audience turn, the proof, what we do to the
@@ -41,7 +41,7 @@ export default async function Home() {
         the last objection before the ask, so it sits directly before it.
       */}
       <S09cTerms />
-      <S10Enquire />
+      <S10Start />
     </>
   )
 }

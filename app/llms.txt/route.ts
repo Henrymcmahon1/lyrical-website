@@ -38,10 +38,15 @@ finished master and the approval; lyrical provides the recreation and the stems.
 Who it is for: artists, managers, labels, publishers and distributors who own or control a
 catalog and want it to work in more than one language.
 
+How to start: send one song through the studio at ${SITE_URL}/studio. There is no upfront
+cost, a human accepts the job before anything is made, and delivery is within 48 hours of
+that acceptance. Nothing is released without the rights holder's approval.
+
 ## Pages
 
-- [Home](${SITE_URL}): what the company does, how a release works, and the enquiry form.
+- [Home](${SITE_URL}): what the company does and how a release works.
 - [About](${SITE_URL}/about): the thesis, the rights position, and the two founders.
+- [Contact](${SITE_URL}/contact): the enquiry form, for a catalog rather than a single song.
 
 ## Contact
 

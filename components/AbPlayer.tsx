@@ -53,8 +53,13 @@ export function AbPlayer({
         <p className="text-sm text-dark-ink/65">
           A before-and-after for this pair isn&rsquo;t published yet.
         </p>
+        {/*
+          `/contact` rather than `#enquire`, since the form left the page this sits on. An
+          in-page anchor to a section that is no longer rendered scrolls nowhere at all, which
+          reads as a broken button rather than a missing one.
+        */}
         <a
-          href="#enquire"
+          href="/contact"
           className="nudge mt-4 inline-block rounded-card border border-dark-accent px-5 py-3 text-sm text-dark-accent transition-colors hover:bg-dark-accent hover:text-dark-ground"
         >
           Ask to hear this pair

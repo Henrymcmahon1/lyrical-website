@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { MarkUnlock } from '../MarkUnlock'
 import { Parallax } from '../Parallax'
 import { ScrollCue } from '../ScrollCue'
@@ -47,19 +48,27 @@ export default function S01Hero() {
         No upfront cost. You stay in control. Nothing is released without your approval.
       </p>
 
+      {/*
+        The ember button was "Hear a before and after" pointing at `#hear`, a section with
+        nothing to play. It was raised three times across three sessions and never actioned,
+        because the honest fix was not a copy change: the button promised the one thing the
+        site cannot do. Henry settled it on 2026-08-11 by making the studio the primary
+        conversion, so the most prominent button on the site now offers the thing that actually
+        exists. Put a listening button back the day real audio publishes, and not before.
+      */}
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-        <a
-          href="#hear"
+        <Link
+          href="/studio"
           className="nudge rounded-card bg-ember px-7 py-4 text-cream"
         >
-          Hear a before and after <span className="shift-arrow">&rarr;</span>
-        </a>
-        <a
-          href="#enquire"
+          Send us a song <span className="shift-arrow">&rarr;</span>
+        </Link>
+        <Link
+          href="/contact"
           className="nudge rounded-card border border-graphite/30 px-7 py-4 transition-colors hover:border-indigo hover:text-indigo"
         >
-          Start a conversation
-        </a>
+          Talk to us
+        </Link>
       </div>
 
       {/* Self managing: the hero has no step state, so the cue retires on the first scroll. */}

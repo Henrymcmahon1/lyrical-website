@@ -10,16 +10,23 @@
  * Run against a server with no RESEND_API_KEY to exercise the 503 branch.
  *
  *   node scripts/audit-enquiry.mjs http://localhost:3000
+ *
+ * The form moved from the home page to /contact on 2026-08-11, when the studio became the
+ * primary conversion. The route is a named constant rather than a literal repeated twice,
+ * because this repo has broken audits three times by leaving one copy of a path behind.
  */
 import { chromium } from 'playwright'
 const BASE = process.argv[2]
+
+/** Where the enquiry form lives. It was `/#enquire` until 2026-08-11. */
+const ROUTE = '/contact'
 const b = await chromium.launch()
 const ctx = await b.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true })
 const page = await ctx.newPage()
 const fails = []
 const check = (n, ok, d) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${d ? `  ${d}` : ''}`); if (!ok) fails.push(n) }
 
-await page.goto(BASE + '/#enquire', { waitUntil: 'networkidle' })
+await page.goto(BASE + ROUTE, { waitUntil: 'networkidle' })
 await page.addStyleTag({ content: 'nextjs-portal{display:none!important}' })
 
 const form = page.locator('form[action="/api/enquiry"]').last()
@@ -116,7 +123,7 @@ if (hasLink) {
 }
 
 // A validation error must NOT offer the fallback: that field is fixable.
-await page.goto(BASE + '/#enquire', { waitUntil: 'networkidle' })
+await page.goto(BASE + ROUTE, { waitUntil: 'networkidle' })
 const f2 = page.locator('form[action="/api/enquiry"]').last()
 await f2.locator('input[name="name"]').fill('X')   // fails minLength 2 server-side
 await f2.locator('input[name="email"]').fill('someone@example.com')
