@@ -42,7 +42,7 @@ export function Nav() {
       >
         <Link
           href="/"
-          aria-label="Lyrical, home"
+          aria-label="lyrical, home"
           className="inline-flex min-h-11 items-center"
         >
           <Wordmark />

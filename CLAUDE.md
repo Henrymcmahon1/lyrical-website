@@ -36,6 +36,16 @@ Dark sections only: ground #1B1D1F · ink #EDEBE4 · accent #FF6B2C
 - Do NOT use `animation-timeline: view()` for reveals; it was observed pinning elements at
   negative progress (permanently invisible). IntersectionObserver only.
 
+## The name is lowercase
+Since 2026-08-09, on Henry's instruction: the brand renders **`lyrical`**, never `Lyrical`,
+everywhere a visitor or a machine reads it. Body copy, headings, page titles, the meta
+description, the JSON-LD `name` and `alternateName` (`lyrical global`), `llms.txt`, aria
+labels, and BOTH email subject lines. The wordmark was always lowercase; everything else now
+matches it. Tests pin the entity name and the email subjects, so a revert fails the build.
+
+Sentence-initial is lowercase too. "lyrical is AI music translation for rights holders" is
+correct and is not a typo.
+
 ## The mark
 Generated in lib/mark.ts, never hand-drawn. app/icon.svg is generated from the same
 geometry. If you change the geometry, regenerate the icon.

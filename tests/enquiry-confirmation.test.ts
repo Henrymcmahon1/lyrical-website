@@ -53,7 +53,7 @@ describe('what the confirmation must never leak', () => {
 
 describe('what the confirmation says', () => {
   it('names the company so it is obviously not spam', () => {
-    expect(confirmationSubject()).toContain('Lyrical')
+    expect(confirmationSubject()).toContain('lyrical')
   })
 
   it('commits to a reply time, which is the point of sending it', () => {

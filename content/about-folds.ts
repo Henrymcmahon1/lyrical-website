@@ -40,9 +40,9 @@ export const ABOUT_FOLDS: AboutFold[] = [
   },
   {
     label: 'Origin',
-    summary: 'How Lyrical started, and the song that started it.',
+    summary: 'How lyrical started, and the song that started it.',
     paragraphs: [
-      'Lyrical did not begin as a music company. Jordan and Henry were building technology together, and music was not the plan.',
+      'lyrical did not begin as a music company. Jordan and Henry were building technology together, and music was not the plan.',
       'It started with a reinterpretation. Jordan heard a song he had loved for years performed by somebody else, and it landed completely differently. Same song, same words, a different voice, an entirely different feeling. He wanted that to happen on purpose rather than by chance.',
       'Then came the Super Bowl. Watching a stadium sing along to an artist performing in a language most of the audience did not speak, Henry saw something bigger. The reach was already there. The words were not.',
     ],

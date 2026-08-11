@@ -23,7 +23,7 @@ export type Track = {
   note: string
   /** Object key in the private `listen` bucket. */
   key: string
-  /** Marks the row as Lyrical's own work, which is styled to stand apart. */
+  /** Marks the row as lyrical's own work, which is styled to stand apart. */
   ours?: boolean
 }
 

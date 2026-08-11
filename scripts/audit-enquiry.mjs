@@ -86,7 +86,25 @@ if (hasLink) {
   const shown = (await alert.innerText()).match(/[\w.+-]+@[\w.-]+\.\w+/)?.[0]
   check('the fallback names a contact address to the visitor', Boolean(shown), shown)
   check('addressed to the address the page shows', u.pathname === shown, `${u.pathname} vs ${shown}`)
-  check('subject carries name and role', u.searchParams.get('subject') === 'Lyrical enquiry: Preflight Tester (label)', u.searchParams.get('subject'))
+  /*
+    Assert the RULE, not a snapshot of it.
+
+    This line used to compare against the literal "Lyrical enquiry: Preflight Tester (label)",
+    so renaming the brand to lowercase failed an audit that has nothing to do with casing.
+    That is the third time in this repo an audit has broken for a reason unrelated to what it
+    was written to protect.
+
+    What actually matters here is that a founder opening the fallback email can tell who it is
+    from and route it: the subject must be labelled as an enquiry and carry the name and the
+    role. The exact string is pinned by tests/enquiry-email.test.ts, which is the right place
+    for it.
+  */
+  const subject = u.searchParams.get('subject') ?? ''
+  check(
+    'subject carries name and role',
+    /enquiry/i.test(subject) && subject.includes('Preflight Tester') && subject.includes('label'),
+    subject,
+  )
   check('body carries the email', body.includes('preflight@example.com'))
   check('body carries the company, ampersand intact', body.includes('Example Records & Co'))
   check('body carries the catalogue size', body.includes('11-100'))

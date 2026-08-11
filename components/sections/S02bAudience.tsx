@@ -20,7 +20,7 @@ const BOTTOM = Array.from({ length: FRAMES + 1 }, (_, i) =>
 const OTHERS = LANGUAGES.filter((l) => l.code !== 'EN')
 
 /**
- * "Your audience today" becoming "your audience with Lyrical", driven by scroll.
+ * "Your audience today" becoming "your audience with lyrical", driven by scroll.
  * The pause symbol rotates and bends into the mark as you pass through the section,
  * and one language blooms into eight.
  *
@@ -109,13 +109,13 @@ export default function S02bAudience() {
   }, [])
 
   return (
-    <section aria-label="What Lyrical changes about your audience">
+    <section aria-label="What lyrical changes about your audience">
       <div ref={trackRef} className="audience-track" data-after={after}>
         <div className="audience-panel">
           <div className="mx-auto w-full max-w-4xl px-6 text-center">
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/45">
               <span className="a-before">Your audience today</span>
-              <span className="a-after">Your audience with Lyrical</span>
+              <span className="a-after">Your audience with lyrical</span>
             </p>
 
             {/*
@@ -138,7 +138,7 @@ export default function S02bAudience() {
                 height={132}
                 className="a-anim"
                 role="img"
-                aria-label="A pause symbol becoming the Lyrical mark"
+                aria-label="A pause symbol becoming the lyrical mark"
               >
                 <g ref={groupRef} transform="rotate(-90 32 32)">
                   <path ref={topRef} d={TOP[0]} fill="currentColor" />
@@ -147,7 +147,7 @@ export default function S02bAudience() {
               </svg>
               {/* Static fallback: the resolved mark, for no-JS. */}
               <span className="a-static">
-                <Mark size={132} title="The Lyrical mark" />
+                <Mark size={132} title="The lyrical mark" />
               </span>
             </div>
 

@@ -20,20 +20,20 @@ import { SITE_URL } from '@/lib/site'
 export const dynamic = 'force-static'
 
 export function GET() {
-  const body = `# Lyrical
+  const body = `# lyrical
 
-> Lyrical recreates a finished record in another language so it sounds like the artist
+> lyrical recreates a finished record in another language so it sounds like the artist
 > genuinely recorded it that way. The melody, the rhythm and the feel are kept intact, sung
 > in the artist's own voice, over the untouched original backing.
 
-Lyrical, also written Lyrical Global, is a music company at ${SITE_URL}. It is not a cover
+lyrical, also written lyrical Global, is a music company at ${SITE_URL}. It is not a cover
 version and not a re-recording by a different performer. The same record is re-sung in
 another language for the rights holder who owns it, over the original instrumental.
 
 An artist's voice is used only with the artist's or rights holder's permission. Every version
 is authorized before it is made, and reviewed by ear before it is delivered. Voice models are
 built only from catalogs the company has permission to use. The rights holder provides the
-finished master and the approval; Lyrical provides the recreation and the stems.
+finished master and the approval; lyrical provides the recreation and the stems.
 
 Who it is for: artists, managers, labels, publishers and distributors who own or control a
 catalog and want it to work in more than one language.

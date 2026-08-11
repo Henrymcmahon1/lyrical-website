@@ -22,7 +22,7 @@
  * and `tests/copy.test.ts` still fails the build on it.
  */
 export const SITE_DESCRIPTION =
-  'AI music translation for rights holders. Lyrical re-sings a finished record in another ' +
+  'AI music translation for rights holders. lyrical re-sings a finished record in another ' +
   'language, in the artist’s own voice, over the untouched original backing. Melody, rhythm ' +
   'and feel kept intact.'
 

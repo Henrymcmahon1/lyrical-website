@@ -71,7 +71,7 @@ export function enquiryEmailSubject(d: EnquiryEmailFields): string {
   // The email address, not "Not given", when the gate did not collect a name. Otherwise
   // every examples request arrives with an identical subject line and threads together.
   const who = d.name?.trim() || d.email
-  return `Lyrical enquiry: ${who} (${d.role})`
+  return `lyrical enquiry: ${who} (${d.role})`
 }
 
 export function enquiryEmailText(d: EnquiryEmailFields, messageLimit?: number): string {
@@ -190,14 +190,14 @@ ${messageHtml}
 </td></tr>
 
 <tr><td style="padding-top:32px;">
-<a href="mailto:${esc(d.email)}?subject=${encodeURIComponent(`Re: your Lyrical enquiry`)}"
+<a href="mailto:${esc(d.email)}?subject=${encodeURIComponent(`Re: your lyrical enquiry`)}"
    style="display:inline-block;background:${INDIGO};color:${CREAM};text-decoration:none;padding:13px 24px;font-family:Helvetica,Arial,sans-serif;font-size:14px;">
 Reply to ${esc(displayName(d))}
 </a>
 </td></tr>
 
 <tr><td style="padding-top:32px;border-top:1px solid ${RULE};font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.6;color:#857E74;">
-Sent by the enquiry form on the Lyrical site. The full record is in the enquiries table.
+Sent by the enquiry form on the lyrical site. The full record is in the enquiries table.
 </td></tr>
 
 </table>
@@ -234,7 +234,7 @@ function greeting(d: EnquiryEmailFields): string {
 }
 
 export function confirmationSubject(): string {
-  return 'Lyrical: we have your enquiry'
+  return 'lyrical: we have your enquiry'
 }
 
 export function confirmationText(d: EnquiryEmailFields): string {
@@ -254,7 +254,7 @@ export function confirmationText(d: EnquiryEmailFields): string {
     '',
     'If anything is urgent in the meantime, just reply to this email.',
     '',
-    'Lyrical',
+    'lyrical',
     'Every song. Any language. Same soul.',
   ].join('\n')
 }
@@ -300,7 +300,7 @@ If anything is urgent in the meantime, just reply to this email.
 </td></tr>
 
 <tr><td style="padding-top:26px;border-top:1px solid ${RULE};">
-<p style="margin:0;font-family:Georgia,serif;font-size:15px;color:${GRAPHITE};">Lyrical</p>
+<p style="margin:0;font-family:Georgia,serif;font-size:15px;color:${GRAPHITE};">lyrical</p>
 <p style="margin:6px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#857E74;">
 Every song. Any language. Same soul.
 </p>

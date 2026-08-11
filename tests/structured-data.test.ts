@@ -14,11 +14,13 @@ const ORIGIN = 'https://lyricalglobal.com'
 describe('organization', () => {
   it('claims both names, because one of them is unrankable alone', () => {
     const o = organizationLd(ORIGIN)
-    expect(o.name).toBe('Lyrical')
+    // Lowercase, on Henry's instruction 2026-08-09. The wordmark was always lowercase; the
+    // prose, the metadata and this entity name now match it.
+    expect(o.name).toBe('lyrical')
     // "Lyrical" is a dictionary word. "Lyrical Global" is what a person actually searches,
     // and it matches the domain. Both have to resolve to one entity or the LinkedIn page and
     // the site look like two different companies.
-    expect(o.alternateName).toBe('Lyrical Global')
+    expect(o.alternateName).toBe('lyrical global')
   })
 
   it('asserts nothing the public page does not', () => {

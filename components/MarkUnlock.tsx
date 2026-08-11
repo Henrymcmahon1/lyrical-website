@@ -29,7 +29,7 @@ const ease = (x: number) => 1 - Math.pow(1 - x, 3)
  *
  *   Beat 1  ‖   two vertical bars     the catalog, paused at a language border
  *   Beat 2  =   rotated to horizontal "equals" — naive translation
- *   Beat 3  ≈   bars bend into waves  what Lyrical actually delivers
+ *   Beat 3  ≈   bars bend into waves  what lyrical actually delivers
  *
  * The DOM is written directly through refs rather than through React state: this runs at
  * first paint, and 100+ re-renders there is the difference between smooth and janky on a
@@ -120,7 +120,7 @@ export function MarkUnlock({ size = 156 }: { size?: number }) {
       width={size}
       height={size}
       role="img"
-      aria-label="The Lyrical mark: a pause resolving into an approximation"
+      aria-label="The lyrical mark: a pause resolving into an approximation"
     >
       {/* Server-rendered as the pause state, so there is no flash of the final mark. */}
       <g ref={groupRef} transform="rotate(-90 32 32)">

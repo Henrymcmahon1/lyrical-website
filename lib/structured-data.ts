@@ -5,7 +5,7 @@ import { SITE_DESCRIPTION, SITE_URL } from './site'
  * JSON-LD for the home page.
  *
  * The job is narrow and worth stating, because structured data attracts invention: it tells
- * a crawler that "Lyrical" is an ENTITY rather than an English adjective. Without it the
+ * a crawler that "lyrical" is an ENTITY rather than an English adjective. Without it the
  * brand name is a dictionary word competing with a record label and every lyrics site, and
  * nothing on the page says otherwise in a form a machine reads.
  *
@@ -17,8 +17,8 @@ import { SITE_DESCRIPTION, SITE_URL } from './site'
  * not stated anywhere public), no founding date (not established), no employee count, no
  * aggregate rating, no offers. If it is not on the page, it is not here.
  *
- * **`alternateName` carries the real discoverability work.** "Lyrical" is unrankable on its
- * own. "Lyrical Global" is what people will actually search once it is on LinkedIn and in
+ * **`alternateName` carries the real discoverability work.** "lyrical" is unrankable on its
+ * own. "lyrical Global" is what people will actually search once it is on LinkedIn and in
  * directories, and it matches the domain, so both names have to resolve to one entity.
  */
 
@@ -41,8 +41,8 @@ export function organizationLd(origin: string = SITE_URL) {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     '@id': `${origin}/#organization`,
-    name: 'Lyrical',
-    alternateName: 'Lyrical Global',
+    name: 'lyrical',
+    alternateName: 'lyrical global',
     url: origin,
     logo: `${origin}/brand/lyrical-lockup.png`,
     image: `${origin}/og.png`,
@@ -57,7 +57,7 @@ export function websiteLd(origin: string = SITE_URL) {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     '@id': `${origin}/#website`,
-    name: 'Lyrical',
+    name: 'lyrical',
     url: origin,
     description: DESCRIPTION,
     publisher: { '@id': `${origin}/#organization` },

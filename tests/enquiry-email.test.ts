@@ -30,16 +30,16 @@ const BARE = {
 
 describe('enquiryEmailSubject', () => {
   it('names the person and their role, so an inbox rule can route it', () => {
-    expect(enquiryEmailSubject(FULL)).toBe('Lyrical enquiry: Jordan Brock (label)')
+    expect(enquiryEmailSubject(FULL)).toBe('lyrical enquiry: Jordan Brock (label)')
   })
 })
 
 describe('enquiryEmailSubject falls back to the email when there is no name', () => {
   it('uses the email address, which is more use in an inbox than "Not given"', () => {
-    // The examples gate does not collect a name. "Lyrical enquiry: Not given (other)" is
+    // The examples gate does not collect a name. "lyrical enquiry: Not given (other)" is
     // indistinguishable from every other gate request in a threaded inbox.
     expect(enquiryEmailSubject({ ...BARE, name: '' })).toBe(
-      'Lyrical enquiry: al@example.com (artist)',
+      'lyrical enquiry: al@example.com (artist)',
     )
   })
 })

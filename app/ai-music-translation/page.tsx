@@ -71,7 +71,7 @@ export default function AiMusicTranslation() {
         </h1>
 
         <p className="mt-8 text-lg leading-relaxed text-graphite/75">
-          Lyrical provides AI music language translation for artists, managers, labels,
+          lyrical provides AI music language translation for artists, managers, labels,
           publishers and distributors who own or control a recording. We take a finished
           master and re-sing it in another language, in the artist&rsquo;s own voice, over the
           untouched original backing.
