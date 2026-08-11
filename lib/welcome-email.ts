@@ -31,15 +31,15 @@ export function welcomeSubject(): string {
 
 function welcomeDoc(): EmailDoc {
   return {
-    preheader: 'Send us one song and hear it in another language, at no upfront cost.',
+    preheader: 'Make one song multilingual and hear it come back, at no upfront cost.',
     eyebrow: 'Welcome',
     heading: 'Your studio is open.',
     blocks: [
       {
         type: 'paragraph',
         text:
-          'You can send us a song whenever you are ready. One is enough to see what this ' +
-          'sounds like, and most people start with the one they already wish travelled ' +
+          'You can make a song multilingual whenever you are ready. One is enough to see what ' +
+          'this sounds like, and most people start with the one they already wish travelled ' +
           'further.',
       },
       {
@@ -50,7 +50,7 @@ function welcomeDoc(): EmailDoc {
           ['3', 'You hear it before anyone else, and sign only if you want it released'],
         ],
       },
-      { type: 'cta', label: 'Send your first song', href: `${SITE_URL}/studio/new` },
+      { type: 'cta', label: 'Make your first song multilingual', href: `${SITE_URL}/studio/new` },
       {
         type: 'paragraph',
         text:

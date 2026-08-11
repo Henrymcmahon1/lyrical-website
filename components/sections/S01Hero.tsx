@@ -57,11 +57,19 @@ export default function S01Hero() {
         exists. Put a listening button back the day real audio publishes, and not before.
       */}
       <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+        {/*
+          "Make your song multilingual", not "Make a song". Henry's wording, 2026-08-11, and
+          the distinction is load bearing rather than fussy: the object of the verb is a song
+          the visitor already owns, which is why this cannot be read as offering to generate
+          music. "Make a song" would say the opposite of everything else on the page, and
+          `tests/copy.test.ts` exists because that reading is the one a rights holder's lawyer
+          reaches for first.
+        */}
         <Link
           href="/studio"
           className="nudge rounded-card bg-ember px-7 py-4 text-cream"
         >
-          Send us a song <span className="shift-arrow">&rarr;</span>
+          Make your song multilingual <span className="shift-arrow">&rarr;</span>
         </Link>
         <Link
           href="/contact"

@@ -65,11 +65,17 @@ export default async function Studio({
         </p>
       )}
 
+      {/*
+        "Another" once they have sent one. The same button greeting a returning customer with
+        "Make your song multilingual" reads as though the studio has forgotten the four they
+        already have in it.
+      */}
       <a
         href="/studio/new"
         className="nudge mt-8 inline-flex rounded-card bg-ember px-7 py-4 text-cream"
       >
-        Send a song <span className="shift-arrow">&rarr;</span>
+        {jobs?.length ? 'Make another one multilingual' : 'Make your song multilingual'}{' '}
+        <span className="shift-arrow">&rarr;</span>
       </a>
 
       {!jobs?.length ? (

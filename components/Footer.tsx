@@ -26,8 +26,10 @@ export function Footer() {
             earlier. The page is kept and linked, because an orphan page in the sitemap is worse
             than a page with an honest name, and it is the only internal link /hear now has.
           */}
+          {/* The short form of the site's one ask. A footer link has no room for the full
+              sentence, and "it" is unambiguous next to the other three labels. */}
           <Link href="/studio" className="inline-flex min-h-11 items-center hover:text-indigo">
-            Send a song
+            Make it multilingual
           </Link>
           <Link href="/hear" className="inline-flex min-h-11 items-center hover:text-indigo">
             Languages

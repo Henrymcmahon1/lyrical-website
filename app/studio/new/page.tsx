@@ -3,7 +3,7 @@ import { SongSubmitForm } from '@/components/SongSubmitForm'
 import { currentUser } from '@/lib/supabase-server'
 
 /**
- * Send a song.
+ * Where a song is handed over.
  *
  * Signed in only, and that is a compromise rather than the design I would choose. The plan was
  * to let somebody fill the form first and ask for an account at submit, because a sign in wall
@@ -19,7 +19,7 @@ import { currentUser } from '@/lib/supabase-server'
  * yet. When Resend SMTP lands, revisit this and move the wall back to submit.
  */
 export const metadata = {
-  title: 'Send a song',
+  title: 'Make your song multilingual',
   robots: { index: false, follow: false },
 }
 
@@ -31,7 +31,7 @@ export default async function NewSong() {
     <section className="mx-auto max-w-2xl px-6 py-24 sm:py-28">
       <span className="font-mono text-xs tracking-[0.18em] text-graphite/45">The studio</span>
       <h1 className="mt-5 font-brand text-4xl leading-[1.1] tracking-tight text-balance">
-        Send us a song.
+        Make your song multilingual.
       </h1>
       <p className="mt-6 leading-relaxed text-graphite/75">
         Give us the recording and the language you want it in. No upfront cost, and nothing is

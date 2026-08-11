@@ -26,7 +26,7 @@
 const TERMS = [
   {
     h: 'No upfront cost',
-    p: 'Send us a song and hear what it becomes. There is no invoice for finding out whether this works for your catalog.',
+    p: 'Make one song multilingual and hear what it becomes. There is no invoice for finding out whether this works for your catalog.',
   },
   {
     h: 'You stay in control',

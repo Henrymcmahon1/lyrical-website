@@ -28,7 +28,7 @@ export default function S10Start() {
       <div className="mx-auto max-w-3xl px-6 text-center">
         <Reveal>
           <h2 className="font-brand text-5xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
-            Send us one song.
+            Make one song multilingual.
             <br />
             Hear it come back.
           </h2>
@@ -44,11 +44,17 @@ export default function S10Start() {
 
         <Reveal delay={200}>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            {/*
+              `text-base` until `sm`, and that is not a style preference. At 18px this label is
+              within a few pixels of the available width on a 375px screen once the button's own
+              padding is counted, so it either overflows or breaks mid-phrase. The label is long
+              because it is specific; the type size gives way instead.
+            */}
             <Link
               href="/studio"
-              className="nudge rounded-card bg-ember px-8 py-4 text-lg text-cream"
+              className="nudge rounded-card bg-ember px-7 py-4 text-cream sm:px-8 sm:text-lg"
             >
-              Send a song <span className="shift-arrow">&rarr;</span>
+              Make your song multilingual <span className="shift-arrow">&rarr;</span>
             </Link>
             <Link
               href="/contact"

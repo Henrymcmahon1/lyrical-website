@@ -57,7 +57,7 @@ export default function S10Enquire() {
                 href="/studio"
                 className="nudge inline-flex min-h-11 items-center text-cream underline decoration-cream/30 underline-offset-4 transition-colors hover:decoration-cream"
               >
-                Send it to us directly
+                Make it multilingual in the studio
               </Link>{' '}
               and skip this form.
             </p>

@@ -378,11 +378,16 @@ export function SongSubmitForm() {
         disabled={busy}
         className="nudge rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
       >
+        {/*
+          The last button in the journey says the same thing as the first one. Somebody who
+          clicked "Make your song multilingual" in the hero should finish on the same verb,
+          rather than being handed a different word for the thing they came to do.
+        */}
         {stage === 'uploading'
           ? progress
           : stage === 'saving'
             ? 'Finishing…'
-            : 'Send this song'}
+            : 'Make it multilingual'}
       </button>
 
       <p className="text-sm leading-relaxed text-graphite/55">

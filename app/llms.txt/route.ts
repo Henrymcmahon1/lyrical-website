@@ -38,9 +38,10 @@ finished master and the approval; lyrical provides the recreation and the stems.
 Who it is for: artists, managers, labels, publishers and distributors who own or control a
 catalog and want it to work in more than one language.
 
-How to start: send one song through the studio at ${SITE_URL}/studio. There is no upfront
-cost, a human accepts the job before anything is made, and delivery is within 48 hours of
-that acceptance. Nothing is released without the rights holder's approval.
+How to start: make one song multilingual through the studio at ${SITE_URL}/studio. The rights
+holder uploads a finished recording and chooses a target language. There is no upfront cost, a
+human accepts the job before anything is made, and delivery is within 48 hours of that
+acceptance. Nothing is released without the rights holder's approval.
 
 ## Pages
 
