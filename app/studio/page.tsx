@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { JobStatus } from '@/components/JobStatus'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { signOut } from './actions'
 
@@ -15,14 +16,6 @@ import { signOut } from './actions'
 export const metadata = {
   title: 'The studio',
   robots: { index: false, follow: false },
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  submitted: 'Received, waiting on us',
-  approved: 'Accepted, in the queue',
-  in_progress: 'Being made',
-  delivered: 'Delivered',
-  rejected: 'Not taken on',
 }
 
 export default async function Studio({
@@ -83,18 +76,16 @@ export default async function Studio({
           Nothing here yet.
         </p>
       ) : (
-        <ul className="mt-12 border-t border-graphite/12">
+        <ul className="mt-12 flex flex-col gap-5">
           {jobs.map((j) => (
-            <li key={j.id} className="border-b border-graphite/12 py-5">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                <span className="font-brand text-xl tracking-tight">{j.title}</span>
-                <span className="text-sm text-graphite/60">
-                  {STATUS_LABEL[j.status] ?? j.status}
-                </span>
-              </div>
+            <li key={j.id} className="rounded-card border border-graphite/15 p-6">
+              <span className="font-brand text-xl tracking-tight">{j.title}</span>
               <p className="mt-1 text-sm text-graphite/60">
                 {j.primary_artist} &middot; {j.source_language} to {j.target_language}
               </p>
+              <div className="mt-6">
+                <JobStatus status={j.status} />
+              </div>
             </li>
           ))}
         </ul>

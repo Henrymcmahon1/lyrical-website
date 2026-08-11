@@ -104,6 +104,36 @@ body {
   to   { stroke-dashoffset: 0; }
 }
 
+/* ── Job status ───────────────────────────────────────────────
+   A job sits at "received" for hours while a human decides, and a static line of text there
+   reads as a page that has stopped working. This is the smallest honest signal that the thing
+   is alive and waiting on us rather than stuck.
+
+   Opacity and transform only, and it stops entirely under reduced motion, where the dot is
+   still visible and still coloured: the state is carried by colour and text, never by the
+   movement, so nothing is lost when the animation is off. */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.82); }
+}
+
+.status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .status-dot[data-live='true'] {
+    animation: status-pulse 1.9s ease-in-out infinite;
+  }
+}
+
+/* The rail behind the steps. A plain track, filled to the step the job has reached. */
+.status-rail { height: 2px; background: rgba(28, 26, 25, 0.13); }
+.status-rail-fill { height: 100%; transform-origin: left center; transition: transform 600ms ease; }
+
 /* ── Scroll reveal ────────────────────────────────────────────
    Progressive enhancement, and the default MUST be visible.
 

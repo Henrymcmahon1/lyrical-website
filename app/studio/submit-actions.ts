@@ -1,9 +1,70 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { Resend } from 'resend'
+import { canEmailStrangers, enquiryRecipients } from '@/lib/enquiry-email'
 import { SongJobSchema } from '@/lib/song-job-schema'
+import {
+  jobConfirmationHtml,
+  jobConfirmationSubject,
+  jobConfirmationText,
+  jobNotificationHtml,
+  jobNotificationSubject,
+  jobNotificationText,
+  type SongJobEmailFields,
+} from '@/lib/song-job-email'
 import { pathBelongsTo } from '@/lib/song-upload'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
+
+/**
+ * Tell people a song arrived. Never throws.
+ *
+ * The job is already saved by the time this runs, and that ordering is the whole point: a
+ * submission that is safely in the database but whose notification failed is an inconvenience,
+ * while one that was rejected because an email provider had a bad minute is a lost customer
+ * and a lost master. Email is the least reliable thing in this path and it is treated as such.
+ */
+async function notify(fields: SongJobEmailFields): Promise<void> {
+  const key = process.env.RESEND_API_KEY
+  const from = process.env.ENQUIRY_FROM_EMAIL
+  const to = enquiryRecipients(process.env.ENQUIRY_TO_EMAIL)
+
+  if (!key || !from || !to.length) {
+    console.warn('[song-job] Resend not configured; job saved, nobody was told')
+    return
+  }
+
+  const resend = new Resend(key)
+
+  try {
+    await resend.emails.send({
+      from,
+      to,
+      replyTo: fields.submitterEmail,
+      subject: jobNotificationSubject(fields),
+      text: jobNotificationText(fields),
+      html: jobNotificationHtml(fields),
+    })
+  } catch (e) {
+    console.error('[song-job] founder notification failed', e)
+  }
+
+  // Same gate as the enquiry confirmation: only mail a stranger from a verified domain, never
+  // from an @resend.dev sender, which lands in spam and looks like a scam to a rights holder.
+  if (!canEmailStrangers(from)) return
+
+  try {
+    await resend.emails.send({
+      from,
+      to: fields.submitterEmail,
+      subject: jobConfirmationSubject(fields),
+      text: jobConfirmationText(fields),
+      html: jobConfirmationHtml(fields),
+    })
+  } catch (e) {
+    console.error('[song-job] confirmation to submitter failed', e)
+  }
+}
 
 /**
  * Record a submission whose files are already in storage.
@@ -95,6 +156,21 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
     await supabase.from('song_jobs').delete().eq('id', jobId)
     return { ok: false, error: 'We could not save the files. Try again in a moment.' }
   }
+
+  // After the writes, and awaited rather than fired and forgotten: a serverless function that
+  // returns before its promises settle is killed mid-send, and the email silently never goes.
+  await notify({
+    title: job.title,
+    primaryArtist: job.primaryArtist,
+    sourceLanguage: job.sourceLanguage,
+    targetLanguage: job.targetLanguage,
+    fileCount: job.assets.length,
+    featureNames: job.assets
+      .map((a) => a.artistName)
+      .filter((n): n is string => Boolean(n) && n !== job.primaryArtist),
+    notes: job.notes,
+    submitterEmail: user.email ?? '',
+  })
 
   redirect('/studio?submitted=1')
 }
