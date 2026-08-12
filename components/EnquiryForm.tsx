@@ -264,7 +264,7 @@ export function EnquiryForm({
             <div className="flex flex-col gap-2">
               <a
                 href={fallbackHref}
-                className="nudge inline-flex min-h-11 items-center self-start rounded-card border border-indigo px-5 text-indigo transition-colors hover:bg-indigo hover:text-cream"
+                className="nudge inline-flex min-h-11 items-center gap-1.5 self-start rounded-card border border-indigo px-5 text-indigo transition-colors hover:bg-indigo hover:text-cream"
               >
                 Send it as an email instead <span className="shift-arrow">&rarr;</span>
               </a>

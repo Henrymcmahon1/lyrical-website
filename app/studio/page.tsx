@@ -72,9 +72,15 @@ export default async function Studio({
       */}
       <a
         href="/studio/new"
-        className="nudge mt-8 inline-flex rounded-card bg-ember px-7 py-4 text-cream"
+        className="nudge mt-8 inline-flex items-center gap-1.5 rounded-card bg-ember px-7 py-4 text-cream"
       >
-        {jobs?.length ? 'Make another one multilingual' : 'Make your song multilingual'}{' '}
+        {/*
+          No `{' '}` between the label and the arrow. This is an inline-flex container, and a
+          whitespace-only text node between two flex items is not rendered at all, so the
+          explicit space did nothing and the arrow sat against the final letter. `gap-1.5` on
+          the container is the separation that actually applies here.
+        */}
+        {jobs?.length ? 'Make another one multilingual' : 'Make your song multilingual'}
         <span className="shift-arrow">&rarr;</span>
       </a>
 
