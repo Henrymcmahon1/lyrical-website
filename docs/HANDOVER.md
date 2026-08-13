@@ -46,7 +46,7 @@ Founders: **Jordan Brock** (brand, commercial) and **Henry McMahon** (engineerin
 | | |
 |---|---|
 | Stack | Next.js 16.2, React 19, Tailwind 4, TypeScript |
-| Tests | **306**, all passing (`npm test`) |
+| Tests | **351**, all passing (`npm test`) |
 | Email host | **Zoho Mail**, US data centre. MX, SPF and DKIM live. `info@` is a GROUP reaching Jordan and Henry |
 | Sending | **Resend**, own account owned by `info@lyricalglobal.com`, domain verified. SPF lives on the `send.` subdomain so it does not collide with Zoho's at the apex |
 | Confirmation email | **LIVE.** `ENQUIRY_FROM_EMAIL` is `info@lyricalglobal.com`, so `canEmailStrangers()` turns it on |
@@ -456,6 +456,65 @@ until it is added to that grant, and no customer-facing query may `select *` on 
 - **`auth.admin.listUsers` in `SongsTab` is capped at 1000 accounts.** Past that the tail renders
   "unknown sender", which is the right failure, but it wants paging or a denormalised column.
 
+## 4f. Voice models, and the storage ceiling. Session 6, 2026-08-12.
+
+### ⚠️ The number that governs everything: 50MB per file
+
+Supabase's **free plan has a fixed 50MB per-file upload limit**, stated in the dashboard as
+"Free Plan has a fixed upload file size limit of 50 MB". It is **not configurable**. Total
+storage is **1GB**.
+
+**`lib/song-upload.ts` said 500MB.** It had said so since the portal shipped, so the form
+advertised a ceiling ten times higher than the one storage actually enforced, and an upload
+over 50MB was rejected AFTER the customer waited through it, with an error explaining nothing.
+
+That was not theoretical: **a three minute 48kHz/24-bit stereo WAV is about 52MB**, so a normal
+WAV master was already over. The one real submission to date was two FLACs totalling 36MB,
+which is the only reason it never bit. Corrected to 50MB, and the rejection message now names
+FLAC as the way out rather than only stating the limit.
+
+**Lead with FLAC everywhere.** Lossless, roughly 45% smaller, and it is what turns a 52MB
+master into a 30MB one. It is the difference between the free plan working and not.
+
+### What 1GB actually buys
+
+| Format, 30 minutes | Per artist | Artists in 1GB |
+|---|---|---|
+| WAV 48k/24-bit stereo | ~518MB | 1 |
+| WAV 48k/24-bit mono | ~259MB | 3 |
+| **FLAC 48k/24-bit mono** | **~140MB** | **7** |
+
+Henry chose to stay on the free plan on 2026-08-12 with these numbers in front of him. Supabase
+Pro is $25/mo for 100GB and a configurable per-file limit; that is the switch when seven
+artists is not enough, and `MAX_UPLOAD_BYTES` in `lib/voice-training.ts` is the only constant
+that has to change.
+
+### Shipped
+
+| | |
+|---|---|
+| `/studio/voices` | The customer's voice models, with total minutes per artist |
+| `/studio/voices/new` | Artist name, multi-file upload, its own consent checkbox |
+| `/queue?tab=voices` | Third tab. Approve, reject, start training, mark ready |
+| Storage | `voice-training` bucket, private, `{user}/{voice}/{file}`, same policy shape as submissions |
+| CSV | `?tab=voices`, carrying `consent_warranted_at` and no storage paths |
+
+**Headers are read in the browser before upload.** `lib/voice-training.ts` parses a WAV chunk
+list and a FLAC STREAMINFO out of the first 64KB, which gives exact duration and channel count
+without decoding audio. That is what powers the running "18 min 30 s collected" total and what
+refuses a stereo file at the moment it is chosen rather than after a ten minute upload run.
+Both parsers are tested against headers built byte by byte, not fixtures.
+
+**Consent is its own column.** `voice_models.consent_warranted_at`, separate from the per-song
+`rights_warranted_at`, because handing over thirty minutes of an artist's isolated vocal so a
+model can be built from it is a materially bigger permission than sending one song. The site
+promises "voice models are built only from catalogs we have permission to use"; that column is
+the record behind the sentence.
+
+⚠️ **A training set is many files by construction.** Thirty minutes cannot be one object under
+50MB, so it arrives as eight to twelve takes and `voice_samples` is one row per take. Anything
+that assumes one file per voice is wrong.
+
 ## 5. Gotchas that cost real time
 
 **Two scroll clocks, and they are not interchangeable.** `lib/scroll-progress.ts` exports
@@ -558,7 +617,7 @@ only real proof that a key works is a live send appearing in the Resend log.
 ## 6. How to verify anything
 
 ```bash
-npm test                                            # 306 tests
+npm test                                            # 351 tests
 npx eslint .                                        # must be silent
 npx tsc --noEmit                                    # must be silent
 npm run build                                       # must compile clean

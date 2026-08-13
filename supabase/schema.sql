@@ -225,3 +225,116 @@ create policy submissions_own_select on storage.objects
     bucket_id = 'submissions'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- ══ Voice models ══════════════════════════════════════════════════════════════
+-- Added 2026-08-12.
+--
+-- Clean vocals an artist supplies so we can train their voice model. This is deliberately NOT
+-- hung off `song_jobs`, because a voice model belongs to an ARTIST and is reused by every song
+-- that artist ever sends. Attaching it to a song means the second song either re-uploads the
+-- same half gigabyte or inherits it by a rule nobody can see.
+--
+-- ⚠️ THE FREE PLAN CEILING SHAPES THIS TABLE. Supabase free has a fixed 50MB per-file upload
+-- limit and 1GB of total storage. Henry chose to stay on it on 2026-08-12 with those numbers in
+-- front of him. Consequences that are baked in here rather than hoped for:
+--
+--   A training set is MANY rows, not one. Thirty minutes cannot be one object under 50MB.
+--   `seconds` is stored per sample so the total can be summed without opening any audio.
+--   Mono and FLAC are pushed hard in the UI, because 1GB is about seven artists at mono FLAC
+--   and about three at stereo WAV.
+
+create table if not exists public.voice_models (
+  id            uuid primary key default gen_random_uuid(),
+  created_at    timestamptz not null default now(),
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  artist_name   text not null,
+  status        text not null default 'collecting',
+  notes         text,
+  -- The timestamp, not a boolean, and SEPARATE from the per-song rights warranty.
+  --
+  -- Handing over thirty minutes of an artist's isolated vocal so a model can be built from it
+  -- is a materially bigger permission than sending one song to be re-sung, and the site already
+  -- promises "voice models are built only from catalogs we have permission to use". This column
+  -- is the record that backs that sentence, and it is the field an agreement is argued from.
+  consent_warranted_at timestamptz not null default now(),
+  approved_at   timestamptz,
+  -- Staff only. See the column grant below, which is what actually enforces that.
+  internal_notes text
+);
+
+create index if not exists voice_models_user_idx on public.voice_models (user_id, created_at desc);
+create index if not exists voice_models_status_idx on public.voice_models (status, created_at desc);
+
+alter table public.voice_models enable row level security;
+
+drop policy if exists voice_models_own_select on public.voice_models;
+create policy voice_models_own_select on public.voice_models
+  for select using (auth.uid() = user_id);
+
+drop policy if exists voice_models_own_insert on public.voice_models;
+create policy voice_models_own_insert on public.voice_models
+  for insert with check (auth.uid() = user_id);
+
+-- No customer update or delete, exactly as with song_jobs: this row records what somebody
+-- asserted about an artist's permission and when. Staff move it with the service role key.
+
+-- Same correction as song_jobs.internal_notes: a policy decides which ROWS are visible, never
+-- which columns, so the column grant is the real control. Drop the table-level SELECT and
+-- re-grant everything except internal_notes.
+revoke select on public.voice_models from anon, authenticated;
+
+grant select (
+  id, created_at, user_id, artist_name, status, notes,
+  consent_warranted_at, approved_at
+) on public.voice_models to anon, authenticated;
+
+create table if not exists public.voice_samples (
+  id          uuid primary key default gen_random_uuid(),
+  created_at  timestamptz not null default now(),
+  voice_id    uuid not null references public.voice_models (id) on delete cascade,
+  user_id     uuid not null references auth.users (id) on delete cascade,
+  path        text not null,
+  filename    text not null,
+  bytes       bigint not null,
+  -- Read from the file's own header in the BROWSER before upload, so the running total on the
+  -- page and the total in the queue agree without anything server-side opening audio.
+  seconds     numeric
+);
+
+create index if not exists voice_samples_voice_idx on public.voice_samples (voice_id);
+
+alter table public.voice_samples enable row level security;
+
+drop policy if exists voice_samples_own_select on public.voice_samples;
+create policy voice_samples_own_select on public.voice_samples
+  for select using (auth.uid() = user_id);
+
+drop policy if exists voice_samples_own_insert on public.voice_samples;
+create policy voice_samples_own_insert on public.voice_samples
+  for insert with check (auth.uid() = user_id);
+
+-- ── Training storage ──────────────────────────────────────────────────────────
+-- Private, and separate from `submissions` so that a retention decision about training data
+-- never has to be untangled from a decision about masters. They are different promises.
+--
+-- Same path shape, `{user_id}/{voice_id}/{file}`, because the policies below compare the first
+-- segment to auth.uid(). That is what stops one customer reading another's vocals.
+insert into storage.buckets (id, name, public)
+values ('voice-training', 'voice-training', false)
+on conflict (id) do update set public = false;
+
+drop policy if exists voice_training_own_insert on storage.objects;
+create policy voice_training_own_insert on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'voice-training'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists voice_training_own_select on storage.objects;
+create policy voice_training_own_select on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'voice-training'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );

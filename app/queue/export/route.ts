@@ -53,15 +53,33 @@ const SONG_COLUMNS = [
   'notes',
 ]
 
+/**
+ * Voices, WITHOUT storage paths, for the same reason as songs.
+ *
+ * `consent_warranted_at` is included deliberately: it is the timestamp behind the promise that
+ * voice models are built only from catalogs we have permission to use, and an export that
+ * cannot answer "when did they agree" is missing the one column that matters if it is ever
+ * asked.
+ */
+const VOICE_COLUMNS = [
+  'created_at',
+  'artist_name',
+  'status',
+  'consent_warranted_at',
+  'approved_at',
+  'notes',
+]
+
 export async function GET(request: Request) {
   if (!(await hasAdminSession())) {
     // 404 rather than 401: an unauthenticated caller learns nothing about what is here.
     return new Response('Not found', { status: 404 })
   }
 
-  const songs = new URL(request.url).searchParams.get('tab') !== 'enquiries'
-  const table = songs ? 'song_jobs' : 'enquiries'
-  const columns = songs ? SONG_COLUMNS : ENQUIRY_COLUMNS
+  const tab = new URL(request.url).searchParams.get('tab')
+  const table = tab === 'enquiries' ? 'enquiries' : tab === 'voices' ? 'voice_models' : 'song_jobs'
+  const columns =
+    table === 'enquiries' ? ENQUIRY_COLUMNS : table === 'voice_models' ? VOICE_COLUMNS : SONG_COLUMNS
 
   const { data, error } = await supabaseAdmin()
     .from(table)
@@ -73,7 +91,7 @@ export async function GET(request: Request) {
   }
 
   const stamp = new Date().toISOString().slice(0, 10)
-  const name = songs ? 'songs' : 'enquiries'
+  const name = table === 'enquiries' ? 'enquiries' : table === 'voice_models' ? 'voices' : 'songs'
 
   return new Response(toCsv(columns, (data ?? []) as unknown as Record<string, unknown>[]), {
     headers: {

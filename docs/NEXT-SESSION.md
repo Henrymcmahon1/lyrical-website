@@ -16,7 +16,7 @@ went out in one push, including the three portal commits that had been held back
 | Lifecycle emails | Live. Welcome, Accepted, Delivered. Rejection is silent by decision |
 | Home | Studio-first. The enquiry moved to `/contact` |
 | Scorecard | Live in the studio. Method only, no numbers |
-| Tests | 306, `tsc` silent, `eslint` silent, `npm audit` 0 |
+| Tests | 351, `tsc` silent, `eslint` silent, `npm audit` 0 |
 | Audits | responsive, motion and enquiry all pass, including `/contact` |
 | Read back live | Yes, every route, not trusted from a deploy message |
 
@@ -84,6 +84,20 @@ denormalised column on `song_jobs`.
 
 ---
 
+## ⚠️ Storage is the binding constraint now
+
+Supabase free: **50MB per file, hard and not configurable. 1GB total.** See HANDOVER 4f.
+
+- A 3 minute stereo WAV master is ~52MB and will NOT upload. Lead with FLAC everywhere.
+- 1GB is about **seven artists** of voice training data at mono FLAC, or three at mono WAV.
+- Henry chose to stay free on 2026-08-12 knowing both numbers. Pro is $25/mo for 100GB and a
+  configurable per-file limit. `MAX_UPLOAD_BYTES` in `lib/voice-training.ts` and `MAX_BYTES` in
+  `lib/song-upload.ts` are the only two constants that change.
+- **Nobody has uploaded a real training set yet.** The whole voice flow is unexercised by a
+  human, same as the queue.
+
+---
+
 ## Locked, do not quietly change
 
 | Decision | |
@@ -116,7 +130,7 @@ denormalised column on `song_jobs`.
 ## Verify before claiming anything is done
 
 ```bash
-npm test                 # 306 tests
+npm test                 # 351 tests
 npx tsc --noEmit         # silent
 npx eslint .             # silent
 npm run build            # clean

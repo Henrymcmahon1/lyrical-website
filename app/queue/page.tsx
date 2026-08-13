@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import { hasAdminSession } from '@/lib/admin-session'
 import { EnquiriesTab } from './EnquiriesTab'
 import { SongsTab } from './SongsTab'
+import { VoicesTab } from './VoicesTab'
 import { login, logout } from './actions'
 
 /**
- * The internal console. Two tabs: Songs and Enquiries.
+ * The internal console. Three tabs: Songs, Voices and Enquiries.
  *
  * It replaces `/leads`, which is now a redirect so nothing bookmarked breaks. The enquiry half
  * is the same code moved across; the songs half is new and is the thing that was missing, because
@@ -28,7 +29,7 @@ export const dynamic = 'force-dynamic'
 
 const SHELL = 'mx-auto w-full max-w-4xl px-6'
 
-type Tab = 'songs' | 'enquiries'
+type Tab = 'songs' | 'voices' | 'enquiries'
 
 function Login({ error }: { error?: string }) {
   return (
@@ -93,7 +94,8 @@ export default async function QueuePage({
   if (!signedIn) return <Login error={params.error} />
 
   // Songs is the default because it is the tab with a clock running on it.
-  const tab: Tab = params.tab === 'enquiries' ? 'enquiries' : 'songs'
+  const tab: Tab =
+    params.tab === 'enquiries' ? 'enquiries' : params.tab === 'voices' ? 'voices' : 'songs'
   const showAll = params.show === 'all'
 
   const tabHref = (t: Tab) => `/queue?tab=${t}${showAll ? '&show=all' : ''}`
@@ -126,6 +128,15 @@ export default async function QueuePage({
           }`}
         >
           Songs
+        </a>
+        <a
+          href={tabHref('voices')}
+          aria-current={tab === 'voices' ? 'page' : undefined}
+          className={`font-brand text-xl tracking-tight ${
+            tab === 'voices' ? 'text-indigo' : 'text-graphite/45 hover:text-indigo'
+          }`}
+        >
+          Voices
         </a>
         <a
           href={tabHref('enquiries')}
@@ -169,7 +180,7 @@ export default async function QueuePage({
           That is not a move this job can make.
         </p>
       )}
-      {params.moved === 'approved' && (
+      {params.moved === 'approved' && tab === 'songs' && (
         <p role="status" className="mt-6 text-sm text-graphite/70">
           Accepted. The clock is running and they have been emailed.
         </p>
@@ -184,14 +195,32 @@ export default async function QueuePage({
           Rejected. No email was sent, so tell them yourself.
         </p>
       )}
+      {params.moved === 'training' && (
+        <p role="status" className="mt-6 text-sm text-graphite/70">
+          Marked as training.
+        </p>
+      )}
       {params.moved === 'in_progress' && (
         <p role="status" className="mt-6 text-sm text-graphite/70">
           Marked as being made. No email goes out for this one.
         </p>
       )}
 
+      {params.moved === 'approved' && tab === 'voices' && (
+        <p role="status" className="mt-6 text-sm text-graphite/70">
+          Voice approved. No email goes out for this one.
+        </p>
+      )}
+      {params.moved === 'ready' && (
+        <p role="status" className="mt-6 text-sm text-graphite/70">
+          Marked ready. Songs by this artist can use it now.
+        </p>
+      )}
+
       {tab === 'songs' ? (
         <SongsTab showAll={showAll} confirming={params.confirm} />
+      ) : tab === 'voices' ? (
+        <VoicesTab showAll={showAll} />
       ) : (
         <EnquiriesTab
           showAll={showAll}

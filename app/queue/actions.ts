@@ -281,3 +281,63 @@ export async function saveNote(formData: FormData) {
 
   revalidatePath('/queue')
 }
+
+// ── Voices ────────────────────────────────────────────────────────────────────
+
+/**
+ * Which moves a voice model may make. Same shape as the song lifecycle and enforced the same
+ * way: the buttons are drawn from this, and so is the check, because a form post does not have
+ * to have come from a page we rendered.
+ *
+ * `rejected` is reachable only from `collecting`, for the same reason a song can only be
+ * refused before it is accepted: once we have told somebody their artist's voice is approved,
+ * withdrawing that is a conversation rather than a button.
+ */
+const VOICE_MOVES: Record<string, readonly string[]> = {
+  collecting: ['approved', 'rejected'],
+  approved: ['training'],
+  training: ['ready'],
+  ready: [],
+  rejected: [],
+}
+
+export async function moveVoice(formData: FormData) {
+  if (!(await hasAdminSession())) redirect('/queue')
+
+  const id = String(formData.get('id') ?? '')
+  const to = String(formData.get('to') ?? '')
+  const from = String(formData.get('from') ?? '')
+  if (!id) return
+
+  if (!VOICE_MOVES[from]?.includes(to)) redirect('/queue?tab=voices&error=move')
+
+  /**
+   * `.eq('status', from)` is the concurrency guard, exactly as on song jobs. Two founders in
+   * the queue at once is the normal case, and without it one approving while the other rejects
+   * produces two successful writes and two contradictory outcomes.
+   */
+  const { data, error } = await supabaseAdmin()
+    .from('voice_models')
+    .update({
+      status: to,
+      ...(to === 'approved' ? { approved_at: new Date().toISOString() } : {}),
+    })
+    .eq('id', id)
+    .eq('status', from)
+    .select('id')
+
+  if (error || !data?.length) {
+    revalidatePath('/queue')
+    redirect('/queue?tab=voices&error=stale')
+  }
+
+  /*
+   * No email either way, deliberately. Approving a voice is an internal readiness step rather
+   * than something the customer is waiting on, and rejection is silent for the same reason it
+   * is on songs: Henry's decision. The studio page states the status in words, which is where
+   * somebody who cares will look.
+   */
+  revalidatePath('/queue')
+  revalidatePath('/studio/voices')
+  redirect(`/queue?tab=voices&moved=${to}`)
+}

@@ -56,6 +56,18 @@ export default async function Studio({
 
       <p className="mt-4 text-sm text-graphite/55">Signed in as {user.email}</p>
 
+      {/*
+        Voices sit beside songs rather than inside them, because a voice model belongs to an
+        ARTIST and is reused by every song that artist sends. Linked from here so somebody who
+        arrived to submit a song discovers it, rather than only finding it in an email.
+      */}
+      <a
+        href="/studio/voices"
+        className="nudge mt-6 inline-flex min-h-11 items-center text-sm text-indigo underline decoration-indigo/30 underline-offset-4 transition-colors hover:decoration-indigo"
+      >
+        Voices we have learned
+      </a>
+
       {params.submitted && (
         <p
           role="status"

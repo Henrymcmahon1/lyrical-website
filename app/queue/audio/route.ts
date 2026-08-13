@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { hasAdminSession } from '@/lib/admin-session'
 import { SUBMISSIONS_BUCKET } from '@/lib/song-upload'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { VOICE_BUCKET } from '@/lib/voice-training'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -40,13 +41,26 @@ export async function GET(request: Request) {
   // including whether the id they guessed exists.
   if (!(await hasAdminSession())) return new Response('Not found', { status: 404 })
 
-  const id = new URL(request.url).searchParams.get('asset') ?? ''
+  /**
+   * Two kinds of object, one route.
+   *
+   * `?asset=` is a song submission, `?voice=` is a training sample. They live in different
+   * buckets on purpose, so that a retention decision about training data never has to be
+   * untangled from one about masters, but the signing rules are identical and duplicating this
+   * route would mean two places to get the TTL and the lookup wrong.
+   */
+  const params = new URL(request.url).searchParams
+  const voiceId = params.get('voice') ?? ''
+  const assetId = params.get('asset') ?? ''
+  const isVoice = Boolean(voiceId)
+  const id = isVoice ? voiceId : assetId
+
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response('Not found', { status: 404 })
 
   const db = supabaseAdmin()
 
   const { data: asset, error } = await db
-    .from('song_job_assets')
+    .from(isVoice ? 'voice_samples' : 'song_job_assets')
     .select('path')
     .eq('id', id)
     .maybeSingle()
@@ -54,7 +68,7 @@ export async function GET(request: Request) {
   if (error || !asset?.path) return new Response('Not found', { status: 404 })
 
   const { data: signed, error: signError } = await db.storage
-    .from(SUBMISSIONS_BUCKET)
+    .from(isVoice ? VOICE_BUCKET : SUBMISSIONS_BUCKET)
     .createSignedUrl(asset.path, SIGNED_URL_TTL_S)
 
   if (signError || !signed?.signedUrl) {
