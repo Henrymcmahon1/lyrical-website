@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { LANGUAGE_CODES } from './languages'
 import { isSubmittable } from './language-pairs'
+import { MAX_LYRICS_CHARS } from './lyrics'
 
 /**
  * What a portal submission has to contain before it is worth a human looking at it.
@@ -47,6 +48,19 @@ export const SongJobSchema = z
     targetLanguage: z.enum(LANGUAGE_CODES as [string, ...string[]]),
     assets: z.array(AssetSchema).min(1).max(12),
     notes: z.string().trim().max(2000).optional(),
+    /**
+     * The lyric sheet, in whatever language the song is in.
+     *
+     * Optional, and pushed hard rather than required: Henry's decision on 2026-08-12. The form
+     * is already asking for an upload and a rights warranty, and this is the primary
+     * conversion, so a third mandatory field costs submissions from anyone who does not have
+     * the words to hand. The queue flags a job that arrived without them.
+     *
+     * No language check and no character-set check. Eight languages are offered, three of them
+     * CJK, and a validator that assumes Latin script would silently refuse the ones this
+     * product exists to serve.
+     */
+    lyrics: z.string().max(MAX_LYRICS_CHARS).optional(),
     /**
      * Not a checkbox for decoration. This is the statement that makes the eventual agreement
      * enforceable and keeps us out of an infringing release, so it is a literal `true` rather

@@ -51,6 +51,16 @@ const SONG_COLUMNS = [
   'delivered_at',
   'rights_warranted_at',
   'notes',
+  /*
+   * The lyric sheet, on Henry's instruction 2026-08-12.
+   *
+   * ⚠️ Worth knowing what this means: a CSV leaves the building. It lands in a downloads
+   * folder, gets mailed around and opens in a spreadsheet nobody controls, and this column is
+   * the unreleased work itself rather than a reference to it. `toCsv` quotes the newlines
+   * correctly and defuses the leading `=` that a spreadsheet would otherwise execute, so the
+   * file is well formed; the exposure is what the file now contains.
+   */
+  'lyrics',
 ]
 
 /**

@@ -6,6 +6,7 @@ import {
   timeLeft,
 } from '@/lib/job-transitions'
 import { isGuaranteed, TURNAROUND_HOURS } from '@/lib/language-pairs'
+import { lyricStats } from '@/lib/lyrics'
 import { languageByCode, type LanguageCode } from '@/lib/languages'
 import type { JobStatus } from '@/lib/song-job-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -37,6 +38,7 @@ type Job = {
   approved_at: string | null
   delivered_at: string | null
   internal_notes: string | null
+  lyrics: string | null
 }
 
 type Asset = {
@@ -225,6 +227,41 @@ export async function SongsTab({
               {job.notes && (
                 <p className="mt-4 max-w-2xl whitespace-pre-line leading-relaxed text-graphite/80">
                   {job.notes}
+                </p>
+              )}
+
+              {/*
+                The lyric sheet, folded away.
+                
+                A native <details> rather than a JavaScript disclosure, so it works with the
+                rest of this console if scripting is off, and so forty lines of someone else's
+                unreleased words are not the first thing on screen when the queue loads.
+
+                `dir="auto"` lets the browser pick direction from the first strong character,
+                and the monospace face is deliberate: a lyric sheet is read line by line and
+                proportional type hides a line that is far longer than its neighbours.
+              */}
+              {job.lyrics ? (
+                <details className="mt-4 max-w-2xl">
+                  <summary className="nudge inline-flex min-h-11 cursor-pointer list-none items-center font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/50 hover:text-indigo [&::-webkit-details-marker]:hidden">
+                    Lyrics, {lyricStats(job.lyrics).lines} lines
+                  </summary>
+                  <pre
+                    dir="auto"
+                    className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-card border border-graphite/15 p-4 font-mono text-sm leading-relaxed text-graphite/80"
+                  >
+                    {job.lyrics}
+                  </pre>
+                </details>
+              ) : (
+                /*
+                  Said plainly rather than left blank. Lyrics are optional at submit, so a job
+                  arriving without them is normal, and the moment to chase it is BEFORE
+                  accepting: after that the clock is running and the pipeline has nothing to
+                  translate from.
+                */
+                <p className="mt-4 text-sm text-ember">
+                  No lyrics. Ask for them before accepting: the translation is built from them.
                 </p>
               )}
 

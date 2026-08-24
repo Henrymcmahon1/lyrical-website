@@ -95,6 +95,59 @@ describe('the brand renders lowercase, everywhere a person reads it', () => {
   })
 })
 
+describe('the lyric sheet, and where it is allowed to go', () => {
+  // Built with real newlines via a template literal, deliberately: a lyric sheet IS multi-line,
+  // and this way the fixture is the shape of the thing rather than an escaped version of it.
+  const withLyrics = {
+    ...base,
+    lyrics: `[Verse 1]
+Corazón partío
+你好 世界`,
+  }
+
+  it('reaches the FOUNDER notification, which was Henrys call', () => {
+    /**
+     * On the record, 2026-08-12, taken after the argument against was put to him in writing:
+     * email is forwarded, archived and indexed by systems nobody here controls, and unreleased
+     * lyrics are the work itself rather than a pointer to it. He wanted them without opening
+     * the queue. Asserted so the decision is visible rather than implied by an if statement.
+     */
+    expect(jobNotificationText(withLyrics)).toContain('Corazón partío')
+    expect(jobNotificationHtml(withLyrics)).toContain('Corazón partío')
+  })
+
+  it('survives non-Latin script intact', () => {
+    expect(jobNotificationText(withLyrics)).toContain('你好 世界')
+  })
+
+  it('NEVER reaches the customer confirmation, or any other template', () => {
+    // The limit on that decision. Founders only, and there is nothing to gain by sending
+    // somebody the sheet they wrote themselves.
+    const others = [
+      jobConfirmationText(withLyrics),
+      jobConfirmationHtml(withLyrics),
+      jobAcceptedText(withLyrics),
+      jobAcceptedHtml(withLyrics),
+      jobDeliveredText(withLyrics),
+      jobDeliveredHtml(withLyrics),
+    ].join(' ')
+    expect(others).not.toContain('Corazón partío')
+    expect(others).not.toContain('Verse 1')
+  })
+
+  it('is escaped in the html, like every other value a stranger supplies', () => {
+    const nasty = { ...base, lyrics: '<script>alert(1)</script>' }
+    const html = jobNotificationHtml(nasty)
+    expect(html).not.toContain('<script>')
+    expect(html).toContain('&lt;script&gt;')
+  })
+
+  it('leaves the notification unchanged when there are none', () => {
+    // Lyrics are optional, so the commonest case is no block at all rather than an empty one.
+    expect(jobNotificationText(base)).not.toMatch(/lyrics/i)
+  })
+})
+
 describe('the delivery email, which has no player behind it', () => {
   it('says the files are coming, and does not tell anyone to go and press play', () => {
     /**

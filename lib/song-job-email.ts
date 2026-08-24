@@ -32,6 +32,7 @@ export type SongJobEmailFields = {
   fileCount: number
   featureNames: string[]
   notes?: string
+  lyrics?: string
   submitterEmail: string
 }
 
@@ -88,6 +89,29 @@ function notificationDoc(d: SongJobEmailFields): EmailDoc {
 
   const blocks: EmailDoc['blocks'] = [{ type: 'rows', rows }]
   if (d.notes) blocks.push({ type: 'paragraph', text: d.notes })
+
+  /**
+   * The lyric sheet, in the FOUNDER notification only.
+   *
+   * ⚠️ On the record as Henry's decision, 2026-08-12, taken after the argument against it was
+   * put to him in writing. The case against: email is forwarded, archived and indexed by
+   * systems nobody here controls, and unreleased lyrics are the work itself rather than a
+   * pointer to it, which makes them strictly more sensitive than the filenames and storage
+   * paths this file already refuses to carry. He wanted them without opening the queue.
+   *
+   * Two limits that follow, and they are not negotiable without another decision:
+   *
+   *   FOUNDERS ONLY. This block is in `notificationDoc`, which goes through `mailFounders`.
+   *   The customer's confirmation does not carry it, and there is nothing to gain by adding it
+   *   since they wrote the sheet.
+   *
+   *   NEVER A LINK, ALWAYS THE TEXT. If lyrics ever move to storage, this stays as inline text
+   *   or disappears. A signed URL in an inbox is the thing every other rule here prevents.
+   */
+  if (d.lyrics) {
+    blocks.push({ type: 'paragraph', text: d.lyrics })
+  }
+
   blocks.push(
     { type: 'cta', label: 'Open the queue', href: `${SITE_URL}/queue` },
     {

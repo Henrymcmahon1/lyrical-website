@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { JobStatus } from '@/components/JobStatus'
+import { LyricsEditor } from '@/components/LyricsEditor'
 import { Scorecard } from '@/components/Scorecard'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { signOut } from './actions'
@@ -30,7 +31,9 @@ export default async function Studio({
   const supabase = await supabaseServer()
   const { data: jobs } = await supabase
     .from('song_jobs')
-    .select('id, title, primary_artist, source_language, target_language, status, created_at')
+    .select(
+      'id, title, primary_artist, source_language, target_language, status, created_at, lyrics',
+    )
     .order('created_at', { ascending: false })
 
   return (
@@ -111,6 +114,17 @@ export default async function Studio({
               <div className="mt-6">
                 <JobStatus status={j.status} />
               </div>
+
+              {/*
+                Editable only while the job is still waiting on us. The check here is the UI
+                half; the database half is the row policy, which requires the same thing and is
+                what actually refuses a forged write.
+              */}
+              <LyricsEditor
+                jobId={j.id}
+                initial={j.lyrics ?? ''}
+                locked={j.status !== 'submitted'}
+              />
             </li>
           ))}
         </ul>

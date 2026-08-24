@@ -338,3 +338,54 @@ create policy voice_training_own_select on storage.objects
     bucket_id = 'voice-training'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- ══ Lyrics ════════════════════════════════════════════════════════════════════
+-- Added 2026-08-12.
+--
+-- The lyric sheet lives in a COLUMN, not in the storage bucket. A full sheet is two to five
+-- kilobytes, so a thousand songs is about five megabytes, against a 500MB database and a 1GB
+-- file allowance that is already the binding constraint for audio. Text in a column also comes
+-- back with the row and stays searchable and editable.
+alter table public.song_jobs add column if not exists lyrics text;
+
+-- ⚠️ THE SELECT GRANT HAS TO BE REWRITTEN, NOT EXTENDED.
+--
+-- `song_jobs` has column-level SELECT privileges rather than a table-level grant, so that
+-- internal_notes stays staff-only. The consequence, written down further up this file when that
+-- was set up: **a new column is NOT readable by customers until it is added to the grant.** Add
+-- a column and forget this, and the studio silently shows nothing for it, or PostgREST refuses
+-- the whole query. This block is that grant, restated with `lyrics` in it.
+revoke select on public.song_jobs from anon, authenticated;
+
+grant select (
+  id, created_at, user_id, title, primary_artist,
+  source_language, target_language, notes, status,
+  rights_warranted_at, approved_at, delivered_at,
+  lyrics
+) on public.song_jobs to anon, authenticated;
+
+-- ── Letting a customer fix their own lyrics, and NOTHING else ────────────────
+--
+-- Henry's decision, 2026-08-12: lyrics are editable until we accept the job. A typo in a lyric
+-- sheet goes straight into the output, and until now a submitted job was frozen with no update
+-- policy at all, so a wrong paste could only be fixed by us.
+--
+-- ⚠️ THIS NEEDS BOTH HALVES, AND THE POLICY ALONE IS THE DANGEROUS MISTAKE.
+--
+-- An RLS policy decides WHICH ROWS may be updated. It cannot decide which columns, exactly as
+-- it could not for internal_notes. A `for update` policy on its own would therefore let a
+-- signed in customer rewrite their own `status` to 'delivered', or move `approved_at`, or edit
+-- `rights_warranted_at`, which is the field an agreement is argued from.
+--
+-- So the column grant is the real control and the policy is the row filter. Both, or neither.
+revoke update on public.song_jobs from anon, authenticated;
+
+grant update (lyrics) on public.song_jobs to authenticated;
+
+drop policy if exists song_jobs_own_lyrics_update on public.song_jobs;
+create policy song_jobs_own_lyrics_update on public.song_jobs
+  for update to authenticated
+  -- Their own row, and only while it is still waiting on us. Once accepted, the sheet is what
+  -- the work was started from and it stops moving.
+  using (auth.uid() = user_id and status = 'submitted')
+  with check (auth.uid() = user_id and status = 'submitted');

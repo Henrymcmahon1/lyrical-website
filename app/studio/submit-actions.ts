@@ -111,6 +111,7 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
     source_language: job.sourceLanguage,
     target_language: job.targetLanguage,
     notes: job.notes ?? null,
+    lyrics: job.lyrics ?? null,
     status: 'submitted',
   })
 
@@ -150,6 +151,7 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
       .map((a) => a.artistName)
       .filter((n): n is string => Boolean(n) && n !== job.primaryArtist),
     notes: job.notes,
+    lyrics: job.lyrics,
     submitterEmail: user.email ?? '',
   })
 

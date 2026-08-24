@@ -16,7 +16,7 @@ went out in one push, including the three portal commits that had been held back
 | Lifecycle emails | Live. Welcome, Accepted, Delivered. Rejection is silent by decision |
 | Home | Studio-first. The enquiry moved to `/contact` |
 | Scorecard | Live in the studio. Method only, no numbers |
-| Tests | 351, `tsc` silent, `eslint` silent, `npm audit` 0 |
+| Tests | 395, `tsc` silent, `eslint` silent, `npm audit` 0 |
 | Audits | responsive, motion and enquiry all pass, including `/contact` |
 | Read back live | Yes, every route, not trusted from a deploy message |
 
@@ -98,6 +98,24 @@ Supabase free: **50MB per file, hard and not configurable. 1GB total.** See HAND
 
 ---
 
+## Lyrics, added 2026-08-12
+
+A `lyrics` column on `song_jobs`, in Postgres rather than the bucket: a sheet is 2 to 5KB, and
+the database is 500MB against the 1GB of file storage that is already the constraint.
+
+- **Optional at submit, pushed hard.** Henry's call. The queue shows an ember line on any job
+  that arrived without them, because the moment to chase is BEFORE accepting.
+- **Editable until we accept.** This is the FIRST customer update path on `song_jobs`, which had
+  none by design. It needed a column grant AND a row policy: a policy alone would have let a
+  customer rewrite their own `status`. See the schema comment.
+- ⚠️ **Lyrics go in the founder email and the CSV.** Henry's decision, taken after the argument
+  against was put to him in writing. Founders only, never the customer's copy, and never as a
+  link. `tests/song-job-email.test.ts` pins both halves.
+- **`.txt` is decoded from BYTES, not `file.text()`.** Notepad's "Unicode" writes UTF-16 and a
+  legacy Spanish export is Windows-1252; both are unreadable as UTF-8. `lib/lyrics.ts`.
+
+---
+
 ## Locked, do not quietly change
 
 | Decision | |
@@ -130,7 +148,7 @@ Supabase free: **50MB per file, hard and not configurable. 1GB total.** See HAND
 ## Verify before claiming anything is done
 
 ```bash
-npm test                 # 351 tests
+npm test                 # 395 tests
 npx tsc --noEmit         # silent
 npx eslint .             # silent
 npm run build            # clean
