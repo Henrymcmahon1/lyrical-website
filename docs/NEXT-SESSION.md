@@ -1,166 +1,212 @@
 # Next session
 
-Read `docs/HANDOVER.md` first, all of it. §0, §4d, §4e, §5 and §9 matter most. This file is the
-brief for what comes next and assumes you have read that one.
+Read `docs/HANDOVER.md` first, all of it. §0, §4d, §4e, §4f, §5 and §9 matter most. This file is
+the brief for what comes next and assumes you have read that one.
+
+**Written 2026-08-12.** Everything described here is live on production and was read back off
+`https://lyricalglobal.com` rather than trusted from a deploy message.
 
 ---
 
-## Where things stand, 2026-08-11
+## The three rules that will catch you out
 
-Everything in the previous brief was built, verified and **shipped to production**. Six commits
-went out in one push, including the three portal commits that had been held back.
+1. ⚠️ **`git push origin main` DEPLOYS TO PRODUCTION.** There is no push-without-shipping on this
+   repo. Work that must stay dark goes on a branch.
+2. ⚠️ **THE REPO IS PUBLIC.** Never put a credential in a file, even for one command. Pass it via
+   `process.argv` or an environment variable. `*-probe.mjs` and `*-e2e.mjs` are gitignored
+   precisely because a password was once swept into a commit here.
+3. ⚠️ **Never leave a dev server running on localhost:3000 without telling Henry.** He signed up
+   against one on 2026-08-11 and the magic link went out pointing at localhost. Stop it with
+   `preview_stop` when you are done.
+
+**You cannot create accounts or enter API keys or passwords.** Henry does that. You can do
+everything either side of it, including all DNS via the Vercel CLI and all SQL via the Supabase
+dashboard in his Chrome, which he has authorised.
+
+---
+
+## State, 2026-08-12
 
 | | |
 |---|---|
-| `/queue` | Live. Songs and Enquiries. Accept, Start work, Mark delivered, Reject |
-| Lifecycle emails | Live. Welcome, Accepted, Delivered. Rejection is silent by decision |
-| Home | Studio-first. The enquiry moved to `/contact` |
-| Scorecard | Live in the studio. Method only, no numbers |
-| Tests | 395, `tsc` silent, `eslint` silent, `npm audit` 0 |
-| Audits | responsive, motion and enquiry all pass, including `/contact` |
-| Read back live | Yes, every route, not trusted from a deploy message |
+| Live | https://lyricalglobal.com, TLS, `www` 308s to apex |
+| Stack | Next.js 16.2, React 19, Tailwind 4, TypeScript, Supabase, Resend, Vercel |
+| Tests | **396**, `tsc` silent, `eslint` silent, `npm audit --omit=dev` 0 |
+| Git | Clean tree, nothing unpushed, `main` = `008d204` |
+| Public routes | `/`, `/about`, `/hear`, `/contact`, `/ai-music-translation` |
+| Gated routes | `/studio`, `/studio/new`, `/studio/voices`, `/studio/voices/new`, `/queue`, `/listen` |
+| Supabase tables | `enquiries`, `profiles`, `song_jobs`, `song_job_assets`, `voice_models`, `voice_samples` |
+| Buckets | `listen`, `submissions`, `voice-training`, all private |
 
-⚠️ **`git push origin main` DEPLOYS TO PRODUCTION.** There is no push-without-shipping here.
-Work that must stay dark goes on a branch.
+### The funnel, end to end
 
-⚠️ **THE REPO IS PUBLIC.** Never put a credential in a file, even for one command.
+Visitor lands → every page closes with **"Make your song multilingual"** → `/studio` → magic link
+(sent by us, not Supabase) → upload stems or a full mix, plus an optional lyric sheet → job is
+`submitted` → founders emailed → **a human presses Accept in `/queue`**, which stamps
+`approved_at` and starts the 48 hour clock → Being made → Delivered, which emails them and says
+the files are coming separately.
 
----
+`/contact` is the second funnel, for a label with a catalog rather than one song.
 
-## The one thing nobody has done
-
-**Click through `/queue` on production, signed in, and move a real job.**
-
-Everything about it is proven except the thing only a human with the password can do. The
-session, the transitions, the guards and the render are unit tested; the unauthenticated
-surface was read back live. But no person has yet pressed Accept and watched the email arrive.
-
-The full loop to walk, once:
-
-1. Sign in at `/queue`. **The cookie path changed from `/leads` to `/queue`, so the old session
-   is not carried over.** Same `ADMIN_PASSWORD`.
-2. Open the Songs tab. The one real submission from 2026-08-09 should be there.
-3. Click a file. It should open through `/queue/audio` and play. **This is the first time a
-   signed URL from the `submissions` bucket has been exercised by a human.**
-4. Press Accept. Check the acceptance email arrives and reads well, and that the studio's status
-   rail moves.
-5. Press Mark delivered. Same check.
-
-If step 3 fails, look at `media-src` in `next.config.ts` before anything else: a cross-origin
-media move broke `/listen` exactly this way and did it silently.
+`/studio/voices` is where an artist's clean vocals go so a voice model can be trained. Separate
+from songs, because a voice belongs to an ARTIST and is reused by every song they send.
 
 ---
 
-## The work, in order
+## ⚠️ The two constraints that shape every decision
 
-### 1. Delivery has no player, and the email admits it
+### Storage: 50MB per file, 1GB total
 
-Henry's call on 2026-08-11 was status plus email for now, with the audio going across by hand.
-So `jobDeliveredText` says the files are coming separately, and a test stops a later session
-adding a link before there is somewhere to send it.
+Supabase's free plan has a **fixed 50MB per-file upload limit**, stated in the dashboard, **not
+configurable**. Total storage is 1GB. Henry chose to stay free on 2026-08-12 with the numbers in
+front of him.
+
+- A 3 minute 48kHz/24-bit **stereo WAV is ~52MB and will not upload.** Lead with FLAC everywhere:
+  lossless, ~45% smaller, and it turns that master into ~30MB.
+- 1GB is about **seven artists** of voice training data at mono FLAC, or three at stereo WAV.
+- Pro is $25/mo for 100GB and a configurable limit. `MAX_UPLOAD_BYTES` in `lib/voice-training.ts`
+  and `MAX_BYTES` in `lib/song-upload.ts` are the only two constants that change.
+
+### The delivery promise widens silently
+
+`OFFERED` derives from `lib/languages.ts` and `GUARANTEED` derives from `OFFERED`. **Adding one
+language commits us to 48 hours on sixteen more pairs** with nothing in `language-pairs.ts`
+changing. Nine languages is 72 pairs. Do the multiplication before adding one, and say the number
+out loud to Henry.
+
+The only brake is that the clock starts at **acceptance**, never at upload. `/queue` names the
+pair and the promise next to the Accept button for that reason.
+
+---
+
+## Nobody has ever done these. They are the highest-value things left.
+
+1. **Sign in to `/queue` on production and move a real job.** Every guard, transition and render
+   is unit tested and the unauthenticated surface was read back live, but no human has pressed
+   Accept. Specifically: **click a file and check it plays.** That is the first exercise of a
+   signed URL from the `submissions` bucket. If it fails, look at `media-src` in `next.config.ts`
+   first: a cross-origin media move broke `/listen` in exactly that way, silently.
+2. **Upload a real voice training set.** The whole `/studio/voices` flow is unexercised by a
+   human.
+3. **`/listen` playback.** The oldest open item in the project. The in-app browser blocks signed
+   URLs by its own safety filter, so it cannot be checked from an agent session. Henry has to open
+   it in his own Chrome and press play.
+
+---
+
+## The work, in rough order
+
+### 1. Delivery has nothing behind it
+
+Marking a job delivered emails the customer and that is all. There is no delivery table, no
+bucket, no player. Henry's call on 2026-08-11 was status plus email for now, with audio going
+across by hand, and `jobDeliveredText` says exactly that.
 
 The real version needs a `song_job_deliveries` table, a private bucket, staff upload from
-`/queue`, and playback in the studio behind short-lived signed URLs. **Do not put a signed URL
-in the email** whatever else changes: `tests/song-job-email.test.ts` enforces that across every
-template and it should stay that way.
+`/queue`, and playback in the studio behind short-lived signed URLs. **Never put a signed URL in
+an email** whatever else changes: `tests/song-job-email.test.ts` enforces that across every
+template.
 
-### 2. `/listen` playback, still never verified by a human
+### 2. Audio anywhere on the site
 
-The oldest open item in the project. The in-app browser blocks signed URLs by its own safety
-filter, so it cannot be checked from an agent session. **Ask Henry to load it in his own Chrome
-and press play.**
+Still the largest conversion lever and the only one that cannot be faked. Blocked on rights, not
+on code. `content/demos.json` has `hasAudio: false` on everything. When it publishes, `/hear` is
+the first page that should get it, and `components/sections/S03Wheels.tsx` can stop being coy.
 
-### 3. The last "hear" without a player
+### 3. No pricing signal, no social proof
 
-`components/sections/S03Wheels.tsx` still carries the eyebrow "Hear it" above the language
-wheel on the home page. It was left alone because that section delivers what it offers, a
-request for examples by email. It is the last one, and it goes when audio publishes.
+"No upfront cost" is the only commercial number on the site. No client names, testimonials or
+case studies anywhere.
 
-### 4. `SongsTab` is capped at 1000 accounts
+### 4. Smaller, known
 
-`auth.admin.listUsers({ perPage: 1000 })` resolves submitter addresses. Past that the tail
-renders "unknown sender", which is the right direction to fail in, but it wants paging or a
-denormalised column on `song_jobs`.
-
----
-
-## ⚠️ Storage is the binding constraint now
-
-Supabase free: **50MB per file, hard and not configurable. 1GB total.** See HANDOVER 4f.
-
-- A 3 minute stereo WAV master is ~52MB and will NOT upload. Lead with FLAC everywhere.
-- 1GB is about **seven artists** of voice training data at mono FLAC, or three at mono WAV.
-- Henry chose to stay free on 2026-08-12 knowing both numbers. Pro is $25/mo for 100GB and a
-  configurable per-file limit. `MAX_UPLOAD_BYTES` in `lib/voice-training.ts` and `MAX_BYTES` in
-  `lib/song-upload.ts` are the only two constants that change.
-- **Nobody has uploaded a real training set yet.** The whole voice flow is unexercised by a
-  human, same as the queue.
+- `SongsTab` and `VoicesTab` resolve submitter emails via `auth.admin.listUsers({ perPage: 1000 })`.
+  Past a thousand accounts the tail renders "unknown sender", which is the right failure
+  direction, but it wants paging or a denormalised column.
+- Rate limiting is in-memory and therefore per serverless instance. **Measured, not assumed:** six
+  wrong passwords against production were throttled zero times. Real per-IP limiting needs Redis
+  or Postgres.
+- `lib/enquiry-schema.ts` still has a `source === 'gate'` branch making `name` optional. The gate
+  was removed on 2026-08-11 so that path is dead. Harmless, worth a tidy.
+- No backlinks anywhere on the web. Biggest remaining SEO lever and it is outreach, not code.
+- Bing Webmaster Tools not set up. Matters twice because Bing feeds ChatGPT.
+- `sameAs` in `lib/structured-data.ts` is empty until a LinkedIn page exists.
 
 ---
 
-## Lyrics, added 2026-08-12
+## Locked. Do not quietly change these.
 
-A `lyrics` column on `song_jobs`, in Postgres rather than the bucket: a sheet is 2 to 5KB, and
-the database is 500MB against the 1GB of file storage that is already the constraint.
-
-- **Optional at submit, pushed hard.** Henry's call. The queue shows an ember line on any job
-  that arrived without them, because the moment to chase is BEFORE accepting.
-- **Editable until we accept.** This is the FIRST customer update path on `song_jobs`, which had
-  none by design. It needed a column grant AND a row policy: a policy alone would have let a
-  customer rewrite their own `status`. See the schema comment.
-- ⚠️ **Lyrics go in the founder email and the CSV.** Henry's decision, taken after the argument
-  against was put to him in writing. Founders only, never the customer's copy, and never as a
-  link. `tests/song-job-email.test.ts` pins both halves.
-- **`.txt` is decoded from BYTES, not `file.text()`.** Notepad's "Unicode" writes UTF-16 and a
-  legacy Spanish export is Windows-1252; both are unreadable as UTF-8. `lib/lyrics.ts`.
-
----
-
-## Locked, do not quietly change
-
-| Decision | |
+| Decision | Detail |
 |---|---|
-| Brand renders **`lyrical`**, lowercase, everywhere | Tests pin it, including email subjects |
-| Tagline unchanged | "Every song. Any language. Same soul." |
-| **All 72 language pairs carry the 48 hours**, counted from acceptance | Changed 2026-08-11 on Henry's instruction after the trade-off was put to him twice. See HANDOVER §4 |
-| No other claim about speed anywhere | Henry rejected "instantly" as untrue |
-| "No upfront cost" only. **Do not mention the royalty model** | The standalone terms section was removed 2026-08-11. The claim now lives in the hero's third paragraph, step two of `S05How`, the closing `S10Start` line, and the confirmation and welcome emails. Change them together |
-| **Rejection sends no email.** | Henry's call. `tests/job-transitions.test.ts` pins it so adding one has to be deliberate |
-| The studio is the primary conversion, `/contact` is secondary | Do not put the enquiry form back on the home page |
-| Scorecard shows **no numbers** until benchmark data arrives | Describing a measurement that does not run is checkable, and worse than silence |
-| Open signup, manual approval before anything processes | Controls rights exposure and compute spend together |
-| No delete for a song job | A submission is a record of what somebody asserted and when |
+| Brand renders **`lyrical`**, lowercase, everywhere | Body copy, titles, JSON-LD, email subjects. Tests pin it |
+| Tagline | "Every song. Any language. Same soul." |
+| **Nine languages** | EN, ES, PT, FR, DE, ZH, YUE, JA, KO. Italian removed 2026-08-12 |
+| Mandarin stays **中文**, Cantonese is **粵語** | Put to Henry that 中文 reads as "Chinese" and 普通話 would be more precise beside 粵語. He chose to leave it |
+| Cantonese is **`YUE`** | Three letters where others are two. ISO 639-3. Cantonese has no two-letter code |
+| **All 72 pairs carry the 48 hours**, from acceptance | Henry's instruction after the trade-off was put to him twice |
+| No other speed claim anywhere | He rejected "instantly" as untrue |
+| "No upfront cost" only. **Never mention the royalty model** | Lives in the hero, `S05How` step 2, the `S10Start` closing line, and two emails. Change together |
+| **Rejection sends no email** | `tests/job-transitions.test.ts` pins it |
+| Studio is the primary conversion, `/contact` secondary | Do not put the enquiry form back on the home page |
+| Scorecard shows **no numbers** until benchmark data arrives | Describing a measurement that does not run is checkable |
+| Lyrics optional at submit, editable until accepted | Queue flags a job that arrived without them |
+| Lyrics DO go in the founder email and the CSV | Henry's call after the argument against was put to him. Founders only, never the customer's copy, never as a link |
+| No delete for a song job or a voice model | The row records what somebody asserted and when |
+| No gradients. Ember never carries body text. Indigo never on the dark ground | `tests/tokens.test.ts` measures the contrast |
+| US spelling in visitor copy, identifiers keep the old spelling | `catalogue_size` is a live column and a CSV header |
 
 ---
 
-## Blocked on Henry
+## Traps this codebase has actually fallen into
 
-- **Benchmark data** for any scorecard result. Until it lands, the method may be described and
-  no result may be claimed.
-- **Resend SMTP in Supabase.** Unlocks a six digit code instead of a magic link. Supabase's
-  built-in email is rate limited and meant for testing, so signups will fail quietly under any
-  volume. This is the highest-risk unfixed thing in the funnel, because it fails silently and
-  the failure is a lost customer.
-- **`/listen` playback**, above.
+- **An RLS policy cannot restrict COLUMNS, only rows.** `internal_notes` was documented as staff
+  only and was readable by customers for weeks. The fix is a column GRANT. And the obvious
+  `revoke select (col)` **does nothing silently**, because Postgres cannot subtract a column from
+  a table-level grant: you must `revoke select` then `grant select (the columns you want)`.
+- **Therefore a new column on `song_jobs` is invisible to customers until it is added to that
+  grant.** This bit once already when `lyrics` was added.
+- **JSX eats the space between `{expr}` and the text after it** when that text wraps to the next
+  line. Shipped "48hours" to production. `tsc`, `eslint` and 317 tests were all green. Use
+  `&nbsp;`. The guard lives in `audit-responsive`, NOT in a unit test, because vitest's compiler
+  and Next's disagree and a unit test passed with the bug present.
+- **Whitespace between two flex items is not rendered**, so a space or `{' '}` before an arrow in
+  an `inline-flex` link does nothing. Use `gap-1.5`.
+- **`innerText` reports a newline between flex items either way**, so it will tell you the arrow
+  spacing is still broken after you have fixed it. Measure pixels.
+- **`vercel --prod` can print "Not authorized" and deploy anyway.** Read the live site back.
+- **An audit that hardcodes today's numbers fails tomorrow for the wrong reason.** Assert the
+  rule, never a snapshot of it.
+- **A Playwright locator re-resolves.** `evaluateHandle` and keep it when watching one element.
+- **Lenis eases scroll.** Poll until `scrollY` settles; a fixed timeout samples mid-flight.
+- **`requestAnimationFrame` is paused in the in-app Browser pane.** Use Playwright for motion.
+- Three times a "failure" here has been the test's fault, not the code's. Ask what property
+  actually matters before touching either side.
 
 ---
 
 ## Verify before claiming anything is done
 
 ```bash
-npm test                 # 395 tests
+npm test                 # 396 tests
 npx tsc --noEmit         # silent
 npx eslint .             # silent
 npm run build            # clean
 npm audit --omit=dev     # 0
 
 node scripts/audit-responsive.mjs http://localhost:3000   # ~5 min, do not skip after layout changes
-node scripts/audit-motion.mjs http://localhost:3000
+node scripts/audit-motion.mjs http://localhost:3000       # 31 assertions
 node scripts/audit-enquiry.mjs http://localhost:3000      # needs a server with NO RESEND_API_KEY
 ```
 
-`audit-enquiry` drives `/contact`, through a named `ROUTE` constant. `audit-responsive` covers
-`/contact` too. If the form moves again, move both with it.
+`audit-enquiry` drives `/contact` through a named `ROUTE` constant. `audit-responsive` covers
+`/contact` too and carries the fused-word check. If the form moves again, move both with it.
 
-Then read the live site back. Do not trust a deploy message: `vercel --prod` prints
-`"Not authorized"` and succeeds anyway, twice observed.
+**Then read the live site back with curl or Playwright.** Do not trust a deploy message.
+
+---
+
+## How Henry wants to be talked to
+
+Short. Lead with the answer. Tables and dot points over paragraphs. **Never use em dashes**, in
+chat or in anything you build: rewrite the sentence, do not swap in a hyphen. Give complete
+absolute Windows paths. Flag spend before it happens. **Ask questions rather than guessing.**
