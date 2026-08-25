@@ -70,7 +70,7 @@ describe('decoding a .txt that somebody actually saved', () => {
     expect(proper).not.toBe('CafÃ©')
   })
 
-  it('handles CJK, which is three of the eight languages', () => {
+  it('handles CJK, which is four of the nine languages', () => {
     expect(decodeLyricsFile(utf8('你好\nこんにちは\n안녕하세요'))).toBe('你好\nこんにちは\n안녕하세요')
   })
 })

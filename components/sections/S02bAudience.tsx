@@ -175,7 +175,7 @@ export default function S02bAudience() {
                 A finished record, available everywhere, built for one language.
               </span>
               <span className="a-after">
-                The same record, authorized in eight languages, in the artist&rsquo;s own
+                The same record, authorized in nine languages, in the artist&rsquo;s own
                 voice.
               </span>
             </p>

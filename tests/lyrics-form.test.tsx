@@ -47,7 +47,7 @@ describe('the field exists and asks for the right thing', () => {
   })
 
   it('sets dir="auto" so a right to left sheet is not rendered backwards', () => {
-    // None of the eight languages is right to left today. The attribute costs nothing and
+    // None of the nine languages is right to left today. The attribute costs nothing and
     // means the field is already correct if that changes.
     expect(html()).toContain('dir="auto"')
   })

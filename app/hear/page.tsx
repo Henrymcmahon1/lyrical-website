@@ -6,7 +6,7 @@ import S03Wheels from '@/components/sections/S03Wheels'
  * ⚠️ Its title and description promised playback until 2026-08-11, and there has never been any
  * audio on this site to play. That was raised in three consecutive handovers. Henry's decision
  * was to keep the page and repoint it rather than redirect it, so it now does what it says: it
- * shows the eight languages and asks for a song, like everything else.
+ * shows the nine languages and asks for a song, like everything else.
  *
  * The route is still `/hear`, which no longer matches what the page is called. It stays that
  * way on purpose: the URL is indexed, and changing it would trade a real ranking for a tidier
@@ -30,7 +30,7 @@ import S03Wheels from '@/components/sections/S03Wheels'
 export const metadata = {
   title: 'Languages',
   description:
-    'The eight languages lyrical works in, in both directions. Your record, re-sung in ' +
+    'The nine languages lyrical works in, in both directions. Your record, re-sung in ' +
     'another language by the same artist, over the untouched original backing.',
   alternates: { canonical: '/hear' },
 }
@@ -48,7 +48,7 @@ export default function Hear() {
           it twice in one screen reads as a page assembled rather than written.
         */}
         <p className="mt-8 text-lg leading-relaxed text-graphite/75">
-          Eight languages, in either direction.
+          Nine languages, in either direction.
         </p>
       </section>
 

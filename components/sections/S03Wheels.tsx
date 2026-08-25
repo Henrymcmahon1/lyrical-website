@@ -28,7 +28,7 @@ export default function S03Wheels() {
     <section id="hear" className="bg-dark-ground py-24 text-dark-ink sm:py-28">
       <div className="mx-auto flex max-w-4xl flex-col items-center px-6 text-center">
         <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-dark-ink/50">
-          Eight languages
+          Nine languages
         </span>
 
         <h2 className="mt-5 font-brand text-4xl leading-tight tracking-tight text-balance sm:text-5xl">

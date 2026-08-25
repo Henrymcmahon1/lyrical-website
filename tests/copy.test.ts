@@ -51,10 +51,23 @@ describe('copy guardrails — these are commitments, not preferences', () => {
 })
 
 describe('language claims', () => {
-  it('lists exactly the eight approved languages', () => {
+  it('lists exactly the nine approved languages', () => {
+    /**
+     * Pinned as an exact list rather than a count, because this array decides the delivery
+     * promise: `OFFERED` derives from it and `GUARANTEED` derives from `OFFERED`, so an entry
+     * added here silently commits us to 48 hours on every pair it can form. Nine languages is
+     * 72 pairs. A test that only counted them would pass while the wrong language was in.
+     *
+     * Changed 2026-08-12 on Henry's instruction: German and Cantonese in, Italian out.
+     */
     expect(LANGUAGES.map((l) => l.code)).toEqual([
-      'EN', 'ES', 'PT', 'IT', 'FR', 'ZH', 'JA', 'KO',
+      'EN', 'ES', 'PT', 'FR', 'DE', 'ZH', 'YUE', 'JA', 'KO',
     ])
+  })
+
+  it('never lets the promise widen without this file changing', () => {
+    // The arithmetic, stated so the cost of a one-line addition is visible in the diff.
+    expect(LANGUAGES.length).toBe(9)
   })
 
   it('gives every language an endonym', () => {

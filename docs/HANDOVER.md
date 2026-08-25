@@ -206,10 +206,13 @@ judged and this site has only three others to carry it.
 The site claims **8 languages**. The internal capability document proves **Spanish ↔ English**
 only. Raised with Henry three times and confirmed. Do not reopen without being asked.
 
-### Changed decision, on the record — 2026-08-11. All 56 pairs now carry the 48 hours.
+### Changed decision, on the record — 2026-08-11. Every pair carries the 48 hours.
 
 `GUARANTEED` in `lib/language-pairs.ts` was `EN>ES` and `ES>EN`. It is now **every offered pair
-in both directions, 56 of them**. Henry's instruction, given after the trade-off was put to him
+in both directions**, which was 56 pairs at eight languages and is **72 at nine** since German
+and Cantonese were added on 2026-08-12. The count is not fixed because `GUARANTEED` is derived:
+each new language widens the promise by sixteen pairs with nothing in `language-pairs.ts`
+changing. Henry's instruction, given after the trade-off was put to him
 twice, the second time with the contradiction against this very section named.
 
 **What it means in practice.** A rights holder can select any two of the eight languages, upload

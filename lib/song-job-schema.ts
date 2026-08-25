@@ -56,7 +56,7 @@ export const SongJobSchema = z
      * conversion, so a third mandatory field costs submissions from anyone who does not have
      * the words to hand. The queue flags a job that arrived without them.
      *
-     * No language check and no character-set check. Eight languages are offered, three of them
+     * No language check and no character-set check. Nine languages are offered, four of them
      * CJK, and a validator that assumes Latin script would silently refuse the ones this
      * product exists to serve.
      */

@@ -9,7 +9,7 @@ import { Mark } from './Mark'
  * seamlessly. No JS, no rAF, nothing to leak. It is decorative, so it is aria-hidden and
  * the real language list lives in the enquiry form.
  *
- * The reels only ever contain the eight languages we actually offer. A blur of unnamed
+ * The reels only ever contain the nine languages we actually offer. A blur of unnamed
  * words would imply unlimited capability, which is a claim we do not make.
  */
 function Column({ direction }: { direction: 'down' | 'up' }) {

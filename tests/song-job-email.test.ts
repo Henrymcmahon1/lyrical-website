@@ -168,10 +168,12 @@ describe('the timing promise', () => {
   })
 
   it('names it for every pair the portal accepts, since 2026-08-11', () => {
-    // Henry widened GUARANTEED to all 56 pairs. The email is where that promise actually
+    // Henry widened GUARANTEED to every offered pair. The email is where that promise actually
     // reaches a person, so it is asserted here as well as at the source.
     expect(timingLine('JA', 'KO')).toMatch(/48 hours/)
     expect(timingLine('PT', 'FR')).toMatch(/48 hours/)
+    // The two added on 2026-08-12, so the widening is asserted where it reaches a person.
+    expect(timingLine('DE', 'YUE')).toMatch(/48 hours/)
   })
 
   it('says nothing about hours for a pair we have not committed to', () => {

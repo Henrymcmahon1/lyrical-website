@@ -5,8 +5,8 @@ import { LANGUAGES, type LanguageCode } from './languages'
  *
  * This file exists because of a distinction that only appears once there is a portal.
  *
- * The marketing site claiming eight languages is a positioning stretch, already on the record
- * and already settled. A DROPDOWN claiming eight languages is a different thing entirely: it
+ * The marketing site claiming nine languages is a positioning stretch, already on the record
+ * and already settled. A DROPDOWN claiming nine languages is a different thing entirely: it
  * lets a named rights holder select a pair, upload an unreleased master, and receive a written
  * delivery promise. If the capability is not there, the failure is not an awkward email. It is
  * somebody's property sitting in our storage against a commitment we cannot meet.
@@ -40,10 +40,15 @@ export const pairKey = (from: LanguageCode, to: LanguageCode): PairKey => `${fro
  * **Changed 2026-08-11, on Henry's explicit instruction after the trade-off was put to him
  * twice.** It was English and Spanish in both directions, matching the internal capability
  * document, on the principle that understating is the safe failure. It is now EVERY offered
- * pair in both directions: 56 of them.
+ * pair in both directions.
+ *
+ * ⚠️ The count is NOT fixed, because this list is derived. Nine languages is 72 pairs, and it
+ * was 56 at eight. Adding one language to `lib/languages.ts` therefore widens this promise by
+ * sixteen pairs without anything in this file changing. German and Cantonese were added on
+ * 2026-08-12 with that arithmetic in front of Henry.
  *
  * What that means in practice, stated plainly because the next person to read this file needs
- * to know what it costs. A rights holder can now select any two of the eight languages, upload
+ * to know what it costs. A rights holder can now select any two of the nine languages, upload
  * an unreleased master, and receive a written promise of delivery within `TURNAROUND_HOURS`.
  * That promise is made in `timingLine()` and lands in their inbox.
  *
@@ -52,8 +57,9 @@ export const pairKey = (from: LanguageCode, to: LanguageCode): PairKey => `${fro
  * an undeliverable pair is the accept button in `/queue`, which is why that button names the
  * pair and the promise it is about to start. Read it before clicking it.
  *
- * Derived rather than written out as 56 literals, so adding a language to `lib/languages.ts`
- * cannot leave this list silently half-updated.
+ * Derived rather than written out as literals, so adding a language to `lib/languages.ts`
+ * cannot leave this list silently half-updated. That convenience is exactly what makes the
+ * warning above necessary: the widening is invisible unless somebody does the multiplication.
  */
 export const GUARANTEED: readonly PairKey[] = OFFERED.flatMap((from) =>
   OFFERED.filter((to) => to !== from).map((to) => pairKey(from, to)),

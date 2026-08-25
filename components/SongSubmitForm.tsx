@@ -362,7 +362,7 @@ export function SongSubmitForm() {
         and find them.
 
         `dir="auto"` lets the browser decide direction from the first strong character. None of
-        the eight languages is right to left today, and the attribute costs nothing and means a
+        the nine languages is right to left today, and the attribute costs nothing and means a
         pasted Arabic or Hebrew sheet is not rendered backwards if that ever changes.
       */}
       <div className="flex flex-col gap-3">

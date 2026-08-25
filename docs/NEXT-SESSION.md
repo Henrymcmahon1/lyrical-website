@@ -122,7 +122,7 @@ the database is 500MB against the 1GB of file storage that is already the constr
 |---|---|
 | Brand renders **`lyrical`**, lowercase, everywhere | Tests pin it, including email subjects |
 | Tagline unchanged | "Every song. Any language. Same soul." |
-| **All 56 language pairs carry the 48 hours**, counted from acceptance | Changed 2026-08-11 on Henry's instruction after the trade-off was put to him twice. See HANDOVER §4 |
+| **All 72 language pairs carry the 48 hours**, counted from acceptance | Changed 2026-08-11 on Henry's instruction after the trade-off was put to him twice. See HANDOVER §4 |
 | No other claim about speed anywhere | Henry rejected "instantly" as untrue |
 | "No upfront cost" only. **Do not mention the royalty model** | The standalone terms section was removed 2026-08-11. The claim now lives in the hero's third paragraph, step two of `S05How`, the closing `S10Start` line, and the confirmation and welcome emails. Change them together |
 | **Rejection sends no email.** | Henry's call. `tests/job-transitions.test.ts` pins it so adding one has to be deliberate |

@@ -99,7 +99,7 @@ export type LyricStats = { lines: number; characters: number }
  * What the form shows back to somebody who has just pasted.
  *
  * Lines rather than words, because a lyric sheet is read in lines and because a word count is
- * meaningless in Chinese, Japanese and Korean, which are three of the eight languages here.
+ * meaningless in Mandarin, Cantonese, Japanese and Korean, which are four of the nine here.
  * Blank lines are not counted: they are spacing, not content.
  */
 export function lyricStats(text: string): LyricStats {
