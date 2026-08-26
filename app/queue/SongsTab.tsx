@@ -46,6 +46,7 @@ type Asset = {
   job_id: string
   kind: string
   artist_name: string | null
+  part: string | null
   filename: string
   bytes: number
 }
@@ -129,7 +130,7 @@ export async function SongsTab({
     jobIds.length
       ? db
           .from('song_job_assets')
-          .select('id, job_id, kind, artist_name, filename, bytes')
+          .select('id, job_id, kind, artist_name, part, filename, bytes')
           .in('job_id', jobIds)
       : Promise.resolve({ data: [] as Asset[] }),
     db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
@@ -288,6 +289,11 @@ export async function SongsTab({
                     </a>
                     <span className="text-graphite/45 tabular-nums">{formatBytes(a.bytes)}</span>
                     {a.artist_name && <span className="text-graphite/55">{a.artist_name}</span>}
+                    {a.part && (
+                      <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/45">
+                        {a.part}
+                      </span>
+                    )}
                   </li>
                 ))}
                 {!assets.length && (

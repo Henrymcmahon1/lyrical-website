@@ -33,6 +33,13 @@ const trimmed = (max: number) => z.string().trim().min(1).max(max)
 export const AssetSchema = z.object({
   kind: z.enum(ASSET_KINDS),
   artistName: z.string().trim().max(200).optional(),
+  /**
+   * Which part of the song this voice sings: "Verse 2", "Chorus", "Ad-libs". Optional, and
+   * belongs to the file the same way `artistName` does. A track with several singers needs
+   * more than a name to reassemble, and this is what the person mixing reads to know whose
+   * voice goes where. Short by design: it is a label, not a note.
+   */
+  part: z.string().trim().max(60).optional(),
   path: trimmed(500),
   filename: trimmed(300),
   bytes: z.number().int().positive().max(500 * 1024 * 1024),

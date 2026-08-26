@@ -125,6 +125,7 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
       user_id: user.id,
       kind: a.kind,
       artist_name: a.artistName ?? null,
+      part: a.part ?? null,
       path: a.path,
       filename: a.filename,
       bytes: a.bytes,

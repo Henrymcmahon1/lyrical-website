@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { LANGUAGES, type LanguageCode } from '@/lib/languages'
 import { turnaroundNote } from '@/lib/language-pairs'
+import { detectLyrics, lyricsLanguageWarning } from '@/lib/lyrics-language'
 import {
   ACCEPT_ATTRIBUTE,
   SUBMISSIONS_BUCKET,
@@ -39,7 +40,7 @@ const field =
 const label = 'flex flex-col gap-2'
 const labelText = 'text-sm'
 
-type Feature = { name: string; file: File | null }
+type Feature = { name: string; part: string; file: File | null }
 type Stage = 'idle' | 'uploading' | 'saving' | 'error'
 
 export function SongSubmitForm() {
@@ -55,6 +56,7 @@ export function SongSubmitForm() {
   const [notes, setNotes] = useState('')
   const [lyrics, setLyrics] = useState('')
   const [lyricsNote, setLyricsNote] = useState('')
+  const [languageWarning, setLanguageWarning] = useState('')
   const [warranty, setWarranty] = useState(false)
 
   const [stage, setStage] = useState<Stage>('idle')
@@ -68,8 +70,38 @@ export function SongSubmitForm() {
 
   const busy = stage === 'uploading' || stage === 'saving'
 
-  function collectFiles(): { kind: AssetKind; file: File; artistName?: string }[] {
-    const out: { kind: AssetKind; file: File; artistName?: string }[] = []
+  /**
+   * Advisory language check on the lyric sheet.
+   *
+   * Debounced, because `detectLyrics` lazy-loads the franc model and there is no point running it
+   * on every keystroke. Guarded by a live flag so a slow resolve for an old value cannot overwrite
+   * the warning for what is on screen now. Recomputes when the words, the source or the target
+   * change, since a mismatch is defined against all three.
+   */
+  useEffect(() => {
+    let live = true
+    const text = lyrics.trim()
+    // Everything is done inside the debounced callback rather than clearing synchronously here,
+    // so the effect body never calls setState. An empty box clears the warning on the same tick.
+    const timer = setTimeout(async () => {
+      if (!text) {
+        if (live) setLanguageWarning('')
+        return
+      }
+      const detected = await detectLyrics(text)
+      if (!live) return
+      setLanguageWarning(
+        lyricsLanguageWarning({ detected, source: sourceLanguage, target: targetLanguage }) ?? '',
+      )
+    }, 400)
+    return () => {
+      live = false
+      clearTimeout(timer)
+    }
+  }, [lyrics, sourceLanguage, targetLanguage])
+
+  function collectFiles(): { kind: AssetKind; file: File; artistName?: string; part?: string }[] {
+    const out: { kind: AssetKind; file: File; artistName?: string; part?: string }[] = []
     if (mode === 'stems') {
       if (instrumental) out.push({ kind: 'instrumental', file: instrumental })
       if (vocal) out.push({ kind: 'vocal', file: vocal, artistName: primaryArtist })
@@ -77,7 +109,7 @@ export function SongSubmitForm() {
       out.push({ kind: 'full_mix', file: fullMix })
     }
     for (const f of features) {
-      if (f.file) out.push({ kind: 'vocal', file: f.file, artistName: f.name })
+      if (f.file) out.push({ kind: 'vocal', file: f.file, artistName: f.name, part: f.part })
     }
     return out
   }
@@ -108,7 +140,7 @@ export function SongSubmitForm() {
       }
     }
     if (features.some((f) => f.file && !f.name.trim())) {
-      setError('Name the artist on each featured vocal, so we know whose is whose.')
+      setError('Name the singer on each additional voice, so we know whose is whose.')
       return
     }
     if (!warranty) {
@@ -129,7 +161,7 @@ export function SongSubmitForm() {
     setStage('uploading')
     try {
       let n = 0
-      for (const { kind, file, artistName } of files) {
+      for (const { kind, file, artistName, part } of files) {
         n += 1
         setProgress(`Uploading ${n} of ${files.length}`)
         const path = assetPath(auth.user.id, jobId, kind, n, file.name)
@@ -145,6 +177,7 @@ export function SongSubmitForm() {
         uploaded.push({
           kind,
           artistName: artistName?.trim() || undefined,
+          part: part?.trim() || undefined,
           path,
           filename: file.name,
           bytes: file.size,
@@ -301,13 +334,22 @@ export function SongSubmitForm() {
       )}
 
       {/*
-        Features. The name sits next to the file rather than in a list of its own, because the
-        thing the person mixing needs to know is whose voice is in which file.
+        Other voices on the track. Named "voices" rather than "features" because the thing that
+        matters is that every singer on the song is captured, whether or not they are billed as a
+        feature. Each one carries a name and an optional part, so a track with a lead, a feature
+        and a backing vocalist comes back reassembled the way it was sent. The lead vocal above is
+        the primary artist and does not repeat here.
       */}
       <div className="flex flex-col gap-4">
-        <span className={labelText}>Featured artists</span>
+        <div>
+          <span className={labelText}>Other voices on this track</span>
+          <p className="mt-2 text-sm leading-relaxed text-graphite/55">
+            A featured or backing singer, one row each. Name whose voice it is and, if it helps,
+            the part they sing, so we re-sing the right voice on the right section.
+          </p>
+        </div>
         {features.map((f, i) => (
-          <div key={i} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <div key={i} className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
             <label className={label}>
               <span className="text-xs text-graphite/55">Name</span>
               <input
@@ -317,6 +359,20 @@ export function SongSubmitForm() {
                     prev.map((p, j) => (j === i ? { ...p, name: e.target.value } : p)),
                   )
                 }
+                className={field}
+              />
+            </label>
+            <label className={label}>
+              <span className="text-xs text-graphite/55">Part (optional)</span>
+              <input
+                value={f.part}
+                onChange={(e) =>
+                  setFeatures((prev) =>
+                    prev.map((p, j) => (j === i ? { ...p, part: e.target.value } : p)),
+                  )
+                }
+                maxLength={60}
+                placeholder="Chorus"
                 className={field}
               />
             </label>
@@ -346,10 +402,10 @@ export function SongSubmitForm() {
         ))}
         <button
           type="button"
-          onClick={() => setFeatures((prev) => [...prev, { name: '', file: null }])}
+          onClick={() => setFeatures((prev) => [...prev, { name: '', part: '', file: null }])}
           className="nudge inline-flex min-h-11 w-fit items-center rounded-card border border-graphite/25 px-4 text-sm transition-colors hover:border-indigo hover:text-indigo"
         >
-          Add a featured artist
+          Add another voice
         </button>
       </div>
 
@@ -455,6 +511,20 @@ Second line`}
         {(lyricsNote || describeLyricsWarning(lyrics)) && (
           <p role="status" className="text-sm leading-relaxed text-graphite/70">
             {lyricsNote || describeLyricsWarning(lyrics)}
+          </p>
+        )}
+
+        {/*
+          The language check. Advisory, never blocking: it catches the one mistake that looks
+          fine, pasting the translation instead of the original words. See `lib/lyrics-language.ts`
+          for why it only speaks when it is confident.
+        */}
+        {languageWarning && (
+          <p
+            role="status"
+            className="rounded-card border border-graphite/20 p-3 text-sm leading-relaxed text-graphite"
+          >
+            {languageWarning}
           </p>
         )}
       </div>

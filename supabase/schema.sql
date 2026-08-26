@@ -185,6 +185,13 @@ create table if not exists public.song_job_assets (
   bytes        bigint not null
 );
 
+-- Which part of the song this voice sings: "Verse 2", "Chorus", "Ad-libs". Added 2026-08-26.
+-- A track with several singers needs more than a name to reassemble, and this is the label the
+-- person mixing reads to know whose voice goes where. Nullable, and safe to add: song_job_assets
+-- has a plain table-level SELECT grant, not the column-level grant song_jobs carries, so a new
+-- column is visible without rewriting anything.
+alter table public.song_job_assets add column if not exists part text;
+
 create index if not exists song_job_assets_job_idx on public.song_job_assets (job_id);
 
 alter table public.song_job_assets enable row level security;

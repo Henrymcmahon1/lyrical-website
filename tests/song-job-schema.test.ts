@@ -48,6 +48,33 @@ describe('what counts as a usable submission', () => {
   })
 })
 
+describe('a voice can name the part it sings', () => {
+  it('accepts and trims an optional part label on a vocal', () => {
+    const r = SongJobSchema.safeParse({
+      ...base,
+      assets: [asset('instrumental'), { ...asset('vocal'), part: '  Chorus  ' }],
+    })
+    expect(r.success).toBe(true)
+    if (r.success) {
+      const vocal = r.data.assets.find((a) => a.kind === 'vocal')
+      expect(vocal?.part).toBe('Chorus')
+    }
+  })
+
+  it('is optional, so a submission with no parts is still valid', () => {
+    const r = SongJobSchema.safeParse({ ...base, assets: [asset('full_mix')] })
+    expect(r.success).toBe(true)
+  })
+
+  it('rejects a part label long enough to be a note rather than a label', () => {
+    const r = SongJobSchema.safeParse({
+      ...base,
+      assets: [{ ...asset('full_mix'), part: 'x'.repeat(61) }],
+    })
+    expect(r.success).toBe(false)
+  })
+})
+
 describe('the rights warranty', () => {
   it('cannot be absent, false, or anything other than true', () => {
     // A literal rather than a boolean on purpose. This is the statement the eventual agreement
