@@ -75,6 +75,30 @@ describe('a voice can name the part it sings', () => {
   })
 })
 
+describe('attaching a trained voice', () => {
+  it('accepts a UUID voiceId', () => {
+    const r = SongJobSchema.safeParse({
+      ...base,
+      assets: [asset('full_mix')],
+      voiceId: '11111111-1111-4111-8111-111111111111',
+    })
+    expect(r.success).toBe(true)
+  })
+
+  it('is optional, so a song with no voice still validates', () => {
+    expect(SongJobSchema.safeParse({ ...base, assets: [asset('full_mix')] }).success).toBe(true)
+  })
+
+  it('rejects a voiceId that is not a UUID, so a forged value never reaches the insert', () => {
+    const r = SongJobSchema.safeParse({
+      ...base,
+      assets: [asset('full_mix')],
+      voiceId: 'not-a-uuid',
+    })
+    expect(r.success).toBe(false)
+  })
+})
+
 describe('the rights warranty', () => {
   it('cannot be absent, false, or anything other than true', () => {
     // A literal rather than a boolean on purpose. This is the statement the eventual agreement

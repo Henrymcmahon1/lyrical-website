@@ -119,6 +119,24 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
 
   const supabase = await supabaseServer()
 
+  /**
+   * The chosen voice, confirmed to belong to this customer.
+   *
+   * Read with the user's own client, so RLS answers with the row only if they own it. A forged
+   * id, or one for a voice that has since been retired and removed, simply comes back empty and
+   * is dropped to null rather than failing the whole submission: the song still goes, just
+   * without a voice attached, which is the safe direction for that to fail.
+   */
+  let voiceId: string | null = null
+  if (job.voiceId) {
+    const { data: owned } = await supabase
+      .from('voice_models')
+      .select('id')
+      .eq('id', job.voiceId)
+      .maybeSingle()
+    voiceId = owned?.id ?? null
+  }
+
   const { error: jobError } = await supabase.from('song_jobs').insert({
     id: jobId,
     user_id: user.id,
@@ -128,6 +146,7 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
     target_language: job.targetLanguage,
     notes: job.notes ?? null,
     lyrics: job.lyrics ?? null,
+    voice_id: voiceId,
     status: 'submitted',
   })
 

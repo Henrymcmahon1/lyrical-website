@@ -1,4 +1,9 @@
-import { TRAINING_MINIMUM_SECONDS, formatDuration, formatMegabytes } from '@/lib/voice-training'
+import {
+  TRAINING_MINIMUM_SECONDS,
+  formatDuration,
+  formatMegabytes,
+  storageSummary,
+} from '@/lib/voice-training'
 import type { VoiceStatus } from '@/lib/voice-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { moveVoice } from './actions'
@@ -40,6 +45,7 @@ const STATE: Record<string, { label: string; className: string }> = {
   training: { label: 'Training', className: 'text-indigo' },
   ready: { label: 'Ready', className: 'text-graphite/45' },
   rejected: { label: 'Rejected', className: 'text-graphite/45' },
+  retired: { label: 'Retired', className: 'text-graphite/45' },
 }
 
 /** Which moves each state allows. Same shape as the song lifecycle, kept local because it is small. */
@@ -89,12 +95,22 @@ export async function VoicesTab({ showAll }: { showAll: boolean }) {
   const total = count ?? voices.length
 
   const ids = voices.map((v) => v.id)
-  const [sampleResult, userResult] = await Promise.all([
+  const [sampleResult, userResult, voiceBytesResult, assetBytesResult] = await Promise.all([
     ids.length
       ? db.from('voice_samples').select('id, voice_id, filename, bytes, seconds').in('voice_id', ids)
       : Promise.resolve({ data: [] as Sample[] }),
     db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    // GLOBAL, not scoped to the visible voices: the 1GB is a single shared quota, so the meter has
+    // to count every training take and every song asset in the project, retired voices aside.
+    db.from('voice_samples').select('bytes'),
+    db.from('song_job_assets').select('bytes'),
   ])
+
+  const sumBytes = (rows: { bytes: number | null }[] | null | undefined) =>
+    (rows ?? []).reduce((sum, r) => sum + (r.bytes ?? 0), 0)
+  const meter = storageSummary(
+    sumBytes(voiceBytesResult.data) + sumBytes(assetBytesResult.data),
+  )
 
   const byVoice = new Map<string, Sample[]>()
   for (const s of (sampleResult.data ?? []) as Sample[]) {
@@ -106,17 +122,56 @@ export async function VoicesTab({ showAll }: { showAll: boolean }) {
   const emailById = new Map<string, string>()
   for (const u of userResult.data?.users ?? []) if (u.email) emailById.set(u.id, u.email)
 
+  /*
+    The shared-tier meter. On cream, so indigo is allowed here (the dark-ground ban does not
+    apply), and it turns ember only when the tier is nearly full. Shown whether or not anything
+    is waiting, because "nearly out of space" matters most when the queue looks quiet.
+  */
+  const meterBlock = (
+    <div className="mt-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-graphite/45">
+          Training storage
+        </span>
+        <span
+          className={`font-mono text-[11px] tabular-nums ${
+            meter.near ? 'text-ember' : 'text-graphite/45'
+          }`}
+        >
+          {meter.message}
+        </span>
+      </div>
+      <div
+        className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-graphite/12"
+        role="progressbar"
+        aria-valuenow={Math.round(meter.fraction * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Training storage used"
+      >
+        <div
+          className={`h-full rounded-full ${meter.near ? 'bg-ember' : 'bg-indigo'}`}
+          style={{ width: `${meter.fraction * 100}%` }}
+        />
+      </div>
+    </div>
+  )
+
   if (!voices.length) {
     return (
-      <p className="mt-12 text-graphite/60">
-        {showAll ? 'No voice models yet.' : 'Nothing waiting. Every voice has been dealt with.'}
-      </p>
+      <>
+        {meterBlock}
+        <p className="mt-12 text-graphite/60">
+          {showAll ? 'No voice models yet.' : 'Nothing waiting. Every voice has been dealt with.'}
+        </p>
+      </>
     )
   }
 
   return (
     <>
-      <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.16em] text-graphite/45">
+      {meterBlock}
+      <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.16em] text-graphite/45">
         {total} {total === 1 ? 'voice' : 'voices'}
       </p>
 

@@ -5,8 +5,9 @@ import { renderEmailHtml, renderEmailText, type EmailDoc } from '@/lib/email-she
 import { mailFounders } from '@/lib/mailer'
 import { SITE_URL } from '@/lib/site'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
-import { VoiceSubmitSchema, totalSeconds } from '@/lib/voice-schema'
-import { formatDuration, voicePathBelongsTo } from '@/lib/voice-training'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { VoiceSubmitSchema, VoiceTakesSchema, totalSeconds } from '@/lib/voice-schema'
+import { VOICE_BUCKET, formatDuration, voicePathBelongsTo } from '@/lib/voice-training'
 
 /**
  * Record a set of training vocals whose files are already in storage.
@@ -126,4 +127,128 @@ export async function submitVoiceModel(raw: unknown): Promise<VoiceResult | void
   )
 
   redirect('/studio/voices?added=1')
+}
+
+const UUID = /^[0-9a-f-]{36}$/i
+
+/**
+ * Add more clean takes to a voice that is still being collected.
+ *
+ * The files are already in storage under `{user}/{voiceId}/` by the time this runs. Two gates,
+ * the same pair as every other write here: every path must sit under this user and this voice,
+ * and the voice must belong to the caller. A third gate is specific to this action: the voice has
+ * to still be `collecting`, because once we have approved it and started training, more takes
+ * would change the set the work was started from.
+ */
+export async function addVoiceTakes(raw: unknown): Promise<VoiceResult | void> {
+  const user = await currentUser()
+  if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
+
+  const parsed = VoiceTakesSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Something is not right.' }
+  }
+  const { voiceId, samples } = parsed.data
+
+  for (const sample of samples) {
+    if (!voicePathBelongsTo(sample.path, user.id, voiceId)) {
+      return { ok: false, error: 'That upload could not be verified. Reload and try again.' }
+    }
+  }
+
+  const supabase = await supabaseServer()
+
+  // Owned by this user (RLS returns only theirs) and still open to more takes.
+  const { data: voice } = await supabase
+    .from('voice_models')
+    .select('id, status')
+    .eq('id', voiceId)
+    .maybeSingle()
+  if (!voice) return { ok: false, error: 'That voice could not be found.' }
+  if (voice.status !== 'collecting') {
+    return { ok: false, error: 'This voice is already being worked on, so takes cannot be added.' }
+  }
+
+  const { error } = await supabase.from('voice_samples').insert(
+    samples.map((s) => ({
+      voice_id: voiceId,
+      user_id: user.id,
+      path: s.path,
+      filename: s.filename,
+      bytes: s.bytes,
+      seconds: s.seconds,
+    })),
+  )
+  if (error) return { ok: false, error: 'We could not save the files. Try again in a moment.' }
+
+  redirect('/studio/voices?added=1')
+}
+
+/**
+ * Rename a voice, or edit its note.
+ *
+ * A staff-shaped action: the schema has no customer UPDATE policy on `voice_models` on purpose,
+ * so this runs with the service role and enforces ownership itself. Same shape `/queue` uses. A
+ * `<form action>` post, so it works with JavaScript off.
+ */
+export async function renameVoice(formData: FormData): Promise<void> {
+  const user = await currentUser()
+  if (!user) redirect('/studio/sign-in?next=/studio/voices')
+
+  const id = String(formData.get('id') ?? '')
+  const artistName = String(formData.get('artist_name') ?? '').trim()
+  const notes = String(formData.get('notes') ?? '').trim()
+  if (!UUID.test(id) || !artistName) redirect('/studio/voices')
+
+  const db = supabaseAdmin()
+  const { data: voice } = await db
+    .from('voice_models')
+    .select('id, user_id')
+    .eq('id', id)
+    .maybeSingle()
+  if (!voice || voice.user_id !== user.id) redirect('/studio/voices')
+
+  await db
+    .from('voice_models')
+    .update({ artist_name: artistName.slice(0, 200), notes: notes ? notes.slice(0, 2000) : null })
+    .eq('id', id)
+
+  redirect('/studio/voices')
+}
+
+/**
+ * Retire a voice: purge its training audio and keep the record.
+ *
+ * Deliberately NOT a hard delete. The `voice_models` row and its `consent_warranted_at` stay,
+ * because that timestamp is the record that backs "we had the artist's permission", and losing it
+ * to free a few megabytes is the wrong trade. What goes is the training audio: every object under
+ * `{user}/{voiceId}/` in the bucket, then the `voice_samples` rows, then the status moves to
+ * `retired`. Service role, because a customer has no storage-delete policy and no voice update
+ * policy, and ownership is checked here instead.
+ */
+export async function retireVoice(formData: FormData): Promise<void> {
+  const user = await currentUser()
+  if (!user) redirect('/studio/sign-in?next=/studio/voices')
+
+  const id = String(formData.get('id') ?? '')
+  if (!UUID.test(id)) redirect('/studio/voices')
+
+  const db = supabaseAdmin()
+  const { data: voice } = await db
+    .from('voice_models')
+    .select('id, user_id')
+    .eq('id', id)
+    .maybeSingle()
+  if (!voice || voice.user_id !== user.id) redirect('/studio/voices')
+
+  // Remove the objects by their recorded paths rather than by listing the folder: the paths are
+  // exactly what we wrote, so there is nothing to page through and nothing to miss.
+  const { data: samples } = await db.from('voice_samples').select('path').eq('voice_id', id)
+  const paths = (samples ?? []).map((s) => s.path).filter(Boolean)
+  if (paths.length) await db.storage.from(VOICE_BUCKET).remove(paths)
+
+  await db.from('voice_samples').delete().eq('voice_id', id)
+  await db.from('voice_models').update({ status: 'retired' }).eq('id', id)
+
+  redirect('/studio/voices')
 }

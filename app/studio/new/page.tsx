@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { SongSubmitForm } from '@/components/SongSubmitForm'
-import { currentUser } from '@/lib/supabase-server'
+import { currentUser, supabaseServer } from '@/lib/supabase-server'
 
 /**
  * Where a song is handed over.
@@ -27,6 +27,18 @@ export default async function NewSong() {
   const user = await currentUser()
   if (!user) redirect('/studio/sign-in?next=/studio/new')
 
+  /**
+   * The customer's voices, so the form can offer them as the one that sings this song. Read with
+   * the user's own client, so RLS returns only theirs. Retired voices are left out: their
+   * training audio is gone, so they cannot sing anything new.
+   */
+  const supabase = await supabaseServer()
+  const { data: voiceRows } = await supabase
+    .from('voice_models')
+    .select('id, artist_name, status')
+    .order('created_at', { ascending: false })
+  const voices = (voiceRows ?? []).filter((v) => v.status !== 'retired')
+
   return (
     <section className="mx-auto max-w-2xl px-6 py-24 sm:py-28">
       <span className="font-mono text-xs tracking-[0.18em] text-graphite/45">The studio</span>
@@ -39,7 +51,7 @@ export default async function NewSong() {
       </p>
 
       <div className="mt-12">
-        <SongSubmitForm />
+        <SongSubmitForm voices={voices} />
       </div>
     </section>
   )

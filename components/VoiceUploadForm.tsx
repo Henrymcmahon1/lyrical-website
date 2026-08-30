@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabaseBrowser } from '@/lib/supabase-client'
-import { submitVoiceModel } from '@/app/studio/voices/actions'
+import { addVoiceTakes, submitVoiceModel } from '@/app/studio/voices/actions'
 import type { VoiceSampleInput } from '@/lib/voice-schema'
 import {
   MAX_UPLOAD_BYTES,
@@ -49,8 +49,22 @@ type Picked = {
 
 type Stage = 'idle' | 'reading' | 'uploading' | 'saving' | 'error'
 
-export function VoiceUploadForm() {
-  const [artistName, setArtistName] = useState('')
+/**
+ * `existingVoiceId` switches the form into add-takes mode: no artist field, no fresh consent (both
+ * were given when the voice was created), and the uploads land under the existing voice with their
+ * index offset past `startIndex` so they cannot collide with takes already there.
+ */
+export function VoiceUploadForm({
+  existingVoiceId,
+  existingArtist,
+  startIndex = 0,
+}: {
+  existingVoiceId?: string
+  existingArtist?: string
+  startIndex?: number
+} = {}) {
+  const isAdd = Boolean(existingVoiceId)
+  const [artistName, setArtistName] = useState(existingArtist ?? '')
   const [notes, setNotes] = useState('')
   const [consent, setConsent] = useState(false)
   const [picked, setPicked] = useState<Picked[]>([])
@@ -122,7 +136,7 @@ export function VoiceUploadForm() {
     e.preventDefault()
     setError('')
 
-    if (!artistName.trim()) {
+    if (!isAdd && !artistName.trim()) {
       setError('Tell us whose voice this is.')
       return
     }
@@ -130,7 +144,7 @@ export function VoiceUploadForm() {
       setError('Add at least one file of clean vocal.')
       return
     }
-    if (!consent) {
+    if (!isAdd && !consent) {
       setError('Confirm you have the right to have this voice modelled before sending it.')
       return
     }
@@ -142,7 +156,7 @@ export function VoiceUploadForm() {
       return
     }
 
-    const voiceId = crypto.randomUUID()
+    const voiceId = existingVoiceId ?? crypto.randomUUID()
     const uploaded: VoiceSampleInput[] = []
 
     setStage('uploading')
@@ -152,7 +166,9 @@ export function VoiceUploadForm() {
         n += 1
         setProgress(`Uploading ${n} of ${picked.length}`)
 
-        const path = voiceSamplePath(auth.user.id, voiceId, n, item.file.name)
+        // Offset past any takes already on this voice, so an added take never collides with one
+        // that is already stored. For a new voice `startIndex` is 0 and this is just `n`.
+        const path = voiceSamplePath(auth.user.id, voiceId, startIndex + n, item.file.name)
         const { error: upErr } = await supabase.storage
           .from(VOICE_BUCKET)
           .upload(path, item.file, {
@@ -185,13 +201,15 @@ export function VoiceUploadForm() {
       setStage('saving')
       setProgress('')
 
-      const result = await submitVoiceModel({
-        voiceId,
-        artistName: artistName.trim(),
-        notes: notes.trim() || undefined,
-        consent: true,
-        samples: uploaded,
-      })
+      const result = isAdd
+        ? await addVoiceTakes({ voiceId, samples: uploaded })
+        : await submitVoiceModel({
+            voiceId,
+            artistName: artistName.trim(),
+            notes: notes.trim() || undefined,
+            consent: true,
+            samples: uploaded,
+          })
 
       // Only returns on failure: the success path redirects, which throws.
       if (result && !result.ok) {
@@ -208,17 +226,19 @@ export function VoiceUploadForm() {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-8">
-      <label className="flex flex-col gap-2">
-        <span className="text-sm">Whose voice is this?</span>
-        <input
-          value={artistName}
-          onChange={(e) => setArtistName(e.target.value)}
-          required
-          maxLength={200}
-          placeholder="The artist's name"
-          className={field}
-        />
-      </label>
+      {!isAdd && (
+        <label className="flex flex-col gap-2">
+          <span className="text-sm">Whose voice is this?</span>
+          <input
+            value={artistName}
+            onChange={(e) => setArtistName(e.target.value)}
+            required
+            maxLength={200}
+            placeholder="The artist's name"
+            className={field}
+          />
+        </label>
+      )}
 
       {/* ── The files ── */}
       <div className="flex flex-col gap-4">
@@ -331,20 +351,23 @@ export function VoiceUploadForm() {
         Its own consent, separate from the per-song rights warranty, and worded for what it
         actually authorises. The site promises that voice models are built only from catalogs we
         have permission to use, and this checkbox plus `consent_warranted_at` is the record
-        behind that sentence.
+        behind that sentence. Skipped in add-takes mode: consent was given when the voice was
+        created, and these are more takes of the same already-consented artist.
       */}
-      <label className="flex cursor-pointer items-start gap-3 rounded-card border border-graphite/20 p-5">
-        <input
-          type="checkbox"
-          checked={consent}
-          onChange={(e) => setConsent(e.target.checked)}
-          className="mt-1 size-4 shrink-0 accent-indigo"
-        />
-        <span className="text-sm leading-relaxed text-graphite/80">
-          I hold the rights to these recordings, and I have the artist&rsquo;s permission to
-          have a model of their voice built from them and used for the versions I ask for.
-        </span>
-      </label>
+      {!isAdd && (
+        <label className="flex cursor-pointer items-start gap-3 rounded-card border border-graphite/20 p-5">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-1 size-4 shrink-0 accent-indigo"
+          />
+          <span className="text-sm leading-relaxed text-graphite/80">
+            I hold the rights to these recordings, and I have the artist&rsquo;s permission to
+            have a model of their voice built from them and used for the versions I ask for.
+          </span>
+        </label>
+      )}
 
       {error && (
         <p role="alert" className="text-sm leading-relaxed text-ember">
@@ -358,7 +381,13 @@ export function VoiceUploadForm() {
           disabled={busy}
           className="nudge rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
         >
-          {stage === 'uploading' ? progress : stage === 'saving' ? 'Finishing…' : 'Send these vocals'}
+          {stage === 'uploading'
+            ? progress
+            : stage === 'saving'
+              ? 'Finishing…'
+              : isAdd
+                ? 'Add these takes'
+                : 'Send these vocals'}
         </button>
         {busy && (
           <span className="text-sm text-graphite/55" role="status">

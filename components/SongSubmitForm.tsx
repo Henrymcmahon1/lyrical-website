@@ -45,9 +45,13 @@ const labelText = 'text-sm'
 type Feature = { name: string; part: string; file: File | null }
 type Stage = 'idle' | 'uploading' | 'saving' | 'error'
 
-export function SongSubmitForm() {
+/** A voice the customer can pick as the one that sings this song. */
+export type VoiceOption = { id: string; artist_name: string; status: string }
+
+export function SongSubmitForm({ voices = [] }: { voices?: VoiceOption[] }) {
   const [title, setTitle] = useState('')
   const [primaryArtist, setPrimaryArtist] = useState('')
+  const [voiceId, setVoiceId] = useState('')
   const [sourceLanguage, setSourceLanguage] = useState<LanguageCode>('EN')
   const [targetLanguage, setTargetLanguage] = useState<LanguageCode>('ES')
   const [mode, setMode] = useState<'stems' | 'mix'>('stems')
@@ -212,6 +216,7 @@ export function SongSubmitForm() {
       // Normalised on the way out, so what is stored is what the queue and the pipeline read:
       // one line per sung line, no stray carriage returns, no invisible byte order mark.
       lyrics: normaliseLyrics(lyrics) || undefined,
+      voiceId: voiceId || undefined,
       rightsWarranty: true,
       turnstileToken: turnstileToken || undefined,
     })
@@ -239,6 +244,48 @@ export function SongSubmitForm() {
           className={field}
         />
       </label>
+
+      {/*
+        Which trained voice sings this. Optional, because a song can be sent before its voice is
+        built. When the customer has no voices at all, the control becomes a nudge to build one
+        rather than an empty dropdown, but the song can still go without it.
+      */}
+      {voices.length > 0 ? (
+        <label className={label}>
+          <span className={labelText}>Which voice sings this?</span>
+          <select
+            value={voiceId}
+            onChange={(e) => setVoiceId(e.target.value)}
+            className={field}
+          >
+            <option value="">No voice yet</option>
+            {voices.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.artist_name}
+                {v.status === 'ready' ? '' : ` · ${v.status}`}
+              </option>
+            ))}
+          </select>
+          <span className="text-sm leading-relaxed text-graphite/55">
+            The trained voice we re-sing in. Leave it on &ldquo;No voice yet&rdquo; if the
+            artist&rsquo;s voice is still being built.
+          </span>
+        </label>
+      ) : (
+        <div className="rounded-card border-l-[3px] border-indigo bg-indigo/5 px-5 py-4">
+          <p className="text-sm leading-relaxed text-graphite/80">
+            <strong className="font-semibold text-graphite">No voice model yet.</strong> To
+            re-sing this in the artist&rsquo;s own voice, we first learn it from their clean
+            vocal. You can send the song now and build the voice separately.
+          </p>
+          <a
+            href="/studio/voices/new"
+            className="nudge mt-3 inline-flex min-h-11 items-center rounded-card border border-graphite/25 px-5 text-sm transition-colors hover:border-indigo hover:text-indigo"
+          >
+            Build a voice model
+          </a>
+        </div>
+      )}
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className={label}>

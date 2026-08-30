@@ -396,3 +396,25 @@ create policy song_jobs_own_lyrics_update on public.song_jobs
   -- the work was started from and it stops moving.
   using (auth.uid() = user_id and status = 'submitted')
   with check (auth.uid() = user_id and status = 'submitted');
+
+-- ══ Song ↔ voice model ═════════════════════════════════════════════════════════
+-- Added 2026-08-30.
+--
+-- A song can name which trained voice sings it. The voice belongs to an ARTIST and is reused by
+-- every song for them, so this is a reference, not a copy: `voice_id` points at a row in
+-- `voice_models`, nullable because a song can be sent before its voice is built.
+alter table public.song_jobs
+  add column if not exists voice_id uuid references public.voice_models (id);
+
+-- ⚠️ THE SELECT GRANT HAS TO BE REWRITTEN, NOT EXTENDED. Same rule as `lyrics` above: a new
+-- column is NOT readable by customers until it is added to the column grant, because song_jobs
+-- holds column-level SELECT privileges so that internal_notes stays staff-only. This is that
+-- grant, restated with `voice_id` in it.
+revoke select on public.song_jobs from anon, authenticated;
+
+grant select (
+  id, created_at, user_id, title, primary_artist,
+  source_language, target_language, notes, status,
+  rights_warranted_at, approved_at, delivered_at,
+  lyrics, voice_id
+) on public.song_jobs to anon, authenticated;

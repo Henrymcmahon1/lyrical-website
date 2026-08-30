@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { VoiceUploadForm } from '@/components/VoiceUploadForm'
-import { currentUser } from '@/lib/supabase-server'
+import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { TRAINING_MINIMUM_SECONDS, TRAINING_TARGET_SECONDS } from '@/lib/voice-training'
 
 /**
@@ -11,29 +11,61 @@ import { TRAINING_MINIMUM_SECONDS, TRAINING_TARGET_SECONDS } from '@/lib/voice-t
  * account step has to come before somebody invests effort, not after.
  */
 export const metadata = {
-  title: 'Add a voice',
+  title: 'Build a voice model',
   robots: { index: false, follow: false },
 }
 
 const MINUTES_MIN = TRAINING_MINIMUM_SECONDS / 60
 const MINUTES_TARGET = TRAINING_TARGET_SECONDS / 60
 
-export default async function NewVoice() {
-  const user = await currentUser()
+export default async function NewVoice({
+  searchParams,
+}: {
+  searchParams: Promise<{ voice?: string }>
+}) {
+  const [user, params] = await Promise.all([currentUser(), searchParams])
   if (!user) redirect('/studio/sign-in?next=/studio/voices/new')
+
+  /**
+   * Add-takes mode, when `?voice` names one of this user's voices that is still collecting. The
+   * lookup runs with the user's own client, so RLS returns nothing for a voice they do not own,
+   * and a voice already in training or beyond is not open to more takes. Either way we send them
+   * back to the manager rather than showing an add form that would be refused.
+   */
+  let addTo: { id: string; artist_name: string; count: number } | null = null
+  const wanted = params.voice
+  if (wanted && /^[0-9a-f-]{36}$/i.test(wanted)) {
+    const supabase = await supabaseServer()
+    const { data: voice } = await supabase
+      .from('voice_models')
+      .select('id, artist_name, status')
+      .eq('id', wanted)
+      .maybeSingle()
+    if (!voice || voice.status !== 'collecting') redirect('/studio/voices')
+    const { count } = await supabase
+      .from('voice_samples')
+      .select('id', { count: 'exact', head: true })
+      .eq('voice_id', voice.id)
+    addTo = { id: voice.id, artist_name: voice.artist_name, count: count ?? 0 }
+  }
 
   return (
     <section className="mx-auto max-w-2xl px-6 py-20 sm:py-28">
       <span className="font-mono text-xs tracking-[0.18em] text-graphite/45">The studio</span>
 
       <h1 className="mt-5 font-brand text-4xl leading-[1.08] tracking-tight text-balance">
-        Teach us a voice.
+        {addTo ? `Add takes to ${addTo.artist_name}.` : 'Build a voice model.'}
       </h1>
 
       <p className="mt-6 leading-relaxed text-graphite/75">
-        To sing in an artist&rsquo;s voice we first have to learn it, and that takes{' '}
-        {MINUTES_MIN} to {MINUTES_TARGET} minutes of them singing on their own. You only do this
-        once per artist. Every song you send us afterwards uses the same voice.
+        {addTo ? (
+          <>More clean vocal for this voice, in the same shape as before. It adds to what is
+          already collected rather than replacing it.</>
+        ) : (
+          <>To sing in an artist&rsquo;s voice we first have to learn it, and that takes{' '}
+          {MINUTES_MIN} to {MINUTES_TARGET} minutes of them singing on their own. You only do this
+          once per artist. Every song you send us afterwards uses the same voice.</>
+        )}
       </p>
 
       {/*
@@ -51,7 +83,11 @@ export default async function NewVoice() {
       </div>
 
       <div className="mt-12">
-        <VoiceUploadForm />
+        <VoiceUploadForm
+          existingVoiceId={addTo?.id}
+          existingArtist={addTo?.artist_name}
+          startIndex={addTo?.count ?? 0}
+        />
       </div>
     </section>
   )

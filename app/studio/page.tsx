@@ -59,24 +59,6 @@ export default async function Studio({
 
       <p className="mt-4 text-sm text-graphite/55">Signed in as {user.email}</p>
 
-      {/*
-        Voices sit beside songs rather than inside them, because a voice model belongs to an
-        ARTIST and is reused by every song that artist sends. Linked from here so somebody who
-        arrived to submit a song discovers it, rather than only finding it in an email.
-      */}
-      {/*
-        `flex w-fit`, not `inline-flex`. Both this link and the ember button below are their own
-        line in a vertical stack, and an inline-flex element flows inline, so with no submitted
-        notice between them the two sat on the SAME line and the button overlapped this link.
-        A block-level flex sized to its content takes its own line while staying content-width.
-      */}
-      <a
-        href="/studio/voices"
-        className="nudge mt-6 flex w-fit min-h-11 items-center text-sm text-indigo underline decoration-indigo/30 underline-offset-4 transition-colors hover:decoration-indigo"
-      >
-        Voices we have learned
-      </a>
-
       {params.submitted && (
         <p
           role="status"
@@ -104,6 +86,26 @@ export default async function Studio({
         {jobs?.length ? 'Make another one multilingual' : 'Make your song multilingual'}
         <span className="shift-arrow">&rarr;</span>
       </a>
+
+      {/*
+        Voice models sit beside songs, because a voice belongs to an ARTIST and is reused by every
+        song that artist sends. Two actions: build a new one, or open the manager for the ones you
+        have. Secondary to the song CTA above, so the primary conversion stays the primary thing.
+      */}
+      <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <a
+          href="/studio/voices/new"
+          className="nudge inline-flex min-h-11 items-center rounded-card border border-graphite/25 px-5 text-sm transition-colors hover:border-indigo hover:text-indigo"
+        >
+          Build a voice model
+        </a>
+        <a
+          href="/studio/voices"
+          className="nudge inline-flex min-h-11 items-center text-sm text-indigo underline decoration-indigo/30 underline-offset-4 transition-colors hover:decoration-indigo"
+        >
+          Voice models
+        </a>
+      </div>
 
       {!jobs?.length ? (
         <p className="mt-12 leading-relaxed text-graphite/75">

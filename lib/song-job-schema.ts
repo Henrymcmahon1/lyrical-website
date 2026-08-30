@@ -69,6 +69,17 @@ export const SongJobSchema = z
      */
     lyrics: z.string().max(MAX_LYRICS_CHARS).optional(),
     /**
+     * Which trained voice sings this, when the customer has one.
+     *
+     * Optional, because a song can be sent before its voice model exists. A UUID shape only: the
+     * action re-checks that the id names a voice THIS user owns, because a forged id is otherwise
+     * a way to point your song at somebody else's voice row.
+     */
+    voiceId: z
+      .string()
+      .regex(/^[0-9a-f-]{36}$/i)
+      .optional(),
+    /**
      * Not a checkbox for decoration. This is the statement that makes the eventual agreement
      * enforceable and keeps us out of an infringing release, so it is a literal `true` rather
      * than a boolean: an absent or false value is a failure, not a default.

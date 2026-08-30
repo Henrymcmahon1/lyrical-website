@@ -209,6 +209,60 @@ export function describeVoiceRejection(
   return null
 }
 
+// ── The storage tier, and how close we are to filling it ──────────────────────
+
+/**
+ * The free plan's TOTAL storage, a single quota shared across every customer's uploads. This is
+ * the ceiling the meter measures against, distinct from `MAX_UPLOAD_BYTES`, which is per file.
+ */
+export const FREE_STORAGE_BYTES = 1_000_000_000
+
+/**
+ * Roughly what one artist's training set costs on disk: 30 minutes of mono 48kHz/24-bit FLAC.
+ *
+ * Derived, not guessed. Uncompressed is `48000 * 3 * 60` bytes a minute, and FLAC lands vocals
+ * at about 55% of that, so a minute is ~4.75MB and thirty minutes is ~142MB. It only drives the
+ * "room for about N more artists" estimate, so an approximation is the honest precision here.
+ */
+export const TYPICAL_ARTIST_BYTES = Math.round(30 * 60 * 48000 * 3 * 0.55)
+
+export type StorageSummary = {
+  usedBytes: number
+  /** 0 to 1 against the free tier, clamped. */
+  fraction: number
+  /** How many more typical artists fit in what is left. */
+  artistsLeft: number
+  /** True past ~85%, the point to start worrying rather than the point it breaks. */
+  near: boolean
+  /** The line the queue shows. */
+  message: string
+}
+
+/**
+ * Summarise how full the shared storage tier is, from a byte total summed out of the database.
+ *
+ * Summed from the stored `bytes` columns rather than the storage API, so it is one cheap query
+ * and never opens a file. It understates slightly, because a retired voice's rows are gone while
+ * a little metadata overhead is not counted, and understating the pressure is the safe direction
+ * for a warning to err in only if it never lulls: hence `near` trips well before full.
+ */
+export function storageSummary(usedBytes: number): StorageSummary {
+  const fraction = Math.min(1, usedBytes / FREE_STORAGE_BYTES)
+  const remaining = Math.max(0, FREE_STORAGE_BYTES - usedBytes)
+  const artistsLeft = Math.floor(remaining / TYPICAL_ARTIST_BYTES)
+  const usedMb = Math.round(usedBytes / 1_000_000)
+
+  return {
+    usedBytes,
+    fraction,
+    artistsLeft,
+    near: fraction >= 0.85,
+    message: `${usedMb} MB of 1 GB used · room for about ${artistsLeft} more ${
+      artistsLeft === 1 ? 'artist' : 'artists'
+    } at 30 min mono FLAC`,
+  }
+}
+
 // ── Presenting the total ──────────────────────────────────────────────────────
 
 export function formatMegabytes(bytes: number): string {

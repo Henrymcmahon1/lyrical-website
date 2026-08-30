@@ -39,6 +39,7 @@ type Job = {
   delivered_at: string | null
   internal_notes: string | null
   lyrics: string | null
+  voice_id: string | null
 }
 
 type Asset = {
@@ -126,7 +127,8 @@ export async function SongsTab({
    * that point this wants paging or a denormalised column.
    */
   const jobIds = jobs.map((j) => j.id)
-  const [assetResult, userResult] = await Promise.all([
+  const voiceIds = [...new Set(jobs.map((j) => j.voice_id).filter((v): v is string => Boolean(v)))]
+  const [assetResult, userResult, voiceResult] = await Promise.all([
     jobIds.length
       ? db
           .from('song_job_assets')
@@ -134,7 +136,15 @@ export async function SongsTab({
           .in('job_id', jobIds)
       : Promise.resolve({ data: [] as Asset[] }),
     db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    voiceIds.length
+      ? db.from('voice_models').select('id, artist_name, status').in('id', voiceIds)
+      : Promise.resolve({ data: [] as { id: string; artist_name: string; status: string }[] }),
   ])
+
+  const voiceById = new Map<string, { artist_name: string; status: string }>()
+  for (const v of (voiceResult.data ?? []) as { id: string; artist_name: string; status: string }[]) {
+    voiceById.set(v.id, { artist_name: v.artist_name, status: v.status })
+  }
 
   const assetsByJob = new Map<string, Asset[]>()
   for (const a of (assetResult.data ?? []) as Asset[]) {
@@ -203,6 +213,15 @@ export async function SongsTab({
                     {languageName(job.source_language)} to {languageName(job.target_language)}
                   </dd>
                 </div>
+                {job.voice_id && voiceById.get(job.voice_id) && (
+                  <div>
+                    <dt className="sr-only">Voice</dt>
+                    <dd>
+                      voice: {voiceById.get(job.voice_id)!.artist_name} (
+                      {voiceById.get(job.voice_id)!.status})
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt className="sr-only">Sender</dt>
                   <dd>
