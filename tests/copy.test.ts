@@ -132,10 +132,16 @@ describe('no secret ever reaches the browser', () => {
     // this prefix it would be published in the bundle rather than kept on the server. The
     // guard below is the thing that would catch that, so widen this set one name at a time and
     // never by pattern.
+    //
+    //   TURNSTILE_SITE_KEY   added 2026-08-30. Cloudflare's Turnstile site key, which is
+    //     embedded in the rendered widget by design and is not a secret. Its partner, the
+    //     TURNSTILE_SECRET_KEY used to verify tokens server-side, deliberately has NO public
+    //     prefix and must never gain one.
     const ALLOWED = new Set([
       'NEXT_PUBLIC_SITE_URL',
       'NEXT_PUBLIC_SUPABASE_URL',
       'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+      'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
     ])
     const found = new Set<string>()
 

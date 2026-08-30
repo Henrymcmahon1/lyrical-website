@@ -6,6 +6,7 @@ import { clientKey, consume } from '@/lib/rate-limit'
 import { signInHtml, signInSubject, signInText } from '@/lib/sign-in-email'
 import { SITE_URL } from '@/lib/site'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { verifyTurnstile } from '@/lib/turnstile'
 
 /**
  * Ask for a sign in link.
@@ -44,11 +45,14 @@ function safeNext(raw: string | undefined): string {
 export async function requestSignInLink(
   email: string,
   next?: string,
+  turnstileToken?: string,
 ): Promise<SignInResult> {
   const address = email.trim().toLowerCase()
   if (!address || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)) {
     return { ok: false, error: 'That does not look like an email address.' }
   }
+
+  const requestHeaders = await headers()
 
   /**
    * Throttled, and honestly labelled. This limiter is per serverless instance and Vercel may
@@ -57,13 +61,25 @@ export async function requestSignInLink(
    * is a loop, which tends to hit one warm instance.
    */
   const limit = consume(
-    clientKey(await headers(), 'sign-in-link'),
+    clientKey(requestHeaders, 'sign-in-link'),
     LINK_ATTEMPTS,
     LINK_WINDOW_MS,
     Date.now(),
   )
   if (!limit.allowed) {
     return { ok: false, error: 'Too many links requested. Wait a few minutes and try again.' }
+  }
+
+  /**
+   * The bot challenge. Skipped entirely when Turnstile is not configured, so this is a no-op
+   * until the keys are set. Verified BEFORE any account is created or any mail is sent, because
+   * both of those are the abuse this exists to stop.
+   */
+  const challenge = await verifyTurnstile(turnstileToken ?? '', {
+    remoteip: requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim(),
+  })
+  if (!challenge.ok) {
+    return { ok: false, error: 'That did not look human. Refresh the page and try again.' }
   }
 
   const db = supabaseAdmin()

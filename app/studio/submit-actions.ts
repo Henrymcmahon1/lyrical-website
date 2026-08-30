@@ -1,8 +1,10 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { mailCustomer, mailFounders } from '@/lib/mailer'
 import { SongJobSchema } from '@/lib/song-job-schema'
+import { verifyTurnstile } from '@/lib/turnstile'
 import {
   jobConfirmationHtml,
   jobConfirmationSubject,
@@ -78,10 +80,24 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
   const user = await currentUser()
   if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
 
-  const input = raw as { jobId?: unknown }
+  const input = raw as { jobId?: unknown; turnstileToken?: unknown }
   const jobId = typeof input?.jobId === 'string' ? input.jobId : ''
   if (!/^[0-9a-f-]{36}$/i.test(jobId)) {
     return { ok: false, error: 'That submission looks malformed. Reload and try again.' }
+  }
+
+  /**
+   * The bot challenge. A no-op until Turnstile is configured. The files are already in storage
+   * by the time this runs, but that upload needed a signed-in session, and the sign-in form
+   * carries the same challenge, so a bot cannot reach this point with an account it obtained by
+   * a script. This is the second layer, in front of the job row and the two founder emails.
+   */
+  const token = typeof input?.turnstileToken === 'string' ? input.turnstileToken : ''
+  const challenge = await verifyTurnstile(token, {
+    remoteip: (await headers()).get('x-forwarded-for')?.split(',')[0]?.trim(),
+  })
+  if (!challenge.ok) {
+    return { ok: false, error: 'That did not look human. Reload the page and try again.' }
   }
 
   const parsed = SongJobSchema.safeParse(raw)

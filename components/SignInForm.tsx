@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { requestSignInLink } from '@/app/studio/sign-in/actions'
+import { Turnstile } from '@/components/Turnstile'
+import { turnstileSiteKey } from '@/lib/turnstile'
 
 /**
  * Magic link sign in.
@@ -25,16 +27,26 @@ const field =
   'w-full rounded-card border border-graphite/20 bg-cream px-4 py-3 text-graphite outline-none transition-colors focus:border-indigo'
 
 export function SignInForm({ next }: { next?: string }) {
+  const siteKey = turnstileSiteKey()
   const [email, setEmail] = useState('')
+  const [token, setToken] = useState('')
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+
+    // Widget shown but not solved yet: wait rather than send a request the server will reject.
+    if (siteKey && !token) {
+      setState('error')
+      setMessage('Give the check a moment to finish, then try again.')
+      return
+    }
+
     setState('sending')
 
     try {
-      const result = await requestSignInLink(email, next)
+      const result = await requestSignInLink(email, next, token || undefined)
 
       if (!result.ok) {
         setState('error')
@@ -74,6 +86,14 @@ export function SignInForm({ next }: { next?: string }) {
           className={field}
         />
       </label>
+
+      {/* Renders nothing when Turnstile is not configured, so this is inert until the keys land. */}
+      <Turnstile
+        siteKey={siteKey}
+        action="sign-in"
+        onVerify={setToken}
+        onExpire={() => setToken('')}
+      />
 
       {state === 'error' && (
         <p role="alert" className="text-sm text-graphite/75">

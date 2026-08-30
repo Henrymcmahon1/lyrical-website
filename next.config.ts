@@ -45,9 +45,19 @@ const SUPABASE_ORIGIN = (() => {
 
 const SUPABASE_SRC = SUPABASE_ORIGIN ?? 'https://*.supabase.co'
 
+/*
+  Cloudflare Turnstile, added 2026-08-30. The anti-bot widget on the studio sign-in and submit
+  forms. Its script loads from `challenges.cloudflare.com` (script-src), it draws the challenge
+  in an iframe from the same origin (frame-src, which had no directive and was falling back to
+  `default-src 'self'`, so the iframe would have been blocked), and the widget calls back to that
+  origin (connect-src). Token verification is server-side and needs nothing here. Scoped to the
+  one host, so this grants Cloudflare the challenge surface and nothing wider.
+*/
+const TURNSTILE_SRC = 'https://challenges.cloudflare.com'
+
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
+  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com ${TURNSTILE_SRC}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
@@ -60,7 +70,8 @@ const CSP = [
     to look. Uploads especially, since a 60MB PUT that never leaves the page looks like a slow
     network rather than a policy refusal.
   */
-  `connect-src 'self' https://vitals.vercel-insights.com ${SUPABASE_SRC}`,
+  `connect-src 'self' https://vitals.vercel-insights.com ${SUPABASE_SRC} ${TURNSTILE_SRC}`,
+  `frame-src ${TURNSTILE_SRC}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

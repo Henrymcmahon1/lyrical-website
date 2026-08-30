@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { LANGUAGES, type LanguageCode } from '@/lib/languages'
 import { turnaroundNote } from '@/lib/language-pairs'
 import { detectLyrics, lyricsLanguageWarning } from '@/lib/lyrics-language'
+import { Turnstile } from '@/components/Turnstile'
+import { turnstileSiteKey } from '@/lib/turnstile'
 import {
   ACCEPT_ATTRIBUTE,
   SUBMISSIONS_BUCKET,
@@ -58,6 +60,9 @@ export function SongSubmitForm() {
   const [lyricsNote, setLyricsNote] = useState('')
   const [languageWarning, setLanguageWarning] = useState('')
   const [warranty, setWarranty] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+
+  const siteKey = turnstileSiteKey()
 
   const [stage, setStage] = useState<Stage>('idle')
   const [error, setError] = useState('')
@@ -147,6 +152,11 @@ export function SongSubmitForm() {
       setError('Confirm you have the right to authorise this before sending it.')
       return
     }
+    // Widget shown but not solved yet: wait rather than upload and then be rejected at save.
+    if (siteKey && !turnstileToken) {
+      setError('Give the check at the bottom a moment to finish, then try again.')
+      return
+    }
 
     const supabase = supabaseBrowser()
     const { data: auth } = await supabase.auth.getUser()
@@ -203,6 +213,7 @@ export function SongSubmitForm() {
       // one line per sung line, no stray carriage returns, no invisible byte order mark.
       lyrics: normaliseLyrics(lyrics) || undefined,
       rightsWarranty: true,
+      turnstileToken: turnstileToken || undefined,
     })
 
     // A successful action redirects, so anything returned here is a failure.
@@ -556,6 +567,14 @@ Second line`}
           version of it.
         </span>
       </label>
+
+      {/* Renders nothing when Turnstile is not configured, so this is inert until the keys land. */}
+      <Turnstile
+        siteKey={siteKey}
+        action="submit"
+        onVerify={setTurnstileToken}
+        onExpire={() => setTurnstileToken('')}
+      />
 
       {error && (
         <p role="alert" className="text-sm leading-relaxed text-graphite">
