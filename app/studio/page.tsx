@@ -64,9 +64,15 @@ export default async function Studio({
         ARTIST and is reused by every song that artist sends. Linked from here so somebody who
         arrived to submit a song discovers it, rather than only finding it in an email.
       */}
+      {/*
+        `flex w-fit`, not `inline-flex`. Both this link and the ember button below are their own
+        line in a vertical stack, and an inline-flex element flows inline, so with no submitted
+        notice between them the two sat on the SAME line and the button overlapped this link.
+        A block-level flex sized to its content takes its own line while staying content-width.
+      */}
       <a
         href="/studio/voices"
-        className="nudge mt-6 inline-flex min-h-11 items-center text-sm text-indigo underline decoration-indigo/30 underline-offset-4 transition-colors hover:decoration-indigo"
+        className="nudge mt-6 flex w-fit min-h-11 items-center text-sm text-indigo underline decoration-indigo/30 underline-offset-4 transition-colors hover:decoration-indigo"
       >
         Voices we have learned
       </a>
@@ -87,7 +93,7 @@ export default async function Studio({
       */}
       <a
         href="/studio/new"
-        className="nudge mt-8 inline-flex items-center gap-1.5 rounded-card bg-ember px-7 py-4 text-cream"
+        className="nudge mt-8 flex w-fit items-center gap-1.5 rounded-card bg-ember px-7 py-4 text-cream"
       >
         {/*
           No `{' '}` between the label and the arrow. This is an inline-flex container, and a
