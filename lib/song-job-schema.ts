@@ -80,6 +80,12 @@ export const SongJobSchema = z
       .regex(/^[0-9a-f-]{36}$/i)
       .optional(),
     /**
+     * The fallback when there is no specific trained voice: a general voice type, or leaving the
+     * choice to us. Deliberately narrow, and never stored alongside a `voiceId`. This exists so
+     * that lacking voice-model data cannot stop a submission: everyone can pick one of these.
+     */
+    voicePreference: z.enum(['male', 'female', 'let_us_decide']).optional(),
+    /**
      * Not a checkbox for decoration. This is the statement that makes the eventual agreement
      * enforceable and keeps us out of an infringing release, so it is a literal `true` rather
      * than a boolean: an absent or false value is a failure, not a default.

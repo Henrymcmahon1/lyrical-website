@@ -51,7 +51,9 @@ export type VoiceOption = { id: string; artist_name: string; status: string }
 export function SongSubmitForm({ voices = [] }: { voices?: VoiceOption[] }) {
   const [title, setTitle] = useState('')
   const [primaryArtist, setPrimaryArtist] = useState('')
-  const [voiceId, setVoiceId] = useState('')
+  // Either a trained voice's UUID, or one of 'male' | 'female' | 'let_us_decide'. Empty until
+  // they pick: the choice is required, but "let us decide" is always there so it never blocks.
+  const [voiceChoice, setVoiceChoice] = useState('')
   const [sourceLanguage, setSourceLanguage] = useState<LanguageCode>('EN')
   const [targetLanguage, setTargetLanguage] = useState<LanguageCode>('ES')
   const [mode, setMode] = useState<'stems' | 'mix'>('stems')
@@ -156,6 +158,10 @@ export function SongSubmitForm({ voices = [] }: { voices?: VoiceOption[] }) {
       setError('Confirm you have the right to authorise this before sending it.')
       return
     }
+    if (!voiceChoice) {
+      setError('Choose who sings this. Pick “Let us decide” if you are not sure.')
+      return
+    }
     // Widget shown but not solved yet: wait rather than upload and then be rejected at save.
     if (siteKey && !turnstileToken) {
       setError('Give the check at the bottom a moment to finish, then try again.')
@@ -216,7 +222,11 @@ export function SongSubmitForm({ voices = [] }: { voices?: VoiceOption[] }) {
       // Normalised on the way out, so what is stored is what the queue and the pipeline read:
       // one line per sung line, no stray carriage returns, no invisible byte order mark.
       lyrics: normaliseLyrics(lyrics) || undefined,
-      voiceId: voiceId || undefined,
+      // A UUID is a trained voice; anything else is one of the fallback preferences.
+      voiceId: /^[0-9a-f-]{36}$/i.test(voiceChoice) ? voiceChoice : undefined,
+      voicePreference: /^[0-9a-f-]{36}$/i.test(voiceChoice)
+        ? undefined
+        : (voiceChoice as 'male' | 'female' | 'let_us_decide'),
       rightsWarranty: true,
       turnstileToken: turnstileToken || undefined,
     })
@@ -246,46 +256,50 @@ export function SongSubmitForm({ voices = [] }: { voices?: VoiceOption[] }) {
       </label>
 
       {/*
-        Which trained voice sings this. Optional, because a song can be sent before its voice is
-        built. When the customer has no voices at all, the control becomes a nudge to build one
-        rather than an empty dropdown, but the song can still go without it.
+        Who sings this. Always answerable, so a customer without a trained voice is never blocked:
+        they can pick a general type or leave it to us. A specific trained voice sits at the top
+        when they have one. No default value on purpose (Henry's call): they choose rather than
+        accept a silent one. "Match the original" was deliberately left off, because it sets an
+        expectation the fallback voices do not promise to meet.
       */}
-      {voices.length > 0 ? (
-        <label className={label}>
-          <span className={labelText}>Which voice sings this?</span>
-          <select
-            value={voiceId}
-            onChange={(e) => setVoiceId(e.target.value)}
-            className={field}
-          >
-            <option value="">No voice yet</option>
-            {voices.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.artist_name}
-                {v.status === 'ready' ? '' : ` · ${v.status}`}
-              </option>
-            ))}
-          </select>
-          <span className="text-sm leading-relaxed text-graphite/55">
-            The trained voice we re-sing in. Leave it on &ldquo;No voice yet&rdquo; if the
-            artist&rsquo;s voice is still being built.
-          </span>
-        </label>
-      ) : (
-        <div className="rounded-card border-l-[3px] border-indigo bg-indigo/5 px-5 py-4">
-          <p className="text-sm leading-relaxed text-graphite/80">
-            <strong className="font-semibold text-graphite">No voice model yet.</strong> To
-            re-sing this in the artist&rsquo;s own voice, we first learn it from their clean
-            vocal. You can send the song now and build the voice separately.
-          </p>
+      <label className={label}>
+        <span className={labelText}>Who sings this?</span>
+        <select
+          value={voiceChoice}
+          onChange={(e) => setVoiceChoice(e.target.value)}
+          className={field}
+        >
+          <option value="" disabled>
+            Choose one…
+          </option>
+          {voices.length > 0 && (
+            <optgroup label="Your trained voices">
+              {voices.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.artist_name}
+                  {v.status === 'ready' ? '' : ` · ${v.status}`}
+                </option>
+              ))}
+            </optgroup>
+          )}
+          <optgroup label="Or a general voice">
+            <option value="male">A male voice</option>
+            <option value="female">A female voice</option>
+            <option value="let_us_decide">Let us decide</option>
+          </optgroup>
+        </select>
+        <span className="text-sm leading-relaxed text-graphite/55">
+          Not sure? <strong className="font-medium text-graphite/75">Let us decide</strong> means
+          we pick a voice that fits the song, so you do not need a specific one in mind. Or{' '}
           <a
             href="/studio/voices/new"
-            className="nudge mt-3 inline-flex min-h-11 items-center rounded-card border border-graphite/25 px-5 text-sm transition-colors hover:border-indigo hover:text-indigo"
+            className="text-indigo underline decoration-indigo/30 underline-offset-2 hover:decoration-indigo"
           >
-            Build a voice model
-          </a>
-        </div>
-      )}
+            build a voice model
+          </a>{' '}
+          to re-sing in a particular artist&rsquo;s own voice.
+        </span>
+      </label>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className={label}>

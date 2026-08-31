@@ -418,3 +418,23 @@ grant select (
   rights_warranted_at, approved_at, delivered_at,
   lyrics, voice_id
 ) on public.song_jobs to anon, authenticated;
+
+-- ── A voice preference, when there is no trained voice ─────────────────────────
+-- Added 2026-08-31.
+--
+-- A song must always name who sings it, but not everyone has a trained voice or a specific one
+-- in mind, and lacking that data must never block a submission. So alongside `voice_id` (a
+-- specific trained voice) a song can instead carry a preference: a general voice type, or
+-- deferring the choice to us. One or the other, never both; null only on rows from before this.
+--   'male' | 'female' | 'let_us_decide'
+alter table public.song_jobs add column if not exists voice_preference text;
+
+-- Same rule as every other song_jobs column: readable by customers only once it is in the grant.
+revoke select on public.song_jobs from anon, authenticated;
+
+grant select (
+  id, created_at, user_id, title, primary_artist,
+  source_language, target_language, notes, status,
+  rights_warranted_at, approved_at, delivered_at,
+  lyrics, voice_id, voice_preference
+) on public.song_jobs to anon, authenticated;

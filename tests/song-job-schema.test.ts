@@ -97,6 +97,26 @@ describe('attaching a trained voice', () => {
     })
     expect(r.success).toBe(false)
   })
+
+  it('accepts a fallback voice preference for somebody with no trained voice', () => {
+    for (const pref of ['male', 'female', 'let_us_decide'] as const) {
+      const r = SongJobSchema.safeParse({
+        ...base,
+        assets: [asset('full_mix')],
+        voicePreference: pref,
+      })
+      expect(r.success, pref).toBe(true)
+    }
+  })
+
+  it('refuses a voice preference outside the known set', () => {
+    const r = SongJobSchema.safeParse({
+      ...base,
+      assets: [asset('full_mix')],
+      voicePreference: 'robot',
+    })
+    expect(r.success).toBe(false)
+  })
 })
 
 describe('the rights warranty', () => {

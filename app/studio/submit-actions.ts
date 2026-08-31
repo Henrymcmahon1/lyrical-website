@@ -147,6 +147,9 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
     notes: job.notes ?? null,
     lyrics: job.lyrics ?? null,
     voice_id: voiceId,
+    // The fallback preference, kept only when there is no specific voice. A song points at one or
+    // the other, never both, so a chosen voice clears any preference the client also sent.
+    voice_preference: voiceId ? null : (job.voicePreference ?? null),
     status: 'submitted',
   })
 

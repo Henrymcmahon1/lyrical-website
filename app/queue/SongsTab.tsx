@@ -40,6 +40,13 @@ type Job = {
   internal_notes: string | null
   lyrics: string | null
   voice_id: string | null
+  voice_preference: string | null
+}
+
+const VOICE_PREFERENCE_LABEL: Record<string, string> = {
+  male: 'a male voice',
+  female: 'a female voice',
+  let_us_decide: 'let us decide',
 }
 
 type Asset = {
@@ -213,7 +220,7 @@ export async function SongsTab({
                     {languageName(job.source_language)} to {languageName(job.target_language)}
                   </dd>
                 </div>
-                {job.voice_id && voiceById.get(job.voice_id) && (
+                {job.voice_id && voiceById.get(job.voice_id) ? (
                   <div>
                     <dt className="sr-only">Voice</dt>
                     <dd>
@@ -221,7 +228,14 @@ export async function SongsTab({
                       {voiceById.get(job.voice_id)!.status})
                     </dd>
                   </div>
-                )}
+                ) : job.voice_preference ? (
+                  <div>
+                    <dt className="sr-only">Voice</dt>
+                    <dd>
+                      voice: {VOICE_PREFERENCE_LABEL[job.voice_preference] ?? job.voice_preference}
+                    </dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt className="sr-only">Sender</dt>
                   <dd>
