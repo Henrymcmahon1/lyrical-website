@@ -8,6 +8,7 @@ import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { VoiceSubmitSchema, VoiceTakesSchema, totalSeconds } from '@/lib/voice-schema'
 import { VOICE_BUCKET, formatDuration, voicePathBelongsTo } from '@/lib/voice-training'
+import { VOICE_CONSENT_VERSION } from '@/lib/terms'
 
 /**
  * Record a set of training vocals whose files are already in storage.
@@ -54,6 +55,8 @@ export async function submitVoiceModel(raw: unknown): Promise<VoiceResult | void
     user_id: user.id,
     artist_name: voice.artistName,
     notes: voice.notes ?? null,
+    // Stamped server-side, so the record of which consent wording was agreed to is ours.
+    consent_terms_version: VOICE_CONSENT_VERSION,
     status: 'collecting',
   })
 

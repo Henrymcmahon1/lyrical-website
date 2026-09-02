@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { supabaseBrowser } from '@/lib/supabase-client'
 import { addVoiceTakes, submitVoiceModel } from '@/app/studio/voices/actions'
 import type { VoiceSampleInput } from '@/lib/voice-schema'
+import { RightsWarranty } from '@/components/RightsWarranty'
+import { VOICE_CONSENT_INTRO, VOICE_CONSENT_POINTS, VOICE_CONSENT_PREFACE } from '@/lib/terms'
 import {
   MAX_UPLOAD_BYTES,
   VOICE_ACCEPT_ATTRIBUTE,
@@ -348,25 +350,21 @@ export function VoiceUploadForm({
       </label>
 
       {/*
-        Its own consent, separate from the per-song rights warranty, and worded for what it
-        actually authorises. The site promises that voice models are built only from catalogs we
-        have permission to use, and this checkbox plus `consent_warranted_at` is the record
-        behind that sentence. Skipped in add-takes mode: consent was given when the voice was
-        created, and these are more takes of the same already-consented artist.
+        Its own consent, separate from the per-song rights warranty. It keeps the voice-specific
+        permission line as a preface, then the same warranty counsel prepared. The record behind
+        the site's promise that voice models are built only from catalogs we have permission to
+        use is this agreement plus `consent_warranted_at` and the stamped `consent_terms_version`.
+        Skipped in add-takes mode: consent was given when the voice was created, and these are more
+        takes of the same already-consented artist.
       */}
       {!isAdd && (
-        <label className="flex cursor-pointer items-start gap-3 rounded-card border border-graphite/20 p-5">
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => setConsent(e.target.checked)}
-            className="mt-1 size-4 shrink-0 accent-indigo"
-          />
-          <span className="text-sm leading-relaxed text-graphite/80">
-            I hold the rights to these recordings, and I have the artist&rsquo;s permission to
-            have a model of their voice built from them and used for the versions I ask for.
-          </span>
-        </label>
+        <RightsWarranty
+          preface={VOICE_CONSENT_PREFACE}
+          intro={VOICE_CONSENT_INTRO}
+          points={VOICE_CONSENT_POINTS}
+          checked={consent}
+          onChange={setConsent}
+        />
       )}
 
       {error && (

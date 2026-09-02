@@ -6,6 +6,8 @@ import { turnaroundNote } from '@/lib/language-pairs'
 import { detectLyrics, lyricsLanguageWarning } from '@/lib/lyrics-language'
 import { Turnstile } from '@/components/Turnstile'
 import { turnstileSiteKey } from '@/lib/turnstile'
+import { RightsWarranty } from '@/components/RightsWarranty'
+import { RIGHTS_TERMS_INTRO, RIGHTS_TERMS_POINTS } from '@/lib/terms'
 import {
   ACCEPT_ATTRIBUTE,
   SUBMISSIONS_BUCKET,
@@ -612,22 +614,18 @@ Second line`}
       </label>
 
       {/*
-        The warranty. Not decoration: this is the statement that makes an agreement enforceable
-        later and keeps us out of an infringing release, which is why it is unticked by default
-        and why the submit button will not proceed without it.
+        The warranty, prepared by counsel and shown in full above the checkbox. Not decoration:
+        this is the statement that makes an agreement enforceable later and keeps us out of an
+        infringing release, which is why the box is unticked by default and the submit button
+        will not proceed without it. The wording lives in `lib/terms.ts`; a version is stamped
+        onto the row at submit so what was agreed to stays provable.
       */}
-      <label className="flex items-start gap-3 rounded-card border border-graphite/15 p-4">
-        <input
-          type="checkbox"
-          checked={warranty}
-          onChange={(e) => setWarranty(e.target.checked)}
-          className="mt-1"
-        />
-        <span className="text-sm leading-relaxed text-graphite/75">
-          I own or control this recording, and I have the right to authorise a new language
-          version of it.
-        </span>
-      </label>
+      <RightsWarranty
+        intro={RIGHTS_TERMS_INTRO}
+        points={RIGHTS_TERMS_POINTS}
+        checked={warranty}
+        onChange={setWarranty}
+      />
 
       {/* Renders nothing when Turnstile is not configured, so this is inert until the keys land. */}
       <Turnstile

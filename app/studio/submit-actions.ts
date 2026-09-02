@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { mailCustomer, mailFounders } from '@/lib/mailer'
 import { SongJobSchema } from '@/lib/song-job-schema'
 import { verifyTurnstile } from '@/lib/turnstile'
+import { RIGHTS_TERMS_VERSION } from '@/lib/terms'
 import {
   jobConfirmationHtml,
   jobConfirmationSubject,
@@ -150,6 +151,9 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
     // The fallback preference, kept only when there is no specific voice. A song points at one or
     // the other, never both, so a chosen voice clears any preference the client also sent.
     voice_preference: voiceId ? null : (job.voicePreference ?? null),
+    // Stamped server-side, never from the client, so the record of WHICH wording was agreed to is
+    // ours rather than the browser's. `rightsWarranty` already proved the box was ticked.
+    rights_terms_version: RIGHTS_TERMS_VERSION,
     status: 'submitted',
   })
 

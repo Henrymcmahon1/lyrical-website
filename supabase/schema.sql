@@ -438,3 +438,15 @@ grant select (
   rights_warranted_at, approved_at, delivered_at,
   lyrics, voice_id, voice_preference
 ) on public.song_jobs to anon, authenticated;
+
+-- ── The version of the terms each person agreed to ────────────────────────────
+-- Added 2026-08-31.
+--
+-- The warranty and voice-consent wording (lib/terms.ts) is versioned, and the version in force
+-- at the moment of agreement is stamped here. When counsel changes the wording, the constant is
+-- bumped; old rows keep the version they actually agreed to, so what any given customer accepted
+-- stays provable. Staff-only by construction: not added to the customer SELECT grant, so it is
+-- readable through the service role and never through a customer's own session, which is the
+-- right direction for a record they should not be able to alter or need to read.
+alter table public.song_jobs add column if not exists rights_terms_version text;
+alter table public.voice_models add column if not exists consent_terms_version text;
