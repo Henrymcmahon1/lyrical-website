@@ -55,9 +55,20 @@ const SUPABASE_SRC = SUPABASE_ORIGIN ?? 'https://*.supabase.co'
 */
 const TURNSTILE_SRC = 'https://challenges.cloudflare.com'
 
+/*
+  RB2B, added 2026-08-31. Visitor de-anonymisation for lead gen. The inline loader in the layout
+  injects RB2B's script from the CloudFront host below (script-src), and that script beacons its
+  data to RB2B's collector (connect-src). The collector host is verified against the live site's
+  console after deploy rather than assumed: if RB2B moves it, a CSP violation is the signal and
+  the domain here is what changes. Scoped to these hosts, so it grants RB2B a script and a beacon
+  and nothing wider.
+*/
+const REB2B_SCRIPT_SRC = 'https://ddwl4m2hdecbv.cloudfront.net'
+const REB2B_CONNECT_SRC = 'https://api.reb2b.com https://s3-us-west-2.amazonaws.com'
+
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com ${TURNSTILE_SRC}`,
+  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com ${TURNSTILE_SRC} ${REB2B_SCRIPT_SRC}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
@@ -70,7 +81,7 @@ const CSP = [
     to look. Uploads especially, since a 60MB PUT that never leaves the page looks like a slow
     network rather than a policy refusal.
   */
-  `connect-src 'self' https://vitals.vercel-insights.com ${SUPABASE_SRC} ${TURNSTILE_SRC}`,
+  `connect-src 'self' https://vitals.vercel-insights.com ${SUPABASE_SRC} ${TURNSTILE_SRC} ${REB2B_SCRIPT_SRC} ${REB2B_CONNECT_SRC}`,
   `frame-src ${TURNSTILE_SRC}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",

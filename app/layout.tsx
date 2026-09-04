@@ -68,6 +68,20 @@ export default function RootLayout({
           }}
         />
         {/*
+          RB2B visitor de-anonymisation, added 2026-08-31 on Henry's instruction. The vendor
+          snippet, verbatim: it sets a guard, then injects RB2B's script from CloudFront, which is
+          allowed in `next.config.ts` script-src, and that script beacons to RB2B's collector in
+          connect-src. Runs site-wide. Unlike the Vercel analytics at the end of the body, this
+          identifies individual visitors for lead generation, which is a deliberate business
+          choice rather than the privacy-preserving default; the key is public by design.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '!function(key){if(window.reb2b)return;window.reb2b={loaded:true};var s=document.createElement("script");s.async=true;s.src="https://ddwl4m2hdecbv.cloudfront.net/b/"+key+"/"+key+".js.gz";document.getElementsByTagName("script")[0].parentNode.insertBefore(s,document.getElementsByTagName("script")[0]);}("XOE9GH337QOM");',
+          }}
+        />
+        {/*
           Structured data. This is the one thing on the page that tells a crawler "lyrical"
           is a company and not an adjective, and that it is the same entity as "lyrical
           Global". See lib/structured-data.ts for what it deliberately does not claim.
