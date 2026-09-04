@@ -57,14 +57,15 @@ const TURNSTILE_SRC = 'https://challenges.cloudflare.com'
 
 /*
   RB2B, added 2026-08-31. Visitor de-anonymisation for lead gen. The inline loader in the layout
-  injects RB2B's script from the CloudFront host below (script-src), and that script beacons its
-  data to RB2B's collector (connect-src). The collector host is verified against the live site's
-  console after deploy rather than assumed: if RB2B moves it, a CSP violation is the signal and
-  the domain here is what changes. Scoped to these hosts, so it grants RB2B a script and a beacon
-  and nothing wider.
+  injects RB2B's script from the CloudFront host below (script-src). Verified against the live
+  site: the script itself beacons FIRST-PARTY, POSTing to `/<id>/view` on our own origin, which
+  `connect-src 'self'` already covers, so no external connect host is needed and none is granted.
+  `api.reb2b.com` is kept as a narrow, RB2B-specific margin in case a flow this test did not hit
+  falls back to it; if a CSP violation ever names another host, that is the signal to add exactly
+  it, never a broad one like a whole S3 region.
 */
 const REB2B_SCRIPT_SRC = 'https://ddwl4m2hdecbv.cloudfront.net'
-const REB2B_CONNECT_SRC = 'https://api.reb2b.com https://s3-us-west-2.amazonaws.com'
+const REB2B_CONNECT_SRC = 'https://api.reb2b.com'
 
 const CSP = [
   "default-src 'self'",
