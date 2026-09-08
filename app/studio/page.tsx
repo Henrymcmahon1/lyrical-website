@@ -86,7 +86,7 @@ export default async function Studio({
           role="status"
           className="mt-8 rounded-card border-l-[3px] border-indigo bg-indigo/5 px-5 py-4 leading-relaxed"
         >
-          That is with us. We will confirm we can take it, and nothing is made until we do.
+          We are on it. Your cover is being made now and will be ready soon.
         </p>
       )}
 

@@ -190,13 +190,26 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
     return { ok: false, error: 'We could not save the files. Try again in a moment.' }
   }
 
-  // Consume one cover for this billing period. quota_consumed_at is staff/service
-  // only, so this is written with the service role, scoped to this exact job. This
-  // is chunk E's half; chunk F additionally sets pipeline_state='queued' here so the
-  // poller runs it with no human accept.
+  // Consume one cover for this billing period AND auto-queue it: an entitled
+  // Door 2 submit runs itself, no human accept. quota_consumed_at, pipeline_state
+  // and status are staff/service columns, so this is one service-role write scoped
+  // to this exact job.
+  //
+  //   quota_consumed_at  E: this cover is spent for the period.
+  //   pipeline_state     F: 'queued' is what the pipeline poller claims (and the
+  //                         render-time entitlement re-check gate).
+  //   status/approved_at F: move past the human-accept state so the customer sees
+  //                         it being made, not "waiting for us to accept". The
+  //                         poller moves it to 'in_progress' on claim.
+  const nowIso = new Date().toISOString()
   await supabaseAdmin()
     .from('song_jobs')
-    .update({ quota_consumed_at: new Date().toISOString() })
+    .update({
+      quota_consumed_at: nowIso,
+      pipeline_state: 'queued',
+      status: 'approved',
+      approved_at: nowIso,
+    })
     .eq('id', jobId)
 
   // After the writes, and awaited rather than fired and forgotten: a serverless function that
