@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { DeliveryPlayer } from '@/components/DeliveryPlayer'
 import { JobStatus } from '@/components/JobStatus'
 import { LyricsEditor } from '@/components/LyricsEditor'
 import { Scorecard } from '@/components/Scorecard'
@@ -35,6 +36,17 @@ export default async function Studio({
       'id, title, primary_artist, source_language, target_language, status, created_at, lyrics',
     )
     .order('created_at', { ascending: false })
+
+  // Finished covers to play in-page. RLS returns only this customer's rows, so a bug here shows
+  // nothing rather than somebody else's cover. Newest per job wins if a job was re-delivered.
+  const { data: deliveries } = await supabase
+    .from('song_job_deliveries')
+    .select('id, job_id, created_at')
+    .order('created_at', { ascending: false })
+  const latestDeliveryByJob = new Map<string, string>()
+  for (const d of deliveries ?? []) {
+    if (!latestDeliveryByJob.has(d.job_id)) latestDeliveryByJob.set(d.job_id, d.id)
+  }
 
   return (
     <section className="mx-auto max-w-3xl px-6 py-24 sm:py-28">
@@ -122,6 +134,10 @@ export default async function Studio({
               <div className="mt-6">
                 <JobStatus status={j.status} />
               </div>
+
+              {latestDeliveryByJob.has(j.id) && (
+                <DeliveryPlayer deliveryId={latestDeliveryByJob.get(j.id)!} />
+              )}
 
               {/*
                 Editable only while the job is still waiting on us. The check here is the UI

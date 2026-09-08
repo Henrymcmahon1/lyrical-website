@@ -450,3 +450,59 @@ grant select (
 -- right direction for a record they should not be able to alter or need to read.
 alter table public.song_jobs add column if not exists rights_terms_version text;
 alter table public.voice_models add column if not exists consent_terms_version text;
+
+-- ══ Pipeline integration (self-serve generation) ═══════════════════════════════
+-- Added 2026-09-08. These connect the lyrical-studio pipeline to this database.
+-- Everything here is STAFF/SERVICE-ROLE only or worker-written; nothing changes
+-- what a customer already sees until the studio player (below) ships.
+
+-- ── Pipeline hand-off state on a song job (staff/service only) ────────────────
+-- The pipeline claims a job the moment this reads 'queued' (which is also the
+-- spend gate), then walks it: queued -> claimed -> rendered_local -> delivered
+-- (or failed, see pipeline_error). Deliberately NOT added to the customer
+-- song_jobs SELECT grant, exactly like internal_notes: the service role reads
+-- every column, the customer reads none of these.
+alter table public.song_jobs add column if not exists pipeline_state       text;
+alter table public.song_jobs add column if not exists pipeline_voice_model text;
+alter table public.song_jobs add column if not exists pipeline_error       text;
+create index if not exists song_jobs_pipeline_state_idx
+  on public.song_jobs (pipeline_state) where pipeline_state is not null;
+
+-- ── Deliveries: a finished cover the customer can play ────────────────────────
+-- The worker uploads a streamable MP3 and records a row here; the customer only
+-- reads their own (RLS). Private 'deliveries' bucket, path {user_id}/{job_id}/{file}.
+create table if not exists public.song_job_deliveries (
+  id         uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  job_id     uuid not null references public.song_jobs (id) on delete cascade,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  kind       text not null default 'cover',
+  path       text not null,
+  filename   text not null,
+  bytes      bigint not null
+);
+
+create index if not exists song_job_deliveries_job_idx on public.song_job_deliveries (job_id);
+
+alter table public.song_job_deliveries enable row level security;
+
+-- Customers read their own deliveries; there is deliberately NO customer insert
+-- or update policy. The worker writes with the service role, which bypasses RLS.
+drop policy if exists song_job_deliveries_own_select on public.song_job_deliveries;
+create policy song_job_deliveries_own_select on public.song_job_deliveries
+  for select using (auth.uid() = user_id);
+
+-- Private, same shape and rules as `submissions`: the first path segment is the
+-- owner's user id, and the policy compares it to auth.uid() so one customer
+-- cannot read another's cover. The worker uploads via the service role.
+insert into storage.buckets (id, name, public)
+values ('deliveries', 'deliveries', false)
+on conflict (id) do update set public = false;
+
+drop policy if exists deliveries_own_select on storage.objects;
+create policy deliveries_own_select on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'deliveries'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
