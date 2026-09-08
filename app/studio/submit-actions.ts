@@ -201,6 +201,22 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
   //   status/approved_at F: move past the human-accept state so the customer sees
   //                         it being made, not "waiting for us to accept". The
   //                         poller moves it to 'in_progress' on claim.
+  // If the chosen voice has been trained and rights-cleared (status 'ready' with a
+  // linked model), render in the full cascade with it. Read staff-side: the model
+  // name is not in the customer grant. No trained voice -> pipeline_voice_model
+  // stays null and the pipeline restores zero-shot from the submitted vocal.
+  let trainedVoice: string | null = null
+  if (voiceId) {
+    const { data: v } = await supabaseAdmin()
+      .from('voice_models')
+      .select('status, pipeline_voice_model')
+      .eq('id', voiceId)
+      .maybeSingle()
+    if (v?.status === 'ready' && v?.pipeline_voice_model) {
+      trainedVoice = v.pipeline_voice_model as string
+    }
+  }
+
   const nowIso = new Date().toISOString()
   await supabaseAdmin()
     .from('song_jobs')
@@ -209,6 +225,7 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
       pipeline_state: 'queued',
       status: 'approved',
       approved_at: nowIso,
+      ...(trainedVoice ? { pipeline_voice_model: trainedVoice } : {}),
       // Self-serve is always the Door 2 auto route. Door 1 (big-artist, manual)
       // jobs are created by staff and never pass through here, so they keep
       // route='manual' and are never auto-queued. Set explicitly as the marker.

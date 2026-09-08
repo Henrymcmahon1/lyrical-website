@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 /**
- * Chunk F: an entitled submit auto-queues itself. This pins the service-role
- * write that flips the job to pipeline_state='queued' (what the pipeline poller
- * claims) and past the human-accept status, alongside E's quota stamp.
+ * Chunk F + voice training: an entitled submit auto-queues, and if it picked a
+ * trained ('ready') voice the job carries that voice so the pipeline renders the
+ * full cascade; otherwise it stays null and the pipeline restores zero-shot.
  */
 
 const currentUser = vi.fn()
@@ -15,6 +15,7 @@ vi.mock('@/lib/supabase-server', () => ({
 
 const adminUpdate = vi.fn()
 const adminEq = vi.fn()
+const adminVoice = vi.fn()
 vi.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: () => ({
     from: () => ({
@@ -22,6 +23,7 @@ vi.mock('@/lib/supabase-admin', () => ({
         adminUpdate(payload)
         return { eq: (...a: unknown[]) => adminEq(...a) }
       },
+      select: () => ({ eq: () => ({ maybeSingle: () => adminVoice() }) }),
     }),
   }),
 }))
@@ -40,14 +42,7 @@ vi.mock('@/lib/song-job-email', () => ({
   jobNotificationText: () => '',
 }))
 
-const JOB = {
-  title: 'T',
-  primaryArtist: 'A',
-  sourceLanguage: 'Spanish',
-  targetLanguage: 'English',
-  voicePreference: 'let_us_decide',
-  assets: [{ kind: 'vocal', path: 'u1/j/v.flac', filename: 'v.flac', bytes: 10 }],
-}
+let JOB: Record<string, unknown>
 vi.mock('@/lib/song-job-schema', () => ({
   SongJobSchema: { safeParse: () => ({ success: true, data: JOB }) },
 }))
@@ -64,33 +59,56 @@ const { submitSongJob } = await import('@/app/studio/submit-actions')
 
 const JOB_ID = '00000000-0000-0000-0000-000000000001'
 
+function baseJob(over: Record<string, unknown> = {}) {
+  return {
+    title: 'T',
+    primaryArtist: 'A',
+    sourceLanguage: 'Spanish',
+    targetLanguage: 'English',
+    voicePreference: 'let_us_decide',
+    assets: [{ kind: 'vocal', path: 'u1/j/v.flac', filename: 'v.flac', bytes: 10 }],
+    ...over,
+  }
+}
+
+async function run() {
+  try {
+    await submitSongJob({ jobId: JOB_ID, turnstileToken: 't' })
+  } catch (e) {
+    if (!(e instanceof Redirected)) throw e
+  }
+}
+
 beforeEach(() => {
-  currentUser.mockReset()
-  serverFrom.mockReset()
-  adminUpdate.mockReset()
-  adminEq.mockReset()
+  vi.clearAllMocks()
   currentUser.mockResolvedValue({ id: 'u1', email: 'a@b.co' })
   adminEq.mockResolvedValue({ error: null })
-  // Every server-side .from(...) returns insert/select stubs that succeed.
+  adminVoice.mockResolvedValue({ data: null })
   serverFrom.mockImplementation(() => ({
     insert: async () => ({ error: null }),
-    select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
+    select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: 'voice-1' } }) }) }),
   }))
+  JOB = baseJob()
 })
 
 describe('auto-queue on an entitled submit', () => {
-  it('flips the job to pipeline_state=queued and past human-accept', async () => {
-    try {
-      await submitSongJob({ jobId: JOB_ID, turnstileToken: 't' })
-    } catch (e) {
-      if (!(e instanceof Redirected)) throw e
-    }
+  it('flips the job to queued, past human-accept, no trained voice -> zero-shot', async () => {
+    await run()
     expect(adminUpdate).toHaveBeenCalledTimes(1)
     const payload = adminUpdate.mock.calls[0][0] as Record<string, unknown>
     expect(payload.pipeline_state).toBe('queued')
     expect(payload.status).toBe('approved')
+    expect(payload.route).toBe('auto')
     expect(payload.quota_consumed_at).toBeTruthy()
-    expect(payload.approved_at).toBeTruthy()
+    expect('pipeline_voice_model' in payload).toBe(false)
     expect(adminEq).toHaveBeenCalledWith('id', JOB_ID)
+  })
+
+  it('carries the trained voice when the chosen voice is ready', async () => {
+    JOB = baseJob({ voiceId: 'voice-1', voicePreference: undefined })
+    adminVoice.mockResolvedValue({ data: { status: 'ready', pipeline_voice_model: 'artist_v1' } })
+    await run()
+    const payload = adminUpdate.mock.calls[0][0] as Record<string, unknown>
+    expect(payload.pipeline_voice_model).toBe('artist_v1')
   })
 })

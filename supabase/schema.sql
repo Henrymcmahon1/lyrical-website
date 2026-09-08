@@ -565,3 +565,14 @@ create index if not exists song_jobs_quota_consumed_idx
 -- the auto path. Staff/service only, like pipeline_* and quota_consumed_at:
 -- deliberately NOT in the customer SELECT grant, so no grant rewrite.
 alter table public.song_jobs add column if not exists route text not null default 'auto';
+
+-- == Customer voice training (link + error) ====================================
+-- Added 2026-09-08. When the team approves a voice, the training worker fine-tunes
+-- RVC + Seed-VC and banks them under a name, recorded here as pipeline_voice_model
+-- and the row moves to status='ready'. A Door 2 submit that picks a ready voice
+-- renders in the full cascade with it; without one it falls back to zero-shot.
+-- Both columns are staff/service only: deliberately NOT in the voice_models
+-- customer SELECT grant (the customer sees status, not the internal model name),
+-- so no grant rewrite is needed.
+alter table public.voice_models add column if not exists pipeline_voice_model text;
+alter table public.voice_models add column if not exists training_error text;
