@@ -148,17 +148,19 @@ Corazón partío
   })
 })
 
-describe('the delivery email, which has no player behind it', () => {
-  it('says the files are coming, and does not tell anyone to go and press play', () => {
+describe('the delivery email, now that the studio can play it', () => {
+  it('points the customer at their studio, and no longer says files come by hand', () => {
     /**
-     * There is no delivery bucket and no player in the studio: Henry's call on 2026-08-11 was
-     * status plus email, with the audio going across by hand. An email that says "listen here"
-     * pointing at a page that cannot is the `/hear` mistake one layer deeper, and this is the
-     * test that stops a later session adding the link before the player exists.
+     * Since chunk B the studio has a player, so delivery says "it is in your studio" and links to
+     * the gated `/studio` page. The old wording (files sent by hand) is gone. The one thing that
+     * did NOT change is the leak rule, guarded here and by the token/signed-URL test above: the
+     * link is the login-gated page, never a signed URL to the audio.
      */
     const text = jobDeliveredText(base)
-    expect(text).toMatch(/sending the files across/i)
-    expect(text).not.toMatch(/log in|sign in|press play|listen here|in the studio/i)
+    expect(text).toMatch(/studio/i)
+    expect(text).not.toMatch(/sending the files across/i)
+    // Still no signed URL, storage path, or file in the delivery email.
+    expect(text + jobDeliveredHtml(base)).not.toMatch(/token=|X-Amz|\/deliveries\//i)
   })
 })
 

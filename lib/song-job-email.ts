@@ -219,17 +219,14 @@ export function jobDeliveredSubject(d: SongJobEmailFields): string {
 }
 
 /**
- * Delivery says the work is done and that the files are coming SEPARATELY.
+ * Delivery says the work is done and where to hear it: the customer's own studio.
  *
- * It does not offer a link, and it does not tell anyone to go and press play, because there is
- * nowhere to press play. There is no delivery bucket, no player in the studio and no signed
- * URL that would be safe to put in an inbox anyway. Henry's call on 2026-08-11 was status plus
- * email for now, with the audio going across by hand.
- *
- * That constraint is worth writing down rather than working around. The site already promised
- * playback once on `/hear` and could not deliver it, and this is the same trap one layer
- * deeper: an email that says "listen here" pointing at a page that cannot is worse than one
- * that says a person is about to send you something.
+ * Since chunk B the studio has a player, so this points there, with a CTA to the gated `/studio`
+ * page exactly as the confirmation and acceptance emails do. What it still must never carry is a
+ * signed URL, a storage path or the file itself: email is forwarded, archived and indexed by
+ * systems nobody here controls, so the link is always to the page behind the login, never to the
+ * audio. (Before the player existed this email said the files were coming by hand; the studio is
+ * the part that changed, the leak rule is the part that did not.)
  */
 function deliveredDoc(d: SongJobEmailFields): EmailDoc {
   return {
@@ -244,8 +241,8 @@ function deliveredDoc(d: SongJobEmailFields): EmailDoc {
       {
         type: 'paragraph',
         text:
-          'We are sending the files across to you directly, so keep an eye on this thread. ' +
-          'Reply here if anything has not reached you.',
+          'It is waiting in your studio now. Sign in whenever you like and play it as many ' +
+          'times as you want.',
       },
       {
         type: 'paragraph',
@@ -253,6 +250,7 @@ function deliveredDoc(d: SongJobEmailFields): EmailDoc {
           'Nothing is released until you approve it. Have a listen, and tell us what you ' +
           'think before you decide anything.',
       },
+      { type: 'cta', label: 'Play it in your studio', href: `${SITE_URL}/studio` },
     ],
   }
 }
