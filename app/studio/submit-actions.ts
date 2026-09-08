@@ -209,6 +209,10 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
       pipeline_state: 'queued',
       status: 'approved',
       approved_at: nowIso,
+      // Self-serve is always the Door 2 auto route. Door 1 (big-artist, manual)
+      // jobs are created by staff and never pass through here, so they keep
+      // route='manual' and are never auto-queued. Set explicitly as the marker.
+      route: 'auto',
     })
     .eq('id', jobId)
 

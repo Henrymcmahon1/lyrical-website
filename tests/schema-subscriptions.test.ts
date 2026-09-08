@@ -22,6 +22,13 @@ describe('subscriptions schema', () => {
     for (const block of grantBlocks) expect(block).not.toContain('quota_consumed_at')
   })
 
+  it('adds the Door 1 route marker, staff-only and defaulting to auto', () => {
+    expect(sql).toMatch(/add column if not exists route text not null default 'auto'/)
+    const grantBlocks =
+      sql.match(/grant select \(([^)]*)\) on public\.song_jobs to anon, authenticated/g) ?? []
+    for (const block of grantBlocks) expect(block).not.toContain('route')
+  })
+
   it('uses no em dashes', () => {
     expect(sql).not.toContain('—')
   })

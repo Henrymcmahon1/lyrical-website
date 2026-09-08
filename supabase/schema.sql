@@ -555,3 +555,13 @@ grant select on public.subscriptions to authenticated;
 alter table public.song_jobs add column if not exists quota_consumed_at timestamptz;
 create index if not exists song_jobs_quota_consumed_idx
   on public.song_jobs (user_id, quota_consumed_at) where quota_consumed_at is not null;
+
+-- == Door 1 vs Door 2 routing on a job (chunk D) ================================
+-- Added 2026-09-08. 'auto' (default) = the self-serve Door 2 path: an entitled
+-- submit auto-queues and the poller renders it unattended. 'manual' = the
+-- big-artist Door 1 path: the team hand-perfects it in the dashboard and it must
+-- NEVER be auto-claimed. The poller only ever claims pipeline_state='queued', and
+-- a manual job is never queued, so this column both records the route and guards
+-- the auto path. Staff/service only, like pipeline_* and quota_consumed_at:
+-- deliberately NOT in the customer SELECT grant, so no grant rewrite.
+alter table public.song_jobs add column if not exists route text not null default 'auto';

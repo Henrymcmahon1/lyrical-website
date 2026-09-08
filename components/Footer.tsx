@@ -37,6 +37,9 @@ export function Footer() {
           <Link href="/about" className="inline-flex min-h-11 items-center hover:text-indigo">
             About
           </Link>
+          <Link href="/apply" className="inline-flex min-h-11 items-center hover:text-indigo">
+            Artist partnerships
+          </Link>
           <Link href="/contact" className="inline-flex min-h-11 items-center hover:text-indigo">
             Contact
           </Link>
