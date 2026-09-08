@@ -32,7 +32,7 @@ export function BillingPanel({ quota }: { quota: QuotaStatus }) {
   async function manage() {
     setBusy(true)
     const res = await openBillingPortal()
-    if (res.ok) window.location.href = res.url
+    if (res.ok) window.location.assign(res.url)
     else setBusy(false)
   }
 

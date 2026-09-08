@@ -50,6 +50,12 @@ export function Nav() {
 
         <div className="ml-auto flex items-center gap-4 text-sm sm:gap-7">
           <Link
+            href="/pricing"
+            className="inline-flex min-h-11 items-center hover:text-indigo"
+          >
+            Pricing
+          </Link>
+          <Link
             href="/about"
             className="inline-flex min-h-11 items-center hover:text-indigo"
           >
