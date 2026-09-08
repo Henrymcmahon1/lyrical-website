@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
+import { BillingPanel } from '@/components/BillingPanel'
 import { DeliveryPlayer } from '@/components/DeliveryPlayer'
 import { JobStatus } from '@/components/JobStatus'
 import { LyricsEditor } from '@/components/LyricsEditor'
 import { Scorecard } from '@/components/Scorecard'
+import { quotaStatus } from '@/lib/quota'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { signOut } from './actions'
 
@@ -28,6 +30,10 @@ export default async function Studio({
 }) {
   const [user, params] = await Promise.all([currentUser(), searchParams])
   if (!user) redirect('/studio/sign-in?next=/studio')
+
+  // Billing first: a returning customer wants to see how many covers they have left,
+  // or be pointed at a plan, before the song list. Counted server-side (service role).
+  const quota = await quotaStatus(user.id)
 
   const supabase = await supabaseServer()
   const { data: jobs } = await supabase
@@ -70,6 +76,10 @@ export default async function Studio({
       </div>
 
       <p className="mt-4 text-sm text-graphite/55">Signed in as {user.email}</p>
+
+      <div className="mt-8">
+        <BillingPanel quota={quota} />
+      </div>
 
       {params.submitted && (
         <p
