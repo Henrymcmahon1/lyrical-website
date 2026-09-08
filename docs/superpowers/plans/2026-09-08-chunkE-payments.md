@@ -18,7 +18,7 @@
 - **Lowercase `lyrical`** everywhere a visitor or machine reads it. Legal entity `Lyrical Global Technologies, Inc.` is the only exception (lib/terms.ts).
 - **Security model:** RLS on every customer table; customer reads via their own client, service role bypasses RLS and is server-only. A NEW column on `song_jobs` is invisible to customers until added to the column SELECT grant, and the grant must be REWRITTEN (revoke + full re-grant), never extended. Staff/service-only columns are deliberately NOT added to the customer grant (like `internal_notes`, `pipeline_*`).
 - **Fail loud:** the Stripe client throws when unconfigured (like `supabaseAdmin`). Routes catch and return a clear error; the pricing CTA is disabled when Stripe is not configured, so the site still builds and deploys dark.
-- **No secret in a `NEXT_PUBLIC_` var** (test-enforced). Checkout is server-created, so no publishable key reaches the client and no `NEXT_PUBLIC_STRIPE_*` is needed.
+- **No secret in a public env var** (test-enforced; it scans every file for the public prefix, comments and docs included). Checkout is server-created, so no publishable key reaches the client and no public Stripe env var is needed.
 - **Verify before done:** `npm test`, `npx tsc --noEmit`, `npx eslint .`, `npm run build`. Pipeline: `PYTHONUTF8=1 .venv/Scripts/python.exe -m pytest -q`.
 - **Locked answers (2026-09-08):** tiers Starter $29/3, Creator $79/12, Pro $199/40; over-quota = HARD BLOCK (no overage); quota resets on the Stripe billing anniversary; NO free cover (subscription required from the first); build against Stripe TEST mode, Henry adds live keys.
 
@@ -236,7 +236,7 @@ import Stripe from 'stripe'
  * Server-only Stripe client. NEVER import into a client component: the secret key
  * must not reach the browser. Fails loud when misconfigured rather than silently
  * dropping a payment, matching lib/supabase-admin.ts. Checkout is created
- * server-side, so there is no publishable key and no NEXT_PUBLIC_STRIPE_* var.
+ * server-side, so there is no publishable key and no public Stripe env var.
  */
 export function stripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY)

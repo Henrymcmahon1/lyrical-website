@@ -16,7 +16,9 @@ import {
   type SongJobEmailFields,
 } from '@/lib/song-job-email'
 import { pathBelongsTo } from '@/lib/song-upload'
+import { assertEntitled } from '@/lib/submit-gate'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 /**
  * Tell people a song arrived. Never throws.
@@ -80,6 +82,12 @@ export type SubmitResult = { ok: false; error: string }
 export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> {
   const user = await currentUser()
   if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
+
+  // The two-sided gate, website half: an active subscription with a cover left this
+  // period, or nothing runs. The pipeline re-checks before it spends. Checked before
+  // any work so an out-of-quota submit is refused cheaply, in front of the job row.
+  const gate = await assertEntitled(user.id)
+  if (!gate.ok) return { ok: false, error: gate.error }
 
   const input = raw as { jobId?: unknown; turnstileToken?: unknown }
   const jobId = typeof input?.jobId === 'string' ? input.jobId : ''
@@ -181,6 +189,15 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
     await supabase.from('song_jobs').delete().eq('id', jobId)
     return { ok: false, error: 'We could not save the files. Try again in a moment.' }
   }
+
+  // Consume one cover for this billing period. quota_consumed_at is staff/service
+  // only, so this is written with the service role, scoped to this exact job. This
+  // is chunk E's half; chunk F additionally sets pipeline_state='queued' here so the
+  // poller runs it with no human accept.
+  await supabaseAdmin()
+    .from('song_jobs')
+    .update({ quota_consumed_at: new Date().toISOString() })
+    .eq('id', jobId)
 
   // After the writes, and awaited rather than fired and forgotten: a serverless function that
   // returns before its promises settle is killed mid-send, and the email silently never goes.
