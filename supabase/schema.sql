@@ -1,4 +1,4 @@
--- Lyrical — enquiries table.
+-- Lyrical: enquiries table.
 -- Run this once in the Supabase SQL editor (Dashboard → SQL Editor → New query).
 -- Safe to run more than once: every statement is idempotent.
 
@@ -506,3 +506,52 @@ create policy deliveries_own_select on storage.objects
     bucket_id = 'deliveries'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- == Subscriptions (Door 2 billing) =============================================
+-- Added 2026-09-08 (chunk E). Stripe is the source of truth for billing; this
+-- table is a synced projection kept current by the signature-verified webhook
+-- (app/api/stripe-webhook). The customer reads their own row (RLS) to see their
+-- tier and period; they never write it. The webhook writes via the service role,
+-- which bypasses RLS, exactly like the pipeline delivery writes.
+create table if not exists public.subscriptions (
+  id                     uuid primary key default gen_random_uuid(),
+  created_at             timestamptz not null default now(),
+  updated_at             timestamptz not null default now(),
+  user_id                uuid not null references auth.users (id) on delete cascade,
+  stripe_customer_id     text,
+  stripe_subscription_id text unique,
+  -- 'starter' | 'creator' | 'pro'
+  tier                   text,
+  -- Stripe's status: 'active' | 'trialing' | 'past_due' | 'canceled' | ...
+  status                 text not null default 'incomplete',
+  current_period_start   timestamptz,
+  current_period_end     timestamptz
+);
+
+-- One live subscription row per user. A user resubscribing reuses their row via
+-- the webhook's upsert on user_id, so this stays one-per-user in practice.
+create unique index if not exists subscriptions_user_idx on public.subscriptions (user_id);
+
+alter table public.subscriptions enable row level security;
+
+-- Customers read their own subscription; there is deliberately NO customer insert
+-- or update policy. The webhook writes with the service role.
+drop policy if exists subscriptions_own_select on public.subscriptions;
+create policy subscriptions_own_select on public.subscriptions
+  for select using (auth.uid() = user_id);
+
+-- A plain table-level SELECT grant is fine here: there is no staff-only column on
+-- this table, unlike song_jobs. All columns are safe for the owner to read.
+grant select on public.subscriptions to authenticated;
+
+-- == Quota accounting on song_jobs ==============================================
+-- Added 2026-09-08 (chunk E). Stamped when an entitled Door 2 submission consumes
+-- one of the month's covers, so usage this billing period can be counted. Nullable
+-- so pre-existing and manual (Door 1) jobs never count against a Door 2 quota.
+--
+-- Staff/service only, exactly like pipeline_* and internal_notes: deliberately NOT
+-- added to the customer song_jobs SELECT grant, so it needs no grant rewrite. The
+-- studio billing panel counts it server-side through the service role.
+alter table public.song_jobs add column if not exists quota_consumed_at timestamptz;
+create index if not exists song_jobs_quota_consumed_idx
+  on public.song_jobs (user_id, quota_consumed_at) where quota_consumed_at is not null;
