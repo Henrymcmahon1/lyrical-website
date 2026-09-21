@@ -113,6 +113,16 @@ export const SongJobSchema = z
 
 export type SongJobInput = z.infer<typeof SongJobSchema>
 
+/**
+ * Door 2 adds the personal-use licence. An intersection rather than `.extend()`, so the
+ * refinements on `SongJobSchema` stay as they are and the manual funnel is untouched.
+ */
+export const SelfServeJobSchema = z.intersection(
+  SongJobSchema,
+  z.object({ licenceAccepted: z.literal(true, { error: 'Tick the personal-use terms before sending it.' }) }),
+)
+export type SelfServeJobInput = z.infer<typeof SelfServeJobSchema>
+
 /** The lifecycle. Nothing processes until a human moves it off `submitted`. */
 export const JOB_STATUSES = [
   'submitted',

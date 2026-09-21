@@ -7,7 +7,12 @@ import { detectLyrics, lyricsLanguageWarning } from '@/lib/lyrics-language'
 import { Turnstile } from '@/components/Turnstile'
 import { turnstileSiteKey } from '@/lib/turnstile'
 import { RightsWarranty } from '@/components/RightsWarranty'
-import { RIGHTS_TERMS_INTRO, RIGHTS_TERMS_POINTS } from '@/lib/terms'
+import {
+  LICENCE_TERMS_INTRO,
+  LICENCE_TERMS_POINTS,
+  RIGHTS_TERMS_INTRO,
+  RIGHTS_TERMS_POINTS,
+} from '@/lib/terms'
 import {
   ACCEPT_ATTRIBUTE,
   SUBMISSIONS_BUCKET,
@@ -77,6 +82,8 @@ export function SongSubmitForm({
   const [lyricsNote, setLyricsNote] = useState('')
   const [languageWarning, setLanguageWarning] = useState('')
   const [warranty, setWarranty] = useState(false)
+  // Door 2 only: the personal-use licence. Unticked by default, like the warranty.
+  const [licence, setLicence] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
 
   const siteKey = turnstileSiteKey()
@@ -169,6 +176,10 @@ export function SongSubmitForm({
       setError('Confirm you have the right to authorise this before sending it.')
       return
     }
+    if (selfServe && !licence) {
+      setError('Tick the personal-use terms before sending it.')
+      return
+    }
     if (!voiceChoice) {
       setError('Choose who sings this. Pick “Let us decide” if you are not sure.')
       return
@@ -239,6 +250,7 @@ export function SongSubmitForm({
         ? undefined
         : (voiceChoice as 'male' | 'female' | 'let_us_decide'),
       rightsWarranty: true,
+      licenceAccepted: selfServe ? (true as const) : undefined,
       turnstileToken: turnstileToken || undefined,
     }
 
@@ -650,6 +662,14 @@ Second line`}
         onChange={setWarranty}
       />
 
+      {/*
+        Door 2 only: the personal-use licence, versioned in `lib/terms.ts` and stamped on the
+        row at submit the same way the warranty is. The manual funnel never shows it.
+      */}
+      {selfServe && (
+        <RightsWarranty intro={LICENCE_TERMS_INTRO} points={LICENCE_TERMS_POINTS} checked={licence} onChange={setLicence} />
+      )}
+
       {/* Renders nothing when Turnstile is not configured, so this is inert until the keys land. */}
       <Turnstile
         siteKey={siteKey}
@@ -682,7 +702,7 @@ Second line`}
       </button>
 
       <p className="text-sm leading-relaxed text-graphite/55">
-        Nothing is made until we accept it, and nothing is released without your approval.
+        {selfServe ? 'Beta output. Personal use only.' : 'Nothing is made until we accept it, and nothing is released without your approval.'}
       </p>
     </form>
   )

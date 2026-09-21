@@ -35,8 +35,11 @@ export default async function SignIn({
     <section className="mx-auto max-w-md px-6 py-24 sm:py-28">
       <span className="font-mono text-xs tracking-[0.18em] text-graphite/45">The studio</span>
       <h1 className="mt-5 font-brand text-4xl leading-[1.1] tracking-tight text-balance">
-        Sign in to make your song multilingual.
+        Sing your favorite song in any language.
       </h1>
+      <p className="mt-4 leading-relaxed text-graphite/75">
+        Founding beta: rough edges, honest prices, two free re-rolls on every track. Sign in with your email to start.
+      </p>
 
       {notice && (
         <p role="status" className="mt-6 leading-relaxed text-graphite/75">

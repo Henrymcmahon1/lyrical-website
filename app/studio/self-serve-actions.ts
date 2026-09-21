@@ -1,9 +1,9 @@
 'use server'
 
 import { headers } from 'next/headers'
-import { SongJobSchema } from '@/lib/song-job-schema'
+import { SelfServeJobSchema } from '@/lib/song-job-schema'
 import { verifyTurnstile } from '@/lib/turnstile'
-import { RIGHTS_TERMS_VERSION } from '@/lib/terms'
+import { LICENCE_TERMS_VERSION, RIGHTS_TERMS_VERSION } from '@/lib/terms'
 import { pathBelongsTo } from '@/lib/song-upload'
 import { currentUser } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -80,7 +80,7 @@ export async function submitSelfServeJob(raw: unknown): Promise<SelfServeResult>
     return { ok: false, error: 'That did not look human. Reload the page and try again.' }
   }
 
-  const parsed = SongJobSchema.safeParse(raw)
+  const parsed = SelfServeJobSchema.safeParse(raw)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'Something in the form is not right.' }
   }
@@ -133,6 +133,7 @@ export async function submitSelfServeJob(raw: unknown): Promise<SelfServeResult>
     voice_id: voiceId,
     voice_preference: voiceId ? null : (job.voicePreference ?? null),
     rights_terms_version: RIGHTS_TERMS_VERSION,
+    licence_terms_version: LICENCE_TERMS_VERSION,
     // The automated contract: approved immediately, routed to the render worker, queued for it.
     status: 'approved',
     approved_at: now,
@@ -170,6 +171,9 @@ export async function submitSelfServeJob(raw: unknown): Promise<SelfServeResult>
       return { ok: false, error: 'We could not apply your credit. Try again in a moment.' }
     }
   }
+
+  // The first time this customer accepts the personal-use terms, stamp the profile. No-op after.
+  await admin.from('profiles').update({ licence_terms_version: LICENCE_TERMS_VERSION }).eq('id', user.id).is('licence_terms_version', null)
 
   return { ok: true, jobId }
 }

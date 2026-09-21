@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { hasAdminSession } from '@/lib/admin-session'
 import { EnquiriesTab } from './EnquiriesTab'
+import { FeedbackTab } from './FeedbackTab'
 import { SongsTab } from './SongsTab'
 import { VoicesTab } from './VoicesTab'
 import { login, logout } from './actions'
@@ -29,7 +30,7 @@ export const dynamic = 'force-dynamic'
 
 const SHELL = 'mx-auto w-full max-w-4xl px-6'
 
-type Tab = 'songs' | 'voices' | 'enquiries'
+type Tab = 'songs' | 'voices' | 'enquiries' | 'feedback'
 
 function Login({ error }: { error?: string }) {
   return (
@@ -95,7 +96,7 @@ export default async function QueuePage({
 
   // Songs is the default because it is the tab with a clock running on it.
   const tab: Tab =
-    params.tab === 'enquiries' ? 'enquiries' : params.tab === 'voices' ? 'voices' : 'songs'
+    params.tab === 'enquiries' ? 'enquiries' : params.tab === 'voices' ? 'voices' : params.tab === 'feedback' ? 'feedback' : 'songs'
   const showAll = params.show === 'all'
 
   const tabHref = (t: Tab) => `/queue?tab=${t}${showAll ? '&show=all' : ''}`
@@ -146,6 +147,15 @@ export default async function QueuePage({
           }`}
         >
           Enquiries
+        </a>
+        <a
+          href={tabHref('feedback')}
+          aria-current={tab === 'feedback' ? 'page' : undefined}
+          className={`font-brand text-xl tracking-tight ${
+            tab === 'feedback' ? 'text-indigo' : 'text-graphite/45 hover:text-indigo'
+          }`}
+        >
+          Feedback
         </a>
       </nav>
 
@@ -221,6 +231,8 @@ export default async function QueuePage({
         <SongsTab showAll={showAll} confirming={params.confirm} />
       ) : tab === 'voices' ? (
         <VoicesTab showAll={showAll} />
+      ) : tab === 'feedback' ? (
+        <FeedbackTab />
       ) : (
         <EnquiriesTab
           showAll={showAll}

@@ -53,3 +53,18 @@ export const VOICE_CONSENT_PREFACE =
   'I hold the rights to these recordings, and I have the artist’s permission to have a model of their voice built from them and used for the versions I ask for.'
 export const VOICE_CONSENT_INTRO = RIGHTS_TERMS_INTRO
 export const VOICE_CONSENT_POINTS = RIGHTS_TERMS_POINTS
+
+/**
+ * The Door-2 personal-use licence. Plain product terms for beta output, not counsel's text.
+ * Stamped on `song_jobs.licence_terms_version` at submit and copied onto every re-roll child,
+ * so a delivered file always traces to the terms it was made under. Bump on any edit.
+ */
+export const LICENCE_TERMS_VERSION = '2026-09-22'
+export const LICENCE_TERMS_INTRO = 'This is beta output for you to enjoy. By making a track you agree that:'
+export const LICENCE_TERMS_POINTS = [
+  'The track is for your personal, non-commercial use only.',
+  'You will not upload it to streaming or sales platforms, or sell it in any form.',
+  'You will not present the recording as the artist’s official release.',
+  'lyrical may embed an inaudible provenance mark in every file it delivers.',
+  'Beta output may contain errors. Your remedy is the free re-rolls that come with every track.',
+]
