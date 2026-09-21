@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { SongSubmitForm } from '@/components/SongSubmitForm'
+import { getEntitlementFor } from '@/lib/entitlement-db'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 
 /**
@@ -27,6 +28,10 @@ export default async function NewSong() {
   const user = await currentUser()
   if (!user) redirect('/studio/sign-in?next=/studio/new')
 
+  // No plan, no form. The gate that matters is inside submitSelfServeJob; this is the polite one.
+  const entitlement = await getEntitlementFor(user.id)
+  if (!entitlement.ok) redirect('/pricing?why=plan')
+
   /**
    * The customer's voices, so the form can offer them as the one that sings this song. Read with
    * the user's own client, so RLS returns only theirs. Retired voices are left out: their
@@ -46,8 +51,8 @@ export default async function NewSong() {
         Make your song multilingual.
       </h1>
       <p className="mt-6 leading-relaxed text-graphite/75">
-        Give us the recording and the language you want it in. No upfront cost, and nothing is
-        released without your approval.
+        Upload your stems, pick a language, and hear it re-sung in the same voice. Beta output.
+        Personal use only.
       </p>
 
       <div className="mt-12">
