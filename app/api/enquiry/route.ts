@@ -11,8 +11,10 @@ import {
   enquiryRecipients,
 } from '@/lib/enquiry-email'
 import { EnquirySchema, MIN_ELAPSED_MS, resolveName } from '@/lib/enquiry-schema'
+import { ARTIST_EOI_SOURCE } from '@/lib/eoi-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { clientKey, consume } from '@/lib/rate-limit'
+import { verifyTurnstile } from '@/lib/turnstile'
 
 export const runtime = 'nodejs'
 
@@ -77,6 +79,21 @@ export async function POST(request: Request) {
     return json({ error: message }, 400)
   }
   const d = parsed.data
+
+  /**
+   * Turnstile, for the artist EOI only and only on the JavaScript path (2026-09-22, Bot D).
+   * The widget cannot exist without JavaScript, so the native form post keeps the honeypot,
+   * the elapsed-time floor and the rate limit, exactly as /contact does. `verifyTurnstile`
+   * is config-gated: with no secret it passes, so nothing changes until the keys land.
+   * The token is read off the raw body because `EnquirySchema` strips unknown keys.
+   */
+  if (!isFormPost && d.source === ARTIST_EOI_SOURCE) {
+    const body = raw as { turnstile_token?: unknown } | null
+    const token = typeof body?.turnstile_token === 'string' ? body.turnstile_token : ''
+    const remoteip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    const check = await verifyTurnstile(token, { remoteip })
+    if (!check.ok) return json({ error: 'Please complete the check and send again.' }, 400)
+  }
 
   /**
    * The examples gate does not ask for a name, but the column is NOT NULL and an email
