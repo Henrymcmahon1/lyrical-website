@@ -37,3 +37,18 @@ describe('/pricing', () => {
     expect(ld.offers.map((o) => o.price)).toEqual(PLAN_IDS.map((id) => priceFor(id)))
   })
 })
+
+import Home from '@/app/page'
+import { HERO, DOOR1 } from '@/content/two-doors'
+
+describe('/ (landing)', () => {
+  it('reads as the two doors, in order', async () => {
+    const h = renderToStaticMarkup(await Home())
+    const idx = [HERO.headline, 'How it works', 'Most fans', 'Beta, honestly', DOOR1.h, 'Pick a song. Pick a language.'].map((s) => h.indexOf(s))
+    expect(idx.every((i) => i >= 0)).toBe(true)
+    expect([...idx].sort((a, b) => a - b)).toEqual(idx)
+    expect(h).toContain('href="/pricing"')
+    expect(h).toContain('href="/artists"')
+    expect(h).not.toContain('Make your song multilingual')
+  })
+})
