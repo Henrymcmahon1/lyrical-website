@@ -299,3 +299,34 @@ describe('no "beta" on a marketing page', () => {
     }
   })
 })
+
+import ArtistsPage, { metadata as artistsMeta } from '@/app/artists/page'
+
+describe('no royalty figure and no human-review claim on a public page', () => {
+  /**
+   * Henry, 2026-09-22 (second review): the 30% figure and "human in the loop" (with "human
+   * QA" and "reviewed by ear") left every public page. Both survive on the gated investor
+   * page only, which keeps its model. Rendered markup, head metadata included, for the three
+   * pages that carried them.
+   */
+  const rendered: [string, () => Promise<string>][] = [
+    ['/', async () => renderToStaticMarkup(createElement(Home))],
+    ['/pricing', async () => renderToStaticMarkup(createElement(Pricing))],
+    ['/artists', async () => renderToStaticMarkup(await ArtistsPage({ searchParams: Promise.resolve({}) }))],
+  ]
+
+  it.each(rendered)('%s never says 30%%', async (_path, render) => {
+    const html = await render()
+    expect(html).not.toContain('30%')
+    expect(html).not.toContain('30 per cent')
+  })
+
+  it.each(rendered)('%s never claims a human in the loop', async (_path, render) => {
+    const html = await render()
+    expect(html).not.toMatch(/human in the loop|human qa|human ear|by ear/i)
+  })
+
+  it('/artists metadata carries neither', () => {
+    expect(artistsMeta.description).not.toMatch(/30%|human/i)
+  })
+})

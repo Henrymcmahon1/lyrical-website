@@ -18,8 +18,8 @@ import { turnstileSiteKey } from '@/lib/turnstile'
 
 const TITLE = 'For artists: your songs in every language, in your voice'
 const DESCRIPTION =
-  'Door 1 at lyrical. 30% of net streaming receipts on the new-language masters, perpetual and exclusive, ' +
-  '$0 upfront. Lossless stems, a human in the loop, and nothing released without your approval.'
+  'Door 1 at lyrical. Your songs, released in new languages with us, in your own voice. No upfront cost, ' +
+  'streaming quality, proprietary voice models built for you, and you keep control of what is released.'
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -51,7 +51,7 @@ const STEPS = [
   },
   {
     h: 'We produce',
-    p: 'The song is re-sung in your voice in the new language over your untouched backing. A person listens before anything moves.',
+    p: 'The song is re-sung in your voice in the new language over your untouched backing. You can be as involved in this step as you like.',
   },
   {
     h: 'You approve',
@@ -63,26 +63,27 @@ const STEPS = [
   },
   {
     h: 'Royalties flow',
-    p: 'The new-language masters earn wherever they are released, and your share comes back to you on the terms above, forever.',
+    p: 'The new-language masters earn wherever they are released, and your share comes back to you for as long as they do.',
   },
 ]
 
+/**
+ * The three Door 1 benefits, in the copy deck's order and wording. Since Henry's second review
+ * on 2026-09-22 there is no human-review claim here and no royalty figure anywhere on the
+ * page: the 30% lives on the gated investor page only.
+ */
 const RECEIVES = [
   {
-    h: 'Lossless stems',
-    p: '24-bit WAV, no watermark, ready for your distributor.',
+    h: 'Streaming quality',
+    p: '24-bit WAV stems, no watermark, with a commercial license, ready for your distributor.',
   },
   {
-    h: 'A human on every version',
-    p: 'A person listens to every version by ear before it reaches you. Nothing is delivered unheard.',
-  },
-  {
-    h: 'Full commercial release rights',
-    p: 'Every new-language master carries a commercial license. Release it wherever you release your music.',
-  },
-  {
-    h: 'Your own trained voice',
+    h: 'Proprietary voice models built for you',
     p: 'Built from your stems, singing only the songs and languages you have authorized.',
+  },
+  {
+    h: 'You can be as involved in the process as you like',
+    p: 'Hear every version first and send it back, or leave the production to us and approve the release. Your call, song by song.',
   },
 ]
 
@@ -110,8 +111,8 @@ export default async function ArtistsPage({
           Your songs, in every language, in your voice.
         </h1>
         <p className="mt-8 text-lg leading-relaxed text-graphite/75">
-          30% of net streaming receipts on the new-language masters, perpetual and exclusive, $0
-          upfront. You get lossless stems and a human in the loop.
+          Your songs, released in new languages with us, in your own voice. No upfront cost. You
+          keep control of what is released.
         </p>
         <p className="mt-4 text-lg leading-relaxed text-graphite/75">
           Our first signed artist is Coffey Anderson.
@@ -119,7 +120,7 @@ export default async function ArtistsPage({
         <p className="mt-6 text-sm leading-relaxed text-graphite/55">
           What lyrical touches: the vocal, re-sung in your voice in the new language. What lyrical
           never touches: your instrumental, your melody, your release decisions. Every version is
-          authorized before it is made and reviewed by ear before it is delivered.
+          authorized before it is made.
         </p>
         <Link
           href="#eoi"
@@ -137,7 +138,7 @@ export default async function ArtistsPage({
           own voice in a new language, over your untouched instrumental, and delivered as a new
           master you can release.
         </p>
-        <ul className="mt-8 grid gap-6 sm:grid-cols-2">
+        <ul className="mt-8 grid gap-6 sm:grid-cols-3">
           {RECEIVES.map((r) => (
             <li key={r.h} className="rounded-card border border-graphite/15 p-5">
               <h3 className="font-brand text-xl">{r.h}</h3>

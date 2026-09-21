@@ -98,7 +98,7 @@ export const CAP_ROWS: { what: string; capped: string; unlocked: string }[] = [
 export const FAQ: { q: string; a: string }[] = [
   { q: 'What do I upload?', a: 'Your own songs, or songs you have the rights to, as stems: the instrumental and the lead vocal. If all you have is the full mix, upload that and we separate it.' },
   { q: 'What do I get?', a: 'One 192k MP3 of your song re-sung in the language you picked, in the same voice, over the untouched backing. It carries an inaudible provenance mark.' },
-  { q: 'Can I release it?', a: 'No. Self-serve tracks are for personal use only, not for upload to streaming or sales platforms. Artists who want release rights, lossless stems and a human ear sign through the artist door.' },
+  { q: 'Can I release it?', a: 'No. Self-serve tracks are for personal use only, not for upload to streaming or sales platforms. Artists who want release rights and streaming-quality stems sign through the artist door.' },
   { q: 'What is a re-roll?', a: 'A fresh take of the same song in the same language with a different render seed. Give a thumbs-down with a note that says what was wrong and the re-roll button appears. Two per track, free.' },
   { q: 'Will the price go up?', a: 'Not for you. Early sign-ups keep their founding price for as long as they stay. No human listens to each track before you do, which is what keeps the price where it is, and every rating you leave makes the next track better.' },
 ]

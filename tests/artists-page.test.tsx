@@ -23,16 +23,25 @@ describe('/artists', () => {
     expect(html).toContain('100,000 monthly streams, 12 songs, two languages and an 80%')
   })
 
-  it('shows the gross estimate only: no share figures, terms once as prose', async () => {
+  it('shows the gross estimate only: no share figures, no royalty figure, terms as prose', async () => {
     const html = await render()
     expect(html).not.toContain('70%')
     expect(html).not.toMatch(/\$1,920|\$1,344|\$576/)
+    // Henry, 2026-09-22 (second review): the 30% left every public page. It lives on the
+    // gated investor page only. The JSON-LD description in the head counts too.
+    expect(html).not.toContain('30%')
+    expect(metadata.description).not.toContain('30%')
     expect(html).toContain(
-      '30% of net streaming receipts on the new-language masters, perpetual and exclusive, $0',
+      'Your songs, released in new languages with us, in your own voice. No upfront cost. You keep control of what is released.',
     )
-    // Once in the visible prose. The JSON-LD description in the head is metadata, not copy.
-    const body = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '')
-    expect((body.match(/30%/g) ?? []).length).toBe(1)
+  })
+
+  it('lists exactly the three Door 1 benefits and never a human in the loop', async () => {
+    const html = await render()
+    for (const s of ['Streaming quality', 'Proprietary voice models built for you', 'You can be as involved in the process as you like']) {
+      expect(html).toContain(s)
+    }
+    expect(html).not.toMatch(/human in the loop|human qa|by ear|human on every version/i)
   })
 
   it('offers 1 to 8 languages', async () => {
@@ -45,9 +54,7 @@ describe('/artists', () => {
     const html = await render()
     expect(html).not.toContain('<table')
     expect(html).not.toMatch(/door 2|beta/i)
-    for (const s of ['Lossless stems', 'Full commercial release rights', 'Your own trained voice']) {
-      expect(html).toContain(s)
-    }
+    expect(html).toContain('24-bit WAV stems')
   })
 
   it('carries the copy-deck strings verbatim and labels the estimates', async () => {
