@@ -12,7 +12,11 @@ vi.mock('@/lib/supabase-server', () => ({
 const insert = vi.fn()
 const delEq = vi.fn().mockResolvedValue({ error: null })
 const del = vi.fn(() => ({ eq: delEq }))
-const admin = { from: () => ({ insert, delete: del }) }
+// `update().eq().is()` is the one-time profile stamp of the licence version (Bot C); it must
+// resolve, and it must not be what any assertion here keys off.
+const updateIs = vi.fn().mockResolvedValue({ error: null })
+const update = vi.fn(() => ({ eq: () => ({ is: updateIs }) }))
+const admin = { from: () => ({ insert, delete: del, update }) }
 vi.mock('@/lib/supabase-admin', () => ({ supabaseAdmin: () => admin }))
 const { submitSelfServeJob } = await import('@/app/studio/self-serve-actions')
 
@@ -26,6 +30,7 @@ const raw = {
   sourceLanguage: 'EN',
   targetLanguage: 'ES',
   rightsWarranty: true,
+  licenceAccepted: true,
   assets: [
     { kind: 'instrumental', path: `u1/${jobId}/inst.wav`, filename: 'inst.wav', bytes: 10 },
     { kind: 'vocal', path: `u1/${jobId}/vox.wav`, filename: 'vox.wav', bytes: 10 },
