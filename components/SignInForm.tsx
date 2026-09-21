@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { requestSignInLink } from '@/app/studio/sign-in/actions'
+import { requestSignInLink } from '@/app/(public)/studio/sign-in/actions'
 import { Turnstile } from '@/components/Turnstile'
 import { turnstileSiteKey } from '@/lib/turnstile'
 
@@ -17,7 +17,7 @@ import { turnstileSiteKey } from '@/lib/turnstile'
  * signing up look identical from here, which is what stops this page being used to find out
  * which labels have accounts.
  *
- * ⚠️ The link is minted and sent by `app/studio/sign-in/actions.ts`, on the server, and NOT by
+ * ⚠️ The link is minted and sent by `app/(public)/studio/sign-in/actions.ts`, on the server, and NOT by
  * `supabaseBrowser().auth.signInWithOtp` any more. The old version built the link's host from
  * `window.location.origin`, which is right on production and silently wrong everywhere else: on
  * 2026-08-11 a link requested from a dev server left running on localhost went out pointing at

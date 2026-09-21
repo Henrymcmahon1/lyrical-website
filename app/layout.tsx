@@ -4,6 +4,7 @@ import { fraunces, archivo } from '@/lib/fonts'
 import { Nav } from '@/components/Nav'
 import { Footer } from '@/components/Footer'
 import { SmoothScroll } from '@/components/SmoothScroll'
+import { SiteChrome } from '@/components/SiteChrome'
 import './globals.css'
 import { SITE_DESCRIPTION as DESCRIPTION, SITE_URL as SITE } from '@/lib/site'
 import { ldJson, organizationLd, websiteLd } from '@/lib/structured-data'
@@ -99,11 +100,14 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <Nav />
-        <main id="main" className="flex-1">
+        {/*
+          The Nav and Footer are the public site's frame. The signed-in studio draws its own
+          (app/studio/layout.tsx), so SiteChrome drops them on those routes; every other page,
+          including /studio/sign-in, gets them exactly as before. See lib/studio-shell.ts.
+        */}
+        <SiteChrome nav={<Nav />} footer={<Footer />}>
           {children}
-        </main>
-        <Footer />
+        </SiteChrome>
         {/*
           Vercel Web Analytics. Cookieless and IP-anonymising, so it needs no consent banner,
           which matters on a page whose whole argument is that it handles other people's
