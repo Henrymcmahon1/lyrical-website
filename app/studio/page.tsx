@@ -17,6 +17,13 @@ import { currentUser, supabaseServer } from '@/lib/supabase-server'
  * so the select lists are explicit and never `*`. A child's `pipeline_error` is service-role
  * only; the closed-window copy keys off `status='rejected'` on a child instead.
  *
+ * A rejected ORIGINAL is one of two things. `route` is not customer-readable either, so the
+ * page tells them apart by `licence_terms_version`: a self-serve job carries it (the customer
+ * agreed the licence at submit), a manual-funnel job does not. Self-serve and rejected means
+ * the render failed at our end (the worker sets `rejected`, clears `quota_consumed_at` and
+ * refunds a credit), so it reads "Not made" and says it did not count. Manual and rejected
+ * keeps the funnel's declined wording from JobStatus.
+ *
  * Drawn in the dashboard's panel language (components/studio/ui.tsx): the plan is a row of
  * StatChips, each song a Panel with its takes nested as inner cards. Sign out lives in the
  * shell's rail (app/studio/layout.tsx), so it is not repeated here. Plan names come from
@@ -33,6 +40,7 @@ type Feedback = { job_id: string; rating: 'up' | 'down'; note: string | null; ta
 
 const LICENCE_LINE = 'Personal use only. Not for release or sale. lyrical may carry an inaudible provenance mark.'
 const REROLL_CLOSED = 'The re-roll window for this song has closed. Make it again to start fresh.'
+const NOT_MADE = 'We could not make this one. It has not counted against your tracks. Make it again to start fresh.'
 const OUT_OF_TRACKS = 'You are out of tracks for this period. Upgrade, buy a Single, or wait for it to renew.'
 const EMPTY = 'Nothing here yet. Pick a plan and make your first track.'
 const HEARTBEAT_STALE_MS = 10 * 60 * 1000
@@ -65,10 +73,13 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     ? new Date(entitlement.renewsAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
     : null
 
+  /** A self-serve original that failed at our end: not a child, and it carries the licence version. */
+  const notMade = (j: Job) => j.status === 'rejected' && !j.parent_job_id && j.reroll_index === 0 && !!j.licence_terms_version
+
   const take = (j: Job, left: number, n?: number) => (
     <div key={j.id} className={n ? 'mt-4 rounded-card border border-dark-ink/10 bg-dark-ink/3 p-4' : ''}>
       {n ? <span className={eyebrow}>Take {n}</span> : null}
-      <div className={n ? 'mt-3' : ''}><JobStatus status={j.status} /></div>
+      <div className={n ? 'mt-3' : ''}><JobStatus status={j.status} rejectedAs={notMade(j) ? 'not-made' : 'declined'} /></div>
       {j.status === 'delivered' && (
         <>
           <CoverPlayer jobId={j.id} />
@@ -77,6 +88,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
         </>
       )}
       {n && j.status === 'rejected' ? <p className="mt-3 font-product text-sm text-dark-ink/70">{REROLL_CLOSED}</p> : null}
+      {notMade(j) ? <p className="mt-3 font-product text-sm text-dark-ink/70">{NOT_MADE}</p> : null}
     </div>
   )
 

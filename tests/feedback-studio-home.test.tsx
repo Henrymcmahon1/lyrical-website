@@ -66,5 +66,24 @@ describe('studio home', () => {
     const h = await render()
     expect(h).toContain('The re-roll window for this song has closed.')
     expect(h).toContain('Renders are running')
+    expect(h).not.toContain('We could not make this one.')
+  })
+  it('a rejected self-serve original reads "Not made" and says it did not count, with no player and no bar', async () => {
+    // Self-serve = carries licence_terms_version (route is not customer-readable). Original = no parent.
+    tables.song_jobs = [job({ status: 'rejected' })]
+    const h = await render()
+    expect(h).toContain('Not made')
+    expect(h).toContain('We could not make this one. It has not counted against your tracks. Make it again to start fresh.')
+    expect(h).not.toContain('Not taken on')
+    expect(h).not.toContain('data-player="j1"')
+    expect(h).not.toContain('data-bar="j1"')
+    expect(h).not.toContain('The re-roll window for this song has closed.')
+  })
+  it('a rejected manual-funnel original (no licence version) keeps the declined wording', async () => {
+    tables.song_jobs = [job({ status: 'rejected', licence_terms_version: null })]
+    const h = await render()
+    expect(h).toContain('Not taken on this time.')
+    expect(h).not.toContain('Not made')
+    expect(h).not.toContain('We could not make this one.')
   })
 })
