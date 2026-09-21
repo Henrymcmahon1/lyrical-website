@@ -84,7 +84,8 @@ describe('POST /artists/eoi (the no-JS path)', () => {
   })
 
   it('redirects to the error state on an invalid submission or a filled honeypot, writing nothing', async () => {
-    for (const bad of [{ email: 'nope' }, { website: 'http://spam.example' }]) {
+    const bads: Record<string, string>[] = [{ email: 'nope' }, { website: 'http://spam.example' }]
+    for (const bad of bads) {
       const res = await formPost(bad)
       expect(res.status).toBe(303)
       expect(res.headers.get('location')).toBe('http://localhost:3000/artists?eoi=error#eoi')
