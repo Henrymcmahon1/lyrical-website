@@ -12,7 +12,7 @@ vi.mock('@/app/studio/self-serve-actions', () => ({ submitSelfServeJob: vi.fn() 
 const { SongSubmitForm } = await import('@/components/SongSubmitForm')
 
 const asset = (kind: 'instrumental' | 'vocal') => ({ kind, path: `u/j/${kind}.wav`, filename: `${kind}.wav`, bytes: 1000 })
-const base = { title: 'T', primaryArtist: 'A', sourceLanguage: 'EN', targetLanguage: 'ES', rightsWarranty: true as const, assets: [asset('instrumental'), asset('vocal')] }
+const base = { title: 'T', primaryArtist: 'A', sourceLanguage: 'EN', targetLanguage: 'ES', rightsWarranty: true as const, lyrics: 'Ella es callaíta', assets: [asset('instrumental'), asset('vocal')] }
 
 describe('the licence gate', () => {
   it('self-serve requires licenceAccepted: true; the manual schema is untouched', () => {

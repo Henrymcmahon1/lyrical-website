@@ -117,9 +117,21 @@ export type SongJobInput = z.infer<typeof SongJobSchema>
  * Door 2 adds the personal-use licence. An intersection rather than `.extend()`, so the
  * refinements on `SongJobSchema` stay as they are and the manual funnel is untouched.
  */
+export const LYRICS_REQUIRED_MESSAGE =
+  'Paste the lyrics, in the language they are sung in. The automated studio builds the translation from them.'
+
 export const SelfServeJobSchema = z.intersection(
   SongJobSchema,
-  z.object({ licenceAccepted: z.literal(true, { error: 'Tick the personal-use terms before sending it.' }) }),
+  z.object({
+    licenceAccepted: z.literal(true, { error: 'Tick the personal-use terms before sending it.' }),
+    // The automated pipeline fails loud without a source lyric sheet (the render worker
+    // refuses the job), so the self-serve door requires one up front. The manual funnel
+    // keeps lyrics optional: a human can chase them.
+    lyrics: z
+      .string({ error: LYRICS_REQUIRED_MESSAGE })
+      .max(MAX_LYRICS_CHARS)
+      .refine((text) => text.trim().length > 0, { error: LYRICS_REQUIRED_MESSAGE }),
+  }),
 )
 export type SelfServeJobInput = z.infer<typeof SelfServeJobSchema>
 
