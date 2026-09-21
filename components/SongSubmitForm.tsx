@@ -26,6 +26,7 @@ import {
 import type { AssetInput, AssetKind } from '@/lib/song-job-schema'
 import { supabaseBrowser } from '@/lib/supabase-client'
 import { submitSongJob } from '@/app/studio/submit-actions'
+import { submitSelfServeJob } from '@/app/studio/self-serve-actions'
 
 /**
  * The submission form.
@@ -50,7 +51,15 @@ type Stage = 'idle' | 'uploading' | 'saving' | 'error'
 /** A voice the customer can pick as the one that sings this song. */
 export type VoiceOption = { id: string; artist_name: string; status: string }
 
-export function SongSubmitForm({ voices = [] }: { voices?: VoiceOption[] }) {
+export function SongSubmitForm({
+  voices = [],
+  selfServe = false,
+}: {
+  voices?: VoiceOption[]
+  // When true, submit through the AUTOMATED path (submitSelfServeJob): the job is queued for
+  // the render worker instead of the manual /queue funnel. Default false keeps the manual flow.
+  selfServe?: boolean
+}) {
   const [title, setTitle] = useState('')
   const [primaryArtist, setPrimaryArtist] = useState('')
   // Either a trained voice's UUID, or one of 'male' | 'female' | 'let_us_decide'. Empty until
@@ -213,7 +222,7 @@ export function SongSubmitForm({ voices = [] }: { voices?: VoiceOption[] }) {
 
     setStage('saving')
     setProgress('')
-    const result = await submitSongJob({
+    const payload = {
       jobId,
       title,
       primaryArtist,
@@ -231,9 +240,23 @@ export function SongSubmitForm({ voices = [] }: { voices?: VoiceOption[] }) {
         : (voiceChoice as 'male' | 'female' | 'let_us_decide'),
       rightsWarranty: true,
       turnstileToken: turnstileToken || undefined,
-    })
+    }
 
-    // A successful action redirects, so anything returned here is a failure.
+    if (selfServe) {
+      // Automated path: on success the job is queued for the render worker. Go to the library
+      // so the customer watches it move to Delivered.
+      const result = await submitSelfServeJob(payload)
+      if (result.ok) {
+        window.location.assign('/studio?submitted=1')
+        return
+      }
+      setStage('error')
+      setError(result.error)
+      return
+    }
+
+    // Manual path: a successful action redirects server-side, so a returned value is a failure.
+    const result = await submitSongJob(payload)
     if (result && !result.ok) {
       setStage('error')
       setError(result.error)

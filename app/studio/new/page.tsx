@@ -51,7 +51,9 @@ export default async function NewSong() {
       </p>
 
       <div className="mt-12">
-        <SongSubmitForm voices={voices} />
+        {/* v2: the automated self-serve path. Queues the job for the render worker rather than
+            the manual /queue funnel. */}
+        <SongSubmitForm voices={voices} selfServe />
       </div>
     </section>
   )

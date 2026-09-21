@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { JobStatus } from '@/components/JobStatus'
 import { LyricsEditor } from '@/components/LyricsEditor'
 import { Scorecard } from '@/components/Scorecard'
+import { CoverPlayer } from '@/components/CoverPlayer'
+import { StudioAutoRefresh } from '@/components/StudioAutoRefresh'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { signOut } from './actions'
 
@@ -64,7 +66,8 @@ export default async function Studio({
           role="status"
           className="mt-8 rounded-card border-l-[3px] border-indigo bg-indigo/5 px-5 py-4 leading-relaxed"
         >
-          That is with us. We will confirm we can take it, and nothing is made until we do.
+          That is with us and we are making it now. It will appear below and start playing here
+          the moment it is ready.
         </p>
       )}
 
@@ -113,6 +116,11 @@ export default async function Studio({
         </p>
       ) : (
         <ul className="mt-12 flex flex-col gap-5">
+          {/* Keep the list live while anything is still being made, so a self-serve job walks
+              from queued to delivered on its own. */}
+          <StudioAutoRefresh
+            active={(jobs ?? []).some((j) => j.status !== 'delivered' && j.status !== 'rejected')}
+          />
           {jobs.map((j) => (
             <li key={j.id} className="rounded-card border border-graphite/15 p-6">
               <span className="font-brand text-xl tracking-tight">{j.title}</span>
@@ -122,6 +130,9 @@ export default async function Studio({
               <div className="mt-6">
                 <JobStatus status={j.status} />
               </div>
+
+              {/* A finished cover is playable and downloadable right here. */}
+              {j.status === 'delivered' && <CoverPlayer jobId={j.id} />}
 
               {/*
                 Editable only while the job is still waiting on us. The check here is the UI
