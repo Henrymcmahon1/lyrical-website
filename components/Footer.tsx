@@ -31,8 +31,9 @@ export function Footer() {
           <Link href="/studio" className="inline-flex min-h-11 items-center hover:text-indigo">
             Make it multilingual
           </Link>
-          <Link href="/pricing" className="inline-flex min-h-11 items-center hover:text-indigo">Pricing</Link>
-          <Link href="/artists" className="inline-flex min-h-11 items-center hover:text-indigo">For artists</Link>
+          {/* One link to the two doors, matching the nav since 2026-09-22. /pricing and /artists
+              are reached from the doors section only. */}
+          <Link href="/#doors" className="inline-flex min-h-11 items-center hover:text-indigo">Get started</Link>
           <Link href="/hear" className="inline-flex min-h-11 items-center hover:text-indigo">
             Languages
           </Link>
