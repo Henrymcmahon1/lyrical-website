@@ -450,3 +450,140 @@ grant select (
 -- right direction for a record they should not be able to alter or need to read.
 alter table public.song_jobs add column if not exists rights_terms_version text;
 alter table public.voice_models add column if not exists consent_terms_version text;
+
+-- ── v2 two doors (2026-09-22) ────────────────────────────────────────────────
+-- Applied to the live project on 2026-09-22 via the SQL editor, as three files in
+-- supabase/migrations/. Repeated here so this file still builds a project from scratch.
+-- Two tables this file never had (they were created in the dashboard) are declared first,
+-- in the shape the live database has today.
+
+create table if not exists public.subscriptions (
+  id                     uuid primary key default gen_random_uuid(),
+  created_at             timestamptz not null default now(),
+  updated_at             timestamptz not null default now(),
+  user_id                uuid not null references auth.users (id) on delete cascade,
+  stripe_customer_id     text,
+  stripe_subscription_id text,
+  tier                   text not null,
+  status                 text not null,
+  current_period_start   timestamptz,
+  current_period_end     timestamptz
+);
+alter table public.subscriptions enable row level security;
+drop policy if exists subscriptions_self_select on public.subscriptions;
+create policy subscriptions_self_select on public.subscriptions for select using (auth.uid() = user_id);
+
+create table if not exists public.song_job_deliveries (
+  id         uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  job_id     uuid not null references public.song_jobs (id) on delete cascade,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  kind       text not null,
+  path       text not null,
+  filename   text not null,
+  bytes      bigint not null
+);
+alter table public.song_job_deliveries enable row level security;
+drop policy if exists song_job_deliveries_self_select on public.song_job_deliveries;
+create policy song_job_deliveries_self_select on public.song_job_deliveries for select using (auth.uid() = user_id);
+
+-- 001: plans and credits (v2 two doors). Apply via the Supabase SQL editor.
+-- Spec: docs/superpowers/specs/2026-09-22-two-doors-v2-design.md section 3.
+
+-- Plans: subscriptions carry 'fan' | 'superfan'. 'single' is not a subscription, it is a credit.
+-- The old values stay tolerated by the check until the two test rows are migrated just below.
+alter table public.subscriptions drop constraint if exists subscriptions_tier_check;
+alter table public.subscriptions add constraint subscriptions_tier_check
+  check (tier in ('fan','superfan','starter','creator','pro'));
+update public.subscriptions set tier = 'superfan' where tier in ('pro','creator');
+update public.subscriptions set tier = 'fan' where tier = 'starter';
+
+-- One user, one subscription row: the Stripe webhook upserts on user_id.
+create unique index if not exists subscriptions_user_id_key on public.subscriptions (user_id);
+
+alter table public.profiles add column if not exists stripe_customer_id text unique;
+alter table public.profiles add column if not exists licence_terms_version text;
+
+-- Credits ledger. +1 for a Single purchase, -1 when a track consumes it, +1 refund or grant.
+-- Only the service role writes here; customers may read their own rows.
+create table if not exists public.song_credits (
+  id              uuid primary key default gen_random_uuid(),
+  created_at      timestamptz not null default now(),
+  user_id         uuid not null references auth.users (id) on delete cascade,
+  delta           integer not null,
+  reason          text not null check (reason in ('purchase_single','consume','refund','grant')),
+  job_id          uuid references public.song_jobs (id) on delete set null,
+  stripe_event_id text unique
+);
+create index if not exists song_credits_user_idx on public.song_credits (user_id, created_at desc);
+alter table public.song_credits enable row level security;
+drop policy if exists song_credits_self_select on public.song_credits;
+create policy song_credits_self_select on public.song_credits for select using (auth.uid() = user_id);
+
+-- Every Stripe event id we have seen, so a redelivered webhook is a no-op.
+create table if not exists public.stripe_events (
+  id           text primary key,
+  type         text not null,
+  received_at  timestamptz not null default now(),
+  processed_at timestamptz
+);
+alter table public.stripe_events enable row level security;
+
+-- 002: feedback, re-rolls, licence version, delivery profile, purge stamp, watermark id.
+-- Spec: docs/superpowers/specs/2026-09-22-two-doors-v2-design.md section 3.
+
+-- One rating per job per customer. A thumbs-down must explain itself: 20 characters is the
+-- floor the database enforces, the UI asks for much more.
+create table if not exists public.job_feedback (
+  id         uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  job_id     uuid not null references public.song_jobs (id) on delete cascade,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  rating     text not null check (rating in ('up','down')),
+  note       text,
+  tags       text[] not null default '{}',
+  constraint job_feedback_down_needs_note
+    check (rating <> 'down' or length(btrim(coalesce(note,''))) >= 20),
+  unique (job_id, user_id)
+);
+create index if not exists job_feedback_created_idx on public.job_feedback (created_at desc);
+alter table public.job_feedback enable row level security;
+drop policy if exists job_feedback_self_select on public.job_feedback;
+create policy job_feedback_self_select on public.job_feedback for select using (auth.uid() = user_id);
+drop policy if exists job_feedback_self_insert on public.job_feedback;
+create policy job_feedback_self_insert on public.job_feedback for insert with check (auth.uid() = user_id);
+drop policy if exists job_feedback_self_update on public.job_feedback;
+create policy job_feedback_self_update on public.job_feedback for update using (auth.uid() = user_id);
+
+-- Re-rolls are child jobs of the original (parent_job_id always points at the original).
+alter table public.song_jobs add column if not exists parent_job_id uuid references public.song_jobs (id) on delete set null;
+alter table public.song_jobs add column if not exists reroll_index smallint not null default 0;
+alter table public.song_jobs add column if not exists seed integer;
+alter table public.song_jobs add column if not exists licence_terms_version text;
+alter table public.song_jobs add column if not exists delivery_profile text not null default 'door2';
+alter table public.song_jobs drop constraint if exists song_jobs_delivery_profile_check;
+alter table public.song_jobs add constraint song_jobs_delivery_profile_check
+  check (delivery_profile in ('door2','door1'));
+create index if not exists song_jobs_parent_idx on public.song_jobs (parent_job_id);
+
+-- song_jobs carries a COLUMN grant (see schema.sql). New customer-readable columns must be
+-- added to it explicitly; seed and pipeline_error stay service-role only.
+grant select (parent_job_id, reroll_index, licence_terms_version, delivery_profile)
+  on public.song_jobs to anon, authenticated;
+
+-- Set when the source stems are deleted from Storage after delivery (the render PC keeps a copy).
+alter table public.song_job_assets add column if not exists purged_at timestamptz;
+-- The 16-bit AudioSeal message embedded in a Door-2 delivery.
+alter table public.song_job_deliveries add column if not exists watermark_id integer;
+
+-- 003: render-worker heartbeat, upserted by the OptiPlex poller every loop.
+-- The studio reads it to say whether renders are running. Anyone may read; only the
+-- service role writes.
+create table if not exists public.worker_heartbeat (
+  worker   text primary key,
+  seen_at  timestamptz not null default now(),
+  version  text
+);
+alter table public.worker_heartbeat enable row level security;
+drop policy if exists worker_heartbeat_read on public.worker_heartbeat;
+create policy worker_heartbeat_read on public.worker_heartbeat for select using (true);
