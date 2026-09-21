@@ -216,15 +216,22 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { Nav } from '@/components/Nav'
 import { Footer } from '@/components/Footer'
 
-describe('nav and footer carry the two doors', () => {
-  it('nav is Home, Pricing, For artists, Studio in that order', () => {
+describe('nav and footer point at the two doors', () => {
+  /**
+   * Henry, 2026-09-22 (second review): one "Get started" link to the doors section replaces
+   * "Pricing" and "For artists" in both the nav and the footer. /pricing and /artists stay
+   * live and in the sitemap, reached from the doors section only.
+   */
+  it('nav is Home, Get started, Studio in that order', () => {
     const html = renderToStaticMarkup(createElement(Nav))
-    expect([...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(['/', '/', '/pricing', '/artists', '/studio'])
-    expect(html).not.toContain('Get started')
+    expect([...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(['/', '/', '/#doors', '/studio'])
+    expect(html).toContain('Get started')
+    for (const s of ['/pricing', '/artists', 'Pricing', 'For artists']) expect(html).not.toContain(s)
   })
-  it('footer adds Pricing and For artists and keeps the rest', () => {
+  it('footer carries Get started and keeps the rest, without Pricing or For artists', () => {
     const html = renderToStaticMarkup(createElement(Footer))
-    for (const h of ['/pricing', '/artists', '/studio', '/hear', '/about', '/contact']) expect(html).toContain(`href="${h}"`)
+    for (const h of ['/#doors', '/studio', '/hear', '/about', '/contact']) expect(html).toContain(`href="${h}"`)
+    for (const s of ['href="/pricing"', 'href="/artists"', '>Pricing<', 'For artists']) expect(html).not.toContain(s)
   })
 })
 
@@ -290,5 +297,36 @@ describe('no "beta" on a marketing page', () => {
     for (const Page of [Home, Pricing]) {
       expect(renderToStaticMarkup(createElement(Page))).not.toMatch(/\bfans?\b/i)
     }
+  })
+})
+
+import ArtistsPage, { metadata as artistsMeta } from '@/app/artists/page'
+
+describe('no royalty figure and no human-review claim on a public page', () => {
+  /**
+   * Henry, 2026-09-22 (second review): the 30% figure and "human in the loop" (with "human
+   * QA" and "reviewed by ear") left every public page. Both survive on the gated investor
+   * page only, which keeps its model. Rendered markup, head metadata included, for the three
+   * pages that carried them.
+   */
+  const rendered: [string, () => Promise<string>][] = [
+    ['/', async () => renderToStaticMarkup(createElement(Home))],
+    ['/pricing', async () => renderToStaticMarkup(createElement(Pricing))],
+    ['/artists', async () => renderToStaticMarkup(await ArtistsPage({ searchParams: Promise.resolve({}) }))],
+  ]
+
+  it.each(rendered)('%s never says 30%%', async (_path, render) => {
+    const html = await render()
+    expect(html).not.toContain('30%')
+    expect(html).not.toContain('30 per cent')
+  })
+
+  it.each(rendered)('%s never claims a human in the loop', async (_path, render) => {
+    const html = await render()
+    expect(html).not.toMatch(/human in the loop|human qa|human ear|by ear/i)
+  })
+
+  it('/artists metadata carries neither', () => {
+    expect(artistsMeta.description).not.toMatch(/30%|human/i)
   })
 })

@@ -42,32 +42,45 @@ export const HONEST = {
 export const DOOR1 = {
   label: 'For artists',
   h: 'Your songs, in every language, in your voice.', // (deck)
-  p: '30% of net streaming receipts on the new-language masters, perpetual and exclusive, $0 upfront. You get lossless stems and a human in the loop.', // (deck)
+  /**
+   * The terms sentence. Since Henry's second review on 2026-09-22 it carries no royalty
+   * figure: the 30% lives on the gated investor page only. Public copy says what the deal
+   * is shaped like, not what it pays.
+   */
+  p: 'Your songs, released in new languages with us, in your own voice. No upfront cost. You keep control of what is released.', // (deck)
   precedent: 'Our first signed artist is Coffey Anderson.', // (deck)
   cta: 'Read the terms',
+  /** The three Door 1 benefits, everywhere they are listed. Never "human in the loop". (deck) */
+  benefits: ['Streaming quality', 'Proprietary voice models built for you', 'You can be as involved in the process as you like'],
 }
 
 export const CLOSE = { h: 'Pick a song. Pick a language.', p: 'No free tier, no commitment past the track in front of you.', cta: 'See plans' }
 
-/** The two doors on the home page (`S09cDoors`), between the turn and the ask. */
+/**
+ * The two doors on the home page (`S09cDoors`), the closing section since 2026-09-22.
+ *
+ * Each door says who it is for in one sentence, because Henry watched the two get confused.
+ * Door 2 is for MUSICIANS making tracks from their own songs, or songs they have the rights
+ * to. Door 1 is for ARTISTS releasing a catalog with us. The enquiry link ("Tell us about it",
+ * to /contact) lives in the Door 1 half now that `S10Start` is off the home page. (deck)
+ */
 export const DOORS = {
   h: 'Two ways in.',
   doors: [
     {
-      label: 'For creators',
-      h: 'Make a track in any language, in the same voice.',
-      p: 'Your own songs, or songs you have the rights to. Upload one, pick a language, and hear it re-sung by the same voice over the untouched backing. Yours to keep, for personal use.',
-      points: ['Nine languages', 'Two free re-rolls on every track', 'One MP3 download per track'],
-      cta: 'See plans',
+      h: 'For musicians',
+      p: 'Make tracks from your own songs, or songs you have the rights to, in any language, in the same voice.',
+      points: [] as string[],
+      cta: 'Make a track',
       href: '/pricing',
     },
     {
-      label: 'For artists',
-      h: DOOR1.h,
-      p: DOOR1.p,
-      points: ['30% of net streaming receipts, perpetual', '$0 upfront', 'Lossless stems', 'A human in the loop'],
-      cta: 'For artists',
+      h: 'For artists',
+      p: 'Release your catalog in new languages with us, in your own voice.',
+      points: DOOR1.benefits,
+      cta: 'Sign with us',
       href: '/artists',
+      secondary: { cta: 'Tell us about it', href: '/contact' },
     },
   ],
 }
@@ -85,7 +98,7 @@ export const CAP_ROWS: { what: string; capped: string; unlocked: string }[] = [
 export const FAQ: { q: string; a: string }[] = [
   { q: 'What do I upload?', a: 'Your own songs, or songs you have the rights to, as stems: the instrumental and the lead vocal. If all you have is the full mix, upload that and we separate it.' },
   { q: 'What do I get?', a: 'One 192k MP3 of your song re-sung in the language you picked, in the same voice, over the untouched backing. It carries an inaudible provenance mark.' },
-  { q: 'Can I release it?', a: 'No. Self-serve tracks are for personal use only, not for upload to streaming or sales platforms. Artists who want release rights, lossless stems and a human ear sign through the artist door.' },
+  { q: 'Can I release it?', a: 'No. Self-serve tracks are for personal use only, not for upload to streaming or sales platforms. Artists who want release rights and streaming-quality stems sign through the artist door.' },
   { q: 'What is a re-roll?', a: 'A fresh take of the same song in the same language with a different render seed. Give a thumbs-down with a note that says what was wrong and the re-roll button appears. Two per track, free.' },
   { q: 'Will the price go up?', a: 'Not for you. Early sign-ups keep their founding price for as long as they stay. No human listens to each track before you do, which is what keeps the price where it is, and every rating you leave makes the next track better.' },
 ]
