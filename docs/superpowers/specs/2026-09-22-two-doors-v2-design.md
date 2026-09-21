@@ -280,6 +280,8 @@ Order: Bot 0 alone → A, B, C, D, F in parallel → merge in the order A, C, B,
 
 - **2026-09-22 (second review, Henry):** nav becomes Home / Get started (/#doors) / Studio, "Pricing" and "For artists" links removed (pages stay, reached from the doors section); the home closing section S10Start goes and the two-doors section becomes the dark closer; Door 2 audience is "musicians", Door 1 is "artists", each door says who it is for; the enquiry CTA ("Tell us about it") lives in the Door 1 half; the 30% figure is removed from every public page (the gated investor page keeps it); "human in the loop" is removed, Door 1 benefits are streaming quality, proprietary voice models, and being involved in the process.
 
+- **2026-09-22 (fixes after the second review):** failed self-serve jobs are visible and refunded (pipeline #5, website #12); ID3 wording; pricing FAQ no longer says nobody listens; the poller service task is installed on the render PC. Coffey Anderson "Mr Red White and Blue" EN to ES rendered through the dashboard's service layer with the new `vocal_denoise=false` knob (pipeline #4), scorecard overall 0.81.
+
 ## 14. Open items Henry owns
 
 1. Stripe test keys + webhook secret + price ids into the omega Vercel env (after Bot A's setup script prints the ids). Also RESEND_API_KEY + ENQUIRY_* so enquiry and EOI emails send from omega (rows save without them).
@@ -287,4 +289,4 @@ Order: Bot 0 alone → A, B, C, D, F in parallel → merge in the order A, C, B,
 3. DONE: `INVESTOR_PASSWORD` = lyrical on omega (also ADMIN_PASSWORD, GATE_SECRET).
 4. Supabase plan confirmation (Bot E reports what the dashboard says).
 5. A "go" on the backfill purge dry-run list, when there is one.
-6. Open from the proof run: a job that fails at our end (any `pipeline_state='failed'` other than `stems_expired`) still reads "Being made" to the customer, forever; decide whether the poller should also set `status='rejected'` plus a customer-visible reason, and whether a failed track should refund the quota. The ID3 comment on delivered MP3s still says "lyrical beta"; change to "lyrical" when the pipeline next ships.
+6. DONE 22 Sep: a job that fails at our end now gets `status='rejected'`, `quota_consumed_at=null` and a credit refund when credit-funded (lyrical-studio #5); the studio shows "Not made" with the not-counted line (website #12). ID3 comment reads "lyrical". Poller runs as the installed service task (restart on failure, log rotation; deploy/render-pc.md).
