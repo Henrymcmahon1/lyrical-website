@@ -10,8 +10,8 @@ Rules: lowercase `lyrical`. US spelling. No em dashes. Never "AI-generated". Say
 - Secondary CTA: For artists
 - Beta line (everywhere a track is shown): Beta output. Personal use only.
 - Licence line (delivery card): Personal use only. Not for release or sale. lyrical may carry an inaudible provenance mark.
-- Plan names: Single, Fan, Superfan. Badge on Fan: Most fans.
-- Plan blurbs: Single: Try it, or a one-off gift. Fan: The casual repeat user. Superfan: Power user.
+- Plan names: Single, Plus, Pro (ids stay single/fan/superfan). Badge on Plus: Most popular. Never the word "fan" in copy: it reads as unauthorised material.
+- Plan blurbs: Single: Try it, or a one-off gift. Plus: A few tracks a month. Pro: Making tracks every week.
 - Re-roll line: Every track comes with 2 free re-rolls.
 - Founding line: Founding beta prices. Sign up now and keep them for life.
 - Anchor line: A human singer costs $2,000 a language. We never charge that for automated output.

@@ -24,7 +24,8 @@ describe('plans', () => {
     expect(planById('starter')).toBeNull()
     expect(planById(null)).toBeNull()
     expect(planById('toString')).toBeNull()
-    expect(planById('fan')?.name).toBe('Fan')
+    expect(planById('fan')?.name).toBe('Plus')
+    expect(planById('superfan')?.name).toBe('Pro')
   })
 
   it('lists ids in display order and the subscriptions separately', () => {

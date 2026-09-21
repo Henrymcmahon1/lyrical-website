@@ -43,7 +43,7 @@ beforeEach(() => {
 describe('studio home', () => {
   it('shows the plan card with tracks left and the billing link, or the empty state with the deck copy', async () => {
     let h = await render()
-    expect(h).toContain('Fan'); expect(h).toContain('3 tracks left'); expect(h).toContain('href="/studio/billing"')
+    expect(h).toContain('Plus'); expect(h).toContain('3 tracks left'); expect(h).toContain('href="/studio/billing"')
     entitlement.mockResolvedValue({ ok: false, reason: 'no_plan' })
     h = await render()
     expect(h).toContain('No plan yet')

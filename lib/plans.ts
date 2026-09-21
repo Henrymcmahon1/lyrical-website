@@ -34,21 +34,21 @@ export const PLANS: Record<PlanId, Plan> = {
   },
   fan: {
     id: 'fan',
-    name: 'Fan',
+    name: 'Plus',
     kind: 'subscription',
     tracks: 5,
     foundingUsd: 19,
     standardUsd: 29,
-    blurb: 'The casual repeat user',
+    blurb: 'A few tracks a month',
   },
   superfan: {
     id: 'superfan',
-    name: 'Superfan',
+    name: 'Pro',
     kind: 'subscription',
     tracks: 15,
     foundingUsd: 39,
     standardUsd: 59,
-    blurb: 'Power user',
+    blurb: 'Making tracks every week',
   },
 }
 
