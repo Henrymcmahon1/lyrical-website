@@ -26,3 +26,7 @@ authorize them.
 Open question Henry asked me and I answered in the handover (§1): "should we copy `lyrical-studio` into
 `lyrical-website`?" — my answer is **no, not the Python pipeline**; separate by concern. Confirm the
 direction with him before restructuring anything.
+
+---
+
+**UPDATE 22 Sep 2026:** the planning pass above is done. Do not repeat it. Use `docs/bots/README.md` and paste the per-bot prompt from the brief you are running.
