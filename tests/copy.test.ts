@@ -210,3 +210,20 @@ describe('typography rules', () => {
     expect(offenders, `em-dash in rendered copy:\n${offenders.join('\n')}`).toEqual([])
   })
 })
+
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { Nav } from '@/components/Nav'
+import { Footer } from '@/components/Footer'
+
+describe('nav and footer carry the two doors', () => {
+  it('nav is Home, Pricing, For artists, Studio in that order', () => {
+    const html = renderToStaticMarkup(createElement(Nav))
+    expect([...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(['/', '/', '/pricing', '/artists', '/studio'])
+    expect(html).not.toContain('Get started')
+  })
+  it('footer adds Pricing and For artists and keeps the rest', () => {
+    const html = renderToStaticMarkup(createElement(Footer))
+    for (const h of ['/pricing', '/artists', '/studio', '/hear', '/about', '/contact']) expect(html).toContain(`href="${h}"`)
+  })
+})

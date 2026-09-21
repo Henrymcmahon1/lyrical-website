@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Mark } from './Mark'
 import { Trademark } from './Trademark'
 
-/** The STACKED lockup — the primary, sanctioned arrangement. Mark above wordmark. */
+/** The STACKED lockup, the primary sanctioned arrangement. Mark above wordmark. */
 export function Footer() {
   return (
     <footer className="border-t border-graphite/10 px-6 py-16">
@@ -31,6 +31,8 @@ export function Footer() {
           <Link href="/studio" className="inline-flex min-h-11 items-center hover:text-indigo">
             Make it multilingual
           </Link>
+          <Link href="/pricing" className="inline-flex min-h-11 items-center hover:text-indigo">Pricing</Link>
+          <Link href="/artists" className="inline-flex min-h-11 items-center hover:text-indigo">For artists</Link>
           <Link href="/hear" className="inline-flex min-h-11 items-center hover:text-indigo">
             Languages
           </Link>
