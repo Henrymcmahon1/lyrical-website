@@ -100,5 +100,5 @@ export const FAQ: { q: string; a: string }[] = [
   { q: 'What do I get?', a: 'One 192k MP3 of your song re-sung in the language you picked, in the same voice, over the untouched backing. It carries an inaudible provenance mark.' },
   { q: 'Can I release it?', a: 'No. Self-serve tracks are for personal use only, not for upload to streaming or sales platforms. Artists who want release rights and streaming-quality stems sign through the artist door.' },
   { q: 'What is a re-roll?', a: 'A fresh take of the same song in the same language with a different render seed. Give a thumbs-down with a note that says what was wrong and the re-roll button appears. Two per track, free.' },
-  { q: 'Will the price go up?', a: 'Not for you. Early sign-ups keep their founding price for as long as they stay. No human listens to each track before you do, which is what keeps the price where it is, and every rating you leave makes the next track better.' },
+  { q: 'Will the price go up?', a: 'Not for you. Early sign-ups keep their founding price for as long as they stay. Your track is made automatically and you rate it, with two free re-rolls, and every rating you leave makes the next track better.' },
 ]
