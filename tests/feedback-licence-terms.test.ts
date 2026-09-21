@@ -11,6 +11,7 @@ describe('the personal-use licence', () => {
     expect(LICENCE_TERMS_POINTS).toHaveLength(5)
     const all = LICENCE_TERMS_POINTS.join(' ')
     for (const re of [/personal, non-commercial/, /streaming/, /official release/, /provenance mark/, /re-rolls/]) expect(all).toMatch(re)
-    expect(all).not.toMatch(/—/)
+    // U+2014 is the em dash, spelled by code point so no editor or shell can turn it back into one.
+    expect(all).not.toContain(String.fromCharCode(0x2014))
   })
 })
