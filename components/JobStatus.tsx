@@ -30,7 +30,23 @@ const STEPS: { key: Status; label: string; blurb: string }[] = [
 /** Steps that are still moving. `delivered` and `rejected` are endings, so they do not pulse. */
 const LIVE: ReadonlySet<Status> = new Set<Status>(['submitted', 'approved', 'in_progress'])
 
-export function JobStatus({ status }: { status: string }) {
+/**
+ * How a `rejected` job reads. `declined` is the manual funnel: a human chose not to take the
+ * song on. `not-made` is a self-serve original that failed at our end: nobody declined it, the
+ * render did not come out, and it has not counted against the plan (the worker clears
+ * `quota_consumed_at` and refunds a credit). The page under it carries the explanation.
+ */
+export type RejectedAs = 'declined' | 'not-made'
+
+export function JobStatus({ status, rejectedAs = 'declined' }: { status: string; rejectedAs?: RejectedAs }) {
+  if (status === 'rejected' && rejectedAs === 'not-made') {
+    return (
+      <div className="flex items-center gap-2.5">
+        <span className="status-dot bg-dark-ink/35" data-live="false" aria-hidden="true" />
+        <span className="font-product text-sm text-dark-ink">Not made</span>
+      </div>
+    )
+  }
   if (status === 'rejected') {
     return (
       <div className="flex items-center gap-2.5">
