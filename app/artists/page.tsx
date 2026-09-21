@@ -62,17 +62,28 @@ const STEPS = [
     p: 'You get 24-bit WAV stems, no watermark, with a commercial license, ready for your distributor.',
   },
   {
-    h: '30% flows',
-    p: '30% of net streaming receipts on the new-language masters goes to lyrical. 70% stays with you, forever.',
+    h: 'Royalties flow',
+    p: 'The new-language masters earn wherever they are released, and your share comes back to you on the terms above, forever.',
   },
 ]
 
-const ROWS: [string, string, string][] = [
-  ['Who', 'Signed career artists', 'Fans and hobbyists (beta)'],
-  ['Terms', '30% of net receipts, $0 upfront', 'From $9 a track'],
-  ['Output', '24-bit WAV stems, no watermark', 'One 192k MP3 with an inaudible mark'],
-  ['Quality', 'A human listens before delivery', 'Automated; rate it and re-roll'],
-  ['Rights', 'Commercial release license', 'Personal use only'],
+const RECEIVES = [
+  {
+    h: 'Lossless stems',
+    p: '24-bit WAV, no watermark, ready for your distributor.',
+  },
+  {
+    h: 'A human on every version',
+    p: 'A person listens to every version by ear before it reaches you. Nothing is delivered unheard.',
+  },
+  {
+    h: 'Full commercial release rights',
+    p: 'Every new-language master carries a commercial license. Release it wherever you release your music.',
+  },
+  {
+    h: 'Your own trained voice',
+    p: 'Built from your stems, singing only the songs and languages you have authorized.',
+  },
 ]
 
 const eyebrow = 'font-mono text-xs tracking-[0.18em] text-graphite/45'
@@ -119,28 +130,24 @@ export default async function ArtistsPage({
       </section>
 
       <section className="mx-auto max-w-3xl px-6 py-20">
-        <span className={eyebrow}>Two doors</span>
-        <h2 className={h2}>What Door 1 delivers, and what the fan beta does not.</h2>
-        <table className="mt-8 w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-graphite/25 text-left font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/50">
-              <th className="py-3 pr-4 font-normal">&nbsp;</th>
-              <th className="py-3 pr-4 font-normal">Door 1: artists</th>
-              <th className="py-3 font-normal">Door 2: fans</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ROWS.map(([k, d1, d2]) => (
-              <tr key={k} className="border-b border-graphite/15 align-top">
-                <th scope="row" className="py-3 pr-4 text-left font-normal text-graphite/55">
-                  {k}
-                </th>
-                <td className="py-3 pr-4">{d1}</td>
-                <td className="py-3 text-graphite/75">{d2}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <span className={eyebrow}>Door 1</span>
+        <h2 className={h2}>What you receive.</h2>
+        <p className="mt-6 leading-relaxed text-graphite/75">
+          Door 1 is for artists with a catalog and a career. Your finished song is re-sung in your
+          own voice in a new language, over your untouched instrumental, and delivered as a new
+          master you can release.
+        </p>
+        <ul className="mt-8 grid gap-6 sm:grid-cols-2">
+          {RECEIVES.map((r) => (
+            <li key={r.h} className="rounded-card border border-graphite/15 p-5">
+              <h3 className="font-brand text-xl">{r.h}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-graphite/75">{r.p}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-8 leading-relaxed text-graphite/75">
+          The precedent is Coffey Anderson, our first signed artist, on these same terms.
+        </p>
       </section>
 
       <section className="mx-auto max-w-3xl px-6 py-20">
@@ -165,7 +172,7 @@ export default async function ArtistsPage({
           What could a new language earn you?
         </h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-graphite/75">
-          The worked example below is 100,000 monthly streams, 12 songs, two languages and a 20%
+          The worked example below is 100,000 monthly streams, 12 songs, two languages and an 80%
           new-language audience. Change the inputs to your own. Every result is an estimate.
         </p>
         <div className="mt-10">

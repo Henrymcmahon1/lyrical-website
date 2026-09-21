@@ -28,6 +28,9 @@ const LANGUAGE_OPTIONS = Array.from(
  * State starts at `initial`, so the server renders the worked example and the client hydrates
  * to the same numbers. With JavaScript off the visitor sees a real, labelled estimate and
  * inert controls: no blank tiles, no "loading".
+ *
+ * The output is the GROSS estimate only. The terms are prose elsewhere on the page, never a
+ * split computed here.
  */
 export function EarningsCalculator({ initial }: { initial: EarningsInput }) {
   const [input, setInput] = useState<EarningsInput>(initial)
@@ -72,7 +75,12 @@ export function EarningsCalculator({ initial }: { initial: EarningsInput }) {
           />
         </label>
         <label className="flex flex-col gap-2">
-          <span className="text-sm">Languages you want</span>
+          <span className="text-sm">
+            Languages you want{' '}
+            <span className="text-graphite/55">
+              ({MIN_LANGUAGES} to {MAX_LANGUAGES})
+            </span>
+          </span>
           <select
             name="languages"
             value={input.languages}
@@ -111,28 +119,22 @@ export function EarningsCalculator({ initial }: { initial: EarningsInput }) {
 
       <div className="grid gap-4 sm:grid-cols-2" aria-live="polite">
         <div className={`${tile} sm:col-span-2`}>
-          <p className={label}>Estimated extra net receipts per year</p>
-          <p className="mt-2 font-brand text-4xl" data-testid="extra-annual">
-            {usd(e.extraAnnualReceipts)}
+          <p className={label}>Estimated gross new-language streaming receipts per year</p>
+          <p className="mt-2 font-brand text-4xl" data-testid="gross-annual">
+            {usd(e.grossAnnualReceipts)}
           </p>
           <p className="mt-1 text-sm text-graphite/55">
-            estimate, across {e.languages} {e.languages === 1 ? 'language' : 'languages'},{' '}
-            {usd(e.perLanguage)} per language estimate
+            estimate, before any share, across {e.languages}{' '}
+            {e.languages === 1 ? 'language' : 'languages'}
           </p>
         </div>
         <div className={tile}>
-          <p className={label}>Your 70%, estimate</p>
-          <p className="mt-2 font-brand text-3xl" data-testid="artist-annual">
-            {usd(e.artistAnnual)}
+          <p className={label}>Per language, estimate</p>
+          <p className="mt-2 font-brand text-3xl" data-testid="per-language">
+            {usd(e.perLanguage)}
           </p>
         </div>
         <div className={tile}>
-          <p className={label}>lyrical&rsquo;s 30%, estimate</p>
-          <p className="mt-2 font-brand text-3xl" data-testid="lyrical-annual">
-            {usd(e.lyricalAnnual)}
-          </p>
-        </div>
-        <div className={`${tile} sm:col-span-2`}>
           <p className={label}>Upfront cost (the terms, not an estimate)</p>
           <p className="mt-2 font-brand text-3xl">$0 upfront</p>
         </div>
