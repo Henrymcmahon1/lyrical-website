@@ -36,7 +36,9 @@ export default function S04Fidelity() {
     <section id="technology" className="pt-24 md:py-0">
       <PinnedClaims
         title="Our technology"
-        intro="What changes is the language. Nothing else. Every song is checked by ear before it reaches you."
+        // "Every song is checked by ear before it reaches you" was the third sentence until
+        // 2026-09-22, when Henry's second review took every human-review claim off public copy.
+        intro="What changes is the language. Nothing else."
         claims={CLAIMS}
       />
     </section>

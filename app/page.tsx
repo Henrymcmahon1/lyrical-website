@@ -5,17 +5,18 @@ import S04Fidelity from '@/components/sections/S04Fidelity'
 import S05How from '@/components/sections/S05How'
 import S09bNow from '@/components/sections/S09bNow'
 import S09cDoors from '@/components/sections/S09cDoors'
-import S10Start from '@/components/sections/S10Start'
 
 /**
  * The funnel, deliberately short: hero, the audience turn, the proof, what we do to the
- * record, how it works for you, the turn, the two doors, the ask.
+ * record, how it works for you, the turn, the two doors.
  *
  * This is the original seven-section flow, restored on 2026-09-22 on Henry's instruction
  * after he reviewed the v2 two-doors landing. The v2 sections (`S03Steps`, `S04Plans`,
  * `S05Beta`, `S06Artists`, `S07Close`, `S02Coffey`) stay on disk and off this page. The one
- * addition is `S09cDoors`, one screen between the turn and the ask that offers the creator
- * door (/pricing) and the artist door (/artists) as equals.
+ * addition is `S09cDoors`, which offers the musician door (/pricing) and the artist door
+ * (/artists) as equals. Since Henry's second review the same day it is also the CLOSER:
+ * `S10Start` came off this page (it still closes /about and /ai-music-translation), the
+ * doors moved onto the dark ground, and its enquiry link lives in the artist door.
  *
  * Two pinned sections, not three. They split cleanly: `S04Fidelity` is the product, what
  * happens to the record, and `S05How` is the commercial story, what the buyer does and what
@@ -43,7 +44,6 @@ export default function Home() {
         say: that there are two ways in, and which one is yours.
       */}
       <S09cDoors />
-      <S10Start />
     </>
   )
 }
