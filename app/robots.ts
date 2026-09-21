@@ -14,11 +14,13 @@ export default function robots(): MetadataRoute.Robots {
     //
     // /auth is a redirect endpoint that consumes one-time codes. Nothing there is a page, and
     // a crawler following a magic link out of a leaked email would burn the code.
+    //
+    // /investors is gated, noindex and absent from the sitemap, same four reasons as /listen.
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/auth', '/leads', '/listen', '/queue', '/studio'],
+        disallow: ['/api/', '/auth', '/investors', '/leads', '/listen', '/queue', '/studio'],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

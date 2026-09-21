@@ -210,3 +210,44 @@ describe('typography rules', () => {
     expect(offenders, `em-dash in rendered copy:\n${offenders.join('\n')}`).toEqual([])
   })
 })
+
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { Nav } from '@/components/Nav'
+import { Footer } from '@/components/Footer'
+
+describe('nav and footer carry the two doors', () => {
+  it('nav is Home, Pricing, For artists, Studio in that order', () => {
+    const html = renderToStaticMarkup(createElement(Nav))
+    expect([...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual(['/', '/', '/pricing', '/artists', '/studio'])
+    expect(html).not.toContain('Get started')
+  })
+  it('footer adds Pricing and For artists and keeps the rest', () => {
+    const html = renderToStaticMarkup(createElement(Footer))
+    for (const h of ['/pricing', '/artists', '/studio', '/hear', '/about', '/contact']) expect(html).toContain(`href="${h}"`)
+  })
+})
+
+import robots from '@/app/robots'
+import sitemap from '@/app/sitemap'
+import { SECTIONS as INVESTOR_SECTIONS } from '@/content/investors'
+
+describe('the two doors pages', () => {
+  it('hides /investors from crawlers and lists the public pages', () => {
+    const rule = robots().rules as { disallow: string[] }[]
+    expect(rule[0].disallow).toContain('/investors')
+    const urls = sitemap().map((e) => e.url)
+    expect(urls.some((u) => u.endsWith('/investors'))).toBe(false)
+    for (const p of ['/pricing', '/artists']) expect(urls.some((u) => u.endsWith(p))).toBe(true)
+  })
+  it('labels the $8,000 figure a placeholder wherever it appears', () => {
+    for (const s of INVESTOR_SECTIONS) for (const p of s.p) if (p.includes('$8,000')) expect(p.toLowerCase()).toContain('placeholder')
+  })
+  it('never types a founding or standard price outside lib/plans.ts and the investor prose', () => {
+    const allowed = /(lib[\/]plans\.ts|content[\/]investors\.ts)$/ // either path separator: this runs on Windows too
+    const src = files.filter((f) => !allowed.test(f)).map((f) => readFileSync(f, 'utf8')).join('\n')
+    for (const price of ['$9', '$19', '$39', '$12', '$29', '$59']) {
+      expect(src, `${price} typed outside lib/plans.ts`).not.toMatch(new RegExp(`\${price}(?![\d,])`))
+    }
+  })
+})

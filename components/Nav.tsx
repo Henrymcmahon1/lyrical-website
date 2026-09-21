@@ -2,20 +2,7 @@ import Link from 'next/link'
 import { Wordmark } from './Wordmark'
 
 /**
- * One destination and one action, at every width.
- *
- * The phone layout was the honest one, so desktop now matches it rather than the other way
- * round. Two links went:
- *
- * - **Hear it** pointed at a page that promises "hear the original against the recreated
- *   version" and has nothing to play, so the most prominent link on every page advertised
- *   the site's biggest gap. Put it back the day real audio publishes; it will be the best
- *   link here.
- * - **How it works** was an anchor into the middle of a page that is now two content
- *   sections and about ten screens. Anybody scrolling reaches it without help.
- *
- * What remains is what a rights holder actually needs: About, which carries the rights
- * position and the team, and the way to make contact.
+ * Rewritten 2026-09 for the two doors: Home, Pricing, For artists, Studio.
  *
  * Nav labels are plain language. Never "Solutions".
  *
@@ -48,28 +35,16 @@ export function Nav() {
           <Wordmark />
         </Link>
 
-        <div className="ml-auto flex items-center gap-4 text-sm sm:gap-7">
-          <Link
-            href="/about"
-            className="inline-flex min-h-11 items-center hover:text-indigo"
-          >
-            About
-          </Link>
-          {/*
-            One label at both widths. It used to read "Get started" on a phone and "Start a
-            conversation" on desktop, which is two voices for one button.
-
-            It pointed at `/#enquire` until 2026-08-11 and now points at the studio: the nav
-            action and the hero action have to agree about what the site wants, and what it
-            wants is a song. `/contact` is one click further on, from the closing section of
-            every page and from the hero's second button.
-          */}
-          <Link
-            href="/studio"
-            className="inline-flex min-h-11 items-center rounded-card bg-indigo px-4 text-cream transition-colors hover:bg-graphite"
-          >
-            Get started
-          </Link>
+        {/*
+          At 375px the wordmark (116px) plus four labels overflowed by about 20px and the page
+          scrolled sideways. Below `sm` the wordmark is the way home, so Home hides there; the
+          other three never wrap and the gaps tighten. All four show from `sm` up.
+        */}
+        <div className="ml-auto flex items-center gap-3 whitespace-nowrap text-sm sm:gap-7">
+          <Link href="/" className="hidden min-h-11 items-center hover:text-indigo sm:inline-flex">Home</Link>
+          <Link href="/pricing" className="inline-flex min-h-11 items-center hover:text-indigo">Pricing</Link>
+          <Link href="/artists" className="inline-flex min-h-11 items-center hover:text-indigo">For artists</Link>
+          <Link href="/studio" className="inline-flex min-h-11 items-center rounded-card bg-indigo px-3 text-cream transition-colors hover:bg-graphite sm:px-4">Studio</Link>
         </div>
       </nav>
     </header>
