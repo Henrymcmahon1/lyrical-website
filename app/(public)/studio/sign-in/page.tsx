@@ -38,7 +38,7 @@ export default async function SignIn({
         Sing your favorite song in any language.
       </h1>
       <p className="mt-4 leading-relaxed text-graphite/75">
-        Founding beta: rough edges, honest prices, two free re-rolls on every track. Sign in with your email to start.
+        Founding prices, two free re-rolls on every track. Sign in with your email to start.
       </p>
 
       {notice && (

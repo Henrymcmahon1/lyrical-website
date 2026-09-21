@@ -17,6 +17,7 @@ import {
   trainingProgress,
   voiceSamplePath,
 } from '@/lib/voice-training'
+import { button, control, eyebrow } from '@/components/studio/ui'
 
 /**
  * Collecting clean vocals to train an artist's voice model.
@@ -40,8 +41,9 @@ import {
  * difference between knowing they are finished and guessing.
  */
 
-const field =
-  'w-full rounded-card border border-graphite/20 bg-cream px-4 py-3 text-graphite outline-none transition-colors focus:border-indigo'
+// The dashboard's Field language (components/studio/ui.tsx). Nothing below changed in what it
+// does; only the classes moved to the dark ground.
+const field = control
 
 type Picked = {
   file: File
@@ -229,8 +231,8 @@ export function VoiceUploadForm({
   return (
     <form onSubmit={submit} className="flex flex-col gap-8">
       {!isAdd && (
-        <label className="flex flex-col gap-2">
-          <span className="text-sm">Whose voice is this?</span>
+        <label className="flex flex-col gap-1.5">
+          <span className={eyebrow}>Whose voice is this?</span>
           <input
             value={artistName}
             onChange={(e) => setArtistName(e.target.value)}
@@ -245,18 +247,18 @@ export function VoiceUploadForm({
       {/* ── The files ── */}
       <div className="flex flex-col gap-4">
         <div>
-          <span className="text-sm">Clean vocal</span>
-          <p className="mt-2 text-sm leading-relaxed text-graphite/65">
+          <span className={eyebrow}>Clean vocal</span>
+          <p className="mt-2 font-product text-sm leading-relaxed text-dark-ink/65">
             Isolated vocal only: no instrumental, no reverb tail from another track, no other
-            singer. <strong className="font-semibold text-graphite">Mono</strong>, and{' '}
-            <strong className="font-semibold text-graphite">FLAC</strong> if you can, which is
+            singer. <strong className="font-semibold text-dark-ink">Mono</strong>, and{' '}
+            <strong className="font-semibold text-dark-ink">FLAC</strong> if you can, which is
             lossless and roughly half the size of the same WAV. Up to{' '}
             {formatMegabytes(MAX_UPLOAD_BYTES)} per file, so send a few takes rather than one
             long bounce.
           </p>
         </div>
 
-        <label className="nudge inline-flex min-h-11 cursor-pointer items-center self-start rounded-card border border-graphite/25 px-5 py-3 text-sm transition-colors hover:border-indigo hover:text-indigo">
+        <label className={`cursor-pointer self-start ${button.ghost}`}>
           <input
             type="file"
             multiple
@@ -273,21 +275,21 @@ export function VoiceUploadForm({
         </label>
 
         {stage === 'reading' && (
-          <p className="text-sm text-graphite/60" role="status">
+          <p className="font-product text-sm text-dark-ink/60" role="status">
             Reading&hellip;
           </p>
         )}
 
         {picked.length > 0 && (
           <>
-            <ul className="flex flex-col divide-y divide-graphite/12 border-y border-graphite/12">
+            <ul className="flex flex-col divide-y divide-dark-ink/10 border-y border-dark-ink/10">
               {picked.map((p, i) => (
                 <li key={`${p.file.name}-${i}`} className="flex items-center gap-3 py-3">
-                  <span className="min-w-0 flex-1 truncate text-sm">{p.file.name}</span>
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-graphite/50">
+                  <span className="min-w-0 flex-1 truncate font-product text-sm text-dark-ink">{p.file.name}</span>
+                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-dark-ink/50">
                     {p.seconds ? formatDuration(p.seconds) : 'unknown'}
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-graphite/40">
+                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-dark-ink/40">
                     {formatMegabytes(p.file.size)}
                   </span>
                   <button
@@ -295,7 +297,7 @@ export function VoiceUploadForm({
                     onClick={() => remove(i)}
                     disabled={busy}
                     aria-label={`Remove ${p.file.name}`}
-                    className="nudge inline-flex min-h-11 shrink-0 items-center px-1 font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/45 transition-colors hover:text-ember"
+                    className="nudge inline-flex min-h-11 shrink-0 items-center px-1 font-product text-[11px] uppercase tracking-[0.14em] text-dark-ink/45 transition-colors hover:text-dark-accent"
                   >
                     Remove
                   </button>
@@ -305,12 +307,13 @@ export function VoiceUploadForm({
 
             {/*
               The running total, which is the one number that tells somebody whether they are
-              finished. Width is the only thing animated, and it is a plain transition rather
-              than anything scroll-driven.
+              finished. The fill scales on transform (the site never animates width), a plain
+              transition rather than anything scroll-driven, in the dashboard's ProgressBar
+              language: an ink track, an accent fill while short, ink once there is enough.
             */}
             <div>
               <div
-                className="h-1.5 w-full overflow-hidden rounded-full bg-graphite/12"
+                className="h-2 w-full overflow-hidden rounded-card bg-dark-ink/10"
                 role="progressbar"
                 aria-valuenow={Math.round(status.fraction * 100)}
                 aria-valuemin={0}
@@ -318,14 +321,14 @@ export function VoiceUploadForm({
                 aria-label="Training audio collected"
               >
                 <div
-                  className={`h-full rounded-full transition-[width] duration-500 ${
-                    status.enough ? 'bg-indigo' : 'bg-ember'
+                  className={`h-full origin-left rounded-card transition-transform duration-500 ${
+                    status.enough ? 'bg-dark-ink' : 'bg-dark-accent'
                   }`}
-                  style={{ width: `${status.fraction * 100}%` }}
+                  style={{ transform: `scaleX(${status.fraction})` }}
                 />
               </div>
-              <p className="mt-3 text-sm text-graphite/70">
-                <span className="font-semibold text-graphite tabular-nums">
+              <p className="mt-3 font-product text-sm text-dark-ink/70">
+                <span className="font-semibold text-dark-ink tabular-nums">
                   {formatDuration(total)}
                 </span>{' '}
                 collected. {status.message}
@@ -335,9 +338,9 @@ export function VoiceUploadForm({
         )}
       </div>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm">
-          Anything we should know <span className="text-graphite/50">(optional)</span>
+      <label className="flex flex-col gap-1.5">
+        <span className={eyebrow}>
+          Anything we should know <span className="text-dark-ink/40">(optional)</span>
         </span>
         <textarea
           value={notes}
@@ -368,7 +371,7 @@ export function VoiceUploadForm({
       )}
 
       {error && (
-        <p role="alert" className="text-sm leading-relaxed text-ember">
+        <p role="alert" className="font-product text-sm leading-relaxed text-dark-accent">
           {error}
         </p>
       )}
@@ -377,7 +380,7 @@ export function VoiceUploadForm({
         <button
           type="submit"
           disabled={busy}
-          className="nudge rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
+          className={`${button.primary} px-6 py-3`}
         >
           {stage === 'uploading'
             ? progress
@@ -388,13 +391,13 @@ export function VoiceUploadForm({
                 : 'Send these vocals'}
         </button>
         {busy && (
-          <span className="text-sm text-graphite/55" role="status">
+          <span className="font-product text-sm text-dark-ink/55" role="status">
             Keep this tab open.
           </span>
         )}
       </div>
 
-      <p className="text-sm leading-relaxed text-graphite/55">
+      <p className="font-product text-sm leading-relaxed text-dark-ink/55">
         Nothing is trained until we accept it. These recordings are used to build this
         artist&rsquo;s voice and nothing else.
       </p>

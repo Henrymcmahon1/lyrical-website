@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { getDeliveredCoverUrl } from '@/app/studio/self-serve-actions'
+import { button, link } from '@/components/studio/ui'
 
 /**
  * Plays a delivered cover in the studio. The URL is fetched on demand (a signed, short-lived
@@ -27,7 +28,7 @@ export function CoverPlayer({ jobId }: { jobId: string }) {
       <div className="mt-4 flex flex-col gap-2">
         {/* eslint-disable-next-line jsx-a11y/media-has-caption -- a music cover has no captions */}
         <audio controls src={url} className="w-full" />
-        <a href={url} download className="text-sm text-indigo underline underline-offset-4">
+        <a href={url} download className={`w-fit ${link}`}>
           Download
         </a>
       </div>
@@ -35,16 +36,11 @@ export function CoverPlayer({ jobId }: { jobId: string }) {
   }
 
   return (
-    <div className="mt-4">
-      <button
-        type="button"
-        onClick={load}
-        disabled={loading}
-        className="nudge inline-flex min-h-11 items-center gap-1.5 rounded-card bg-ember px-6 py-3 text-sm text-cream disabled:opacity-50"
-      >
+    <div className="mt-4 flex flex-wrap items-center gap-3">
+      <button type="button" onClick={load} disabled={loading} className={button.primary}>
         {loading ? 'Loading…' : 'Play the cover'}
       </button>
-      {error && <span className="ml-3 text-sm text-graphite/60">{error}</span>}
+      {error && <span className="font-product text-sm text-dark-ink/60">{error}</span>}
     </div>
   )
 }

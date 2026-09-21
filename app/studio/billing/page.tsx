@@ -1,13 +1,17 @@
 import { redirect } from 'next/navigation'
 import { currentUser } from '@/lib/supabase-server'
 import { getBillingSummary } from '@/lib/entitlement-db'
-import { PLANS, planById, priceFor, type PlanId } from '@/lib/plans'
+import { PLANS, SUBSCRIPTION_PLANS, planById, priceFor, type PlanId } from '@/lib/plans'
+import { PageHead, Panel, StatChip, button, link } from '@/components/studio/ui'
 import { openBillingPortal, startCheckout } from './actions'
 
 /**
- * The plan a signed-in fan is on, what it has left this period, the credit balance, and the
- * three money buttons. `?plan=<id>` is the handoff from /pricing: the visitor signs in with
- * `next=/studio/billing?plan=fan` (URL-encoded) and lands straight in Stripe Checkout.
+ * The plan a signed-in customer is on, what it has left this period, the credit balance, and
+ * the three money buttons. `?plan=<id>` is the handoff from /pricing: the visitor signs in with
+ * `next=/studio/billing?plan=<id>` (URL-encoded) and lands straight in Stripe Checkout.
+ *
+ * Plan names and prices come from lib/plans.ts and are never typed here. Drawn as a StatChip
+ * row inside a Panel, the dashboard's instrument-panel language.
  */
 export const metadata = { title: 'Billing', robots: { index: false, follow: false } }
 
@@ -15,7 +19,6 @@ const day = (iso: string | null) =>
   iso
     ? new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : 'the next billing date'
-const button = 'nudge inline-flex min-h-11 items-center rounded-card px-5 text-sm'
 
 export default async function Billing({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   const [user, params] = await Promise.all([currentUser(), searchParams])
@@ -31,59 +34,61 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
   const subscribed = !!plan && plan.kind === 'subscription'
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-24 sm:py-28">
-      <span className="font-mono text-xs tracking-[0.18em] text-graphite/45">The studio</span>
-      <h1 className="mt-5 font-brand text-4xl leading-[1.1] tracking-tight text-balance">Your plan.</h1>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+      <PageHead eyebrow="Billing" title="Your plan." />
 
-      <div className="mt-10 rounded-card border border-graphite/15 p-6">
-        {subscribed ? (
-          <>
-            <p className="font-brand text-2xl tracking-tight">
-              {plan.name}, ${priceFor(plan.id)} a month
-            </p>
-            <p className="mt-2 text-sm text-graphite/60">Renews on {day(sub!.current_period_end)}</p>
-            <p className="mt-4">
-              {usedThisPeriod} of {plan.tracks} tracks used this period.{' '}
-              {Math.max(0, plan.tracks - usedThisPeriod)} left.
-            </p>
-          </>
-        ) : (
-          <p className="font-brand text-2xl tracking-tight">No plan yet</p>
+      <Panel title={subscribed ? plan.name : 'No plan yet'}>
+        <div className="flex flex-wrap gap-2">
+          {subscribed && (
+            <>
+              <StatChip label="Monthly" value={`$${priceFor(plan.id)}`} />
+              <StatChip label="Used" value={`${usedThisPeriod} of ${plan.tracks}`} />
+              <StatChip
+                label="Left"
+                value={Math.max(0, plan.tracks - usedThisPeriod)}
+                tone={plan.tracks - usedThisPeriod <= 0 ? 'action' : 'neutral'}
+              />
+            </>
+          )}
+          <StatChip label="Single credits" value={creditBalance} />
+        </div>
+        {subscribed && (
+          <p className="mt-4 font-product text-sm text-dark-ink/60">Renews on {day(sub!.current_period_end)}</p>
         )}
-        <p className="mt-2 text-sm text-graphite/60">
-          Single credits: {creditBalance}. A credit makes one track and never expires.
+        <p className="mt-2 font-product text-sm text-dark-ink/60">
+          A credit makes one track and never expires.
         </p>
-      </div>
+      </Panel>
 
-      <div className="mt-8 flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3">
         {subscribed ? (
           <form action={openBillingPortal}>
-            <button type="submit" className={`${button} border border-graphite/25`}>
+            <button type="submit" className={button.ghost}>
               Change plan
             </button>
           </form>
         ) : (
-          (['fan', 'superfan'] as PlanId[]).map((id) => (
+          SUBSCRIPTION_PLANS.map((id) => (
             <form key={id} action={startCheckout.bind(null, id)}>
-              <button type="submit" className={`${button} bg-ember text-cream`}>
+              <button type="submit" className={button.primary}>
                 Upgrade to {PLANS[id].name}, ${priceFor(id)} a month
               </button>
             </form>
           ))
         )}
         <form action={startCheckout.bind(null, 'single' as PlanId)}>
-          <button type="submit" className={`${button} border border-graphite/25`}>
+          <button type="submit" className={button.ghost}>
             Buy a Single, ${priceFor('single')}
           </button>
         </form>
       </div>
 
-      <p className="mt-8 text-sm text-graphite/55">
-        Founding beta prices. Sign up now and keep them for life.{' '}
-        <a href="/pricing" className="underline underline-offset-4">
+      <p className="font-product text-sm text-dark-ink/55">
+        Founding prices. Sign up now and keep them for life.{' '}
+        <a href="/pricing" className={link}>
           See plans
         </a>
       </p>
-    </section>
+    </div>
   )
 }

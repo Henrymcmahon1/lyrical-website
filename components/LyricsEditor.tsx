@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { updateLyrics } from '@/app/studio/lyrics-actions'
+import { button, control, eyebrow } from '@/components/studio/ui'
 import {
   LYRICS_ACCEPT_ATTRIBUTE,
   MAX_LYRICS_CHARS,
@@ -57,12 +58,12 @@ export function LyricsEditor({
   }
 
   return (
-    <div className="mt-5 border-t border-graphite/12 pt-4">
+    <div className="mt-5 border-t border-dark-ink/10 pt-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="nudge inline-flex min-h-11 items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/55 transition-colors hover:text-indigo"
+        className={`nudge inline-flex min-h-11 items-center gap-2 transition-colors hover:text-dark-ink ${eyebrow}`}
       >
         {initial ? `Lyrics, ${stats.lines} lines` : 'No lyrics yet'}
         <span aria-hidden="true">{open ? '−' : '+'}</span>
@@ -73,7 +74,7 @@ export function LyricsEditor({
           The nudge, on the page they come back to. Lyrics are optional at submit, and this is
           where somebody who did not have them to hand is most likely to be able to fix that.
         */
-        <p className="mt-1 text-sm leading-relaxed text-graphite/60">
+        <p className="mt-1 font-product text-sm leading-relaxed text-dark-ink/60">
           {locked
             ? 'This song was accepted without a lyric sheet.'
             : 'Adding the words is the single thing that most improves what comes back.'}
@@ -86,11 +87,11 @@ export function LyricsEditor({
             <>
               <pre
                 dir="auto"
-                className="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-sm leading-relaxed text-graphite/80"
+                className="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-sm leading-relaxed text-dark-ink/80"
               >
                 {initial || 'Nothing was sent with this song.'}
               </pre>
-              <p className="text-sm text-graphite/55">
+              <p className="font-product text-sm text-dark-ink/55">
                 We have accepted this song, so the sheet is locked to what the work started
                 from. Write to us if it needs changing.
               </p>
@@ -106,7 +107,7 @@ export function LyricsEditor({
                   setLyrics(e.target.value)
                   setSaved(false)
                 }}
-                className="w-full rounded-card border border-graphite/20 bg-cream px-4 py-3 font-mono text-sm leading-relaxed text-graphite outline-none transition-colors focus:border-indigo"
+                className={`${control} font-mono leading-relaxed`}
               />
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -114,12 +115,12 @@ export function LyricsEditor({
                   type="button"
                   onClick={save}
                   disabled={busy || !dirty}
-                  className="nudge inline-flex min-h-11 items-center rounded-card bg-indigo px-5 text-sm text-cream disabled:opacity-50"
+                  className={button.primary}
                 >
                   {busy ? 'Saving…' : 'Save lyrics'}
                 </button>
 
-                <label className="nudge inline-flex min-h-11 cursor-pointer items-center rounded-card border border-graphite/25 px-4 text-sm transition-colors hover:border-indigo hover:text-indigo">
+                <label className={`cursor-pointer ${button.ghost}`}>
                   <input
                     type="file"
                     accept={LYRICS_ACCEPT_ATTRIBUTE}
@@ -149,23 +150,23 @@ export function LyricsEditor({
                 </label>
 
                 {lyrics.trim() && (
-                  <span className="font-mono text-[11px] tabular-nums text-graphite/45">
+                  <span className="font-mono text-[11px] tabular-nums text-dark-ink/45">
                     {stats.lines} lines
                   </span>
                 )}
               </div>
 
               {saved && (
-                <p role="status" className="text-sm text-indigo">
+                <p role="status" className="font-product text-sm text-dark-ink/70">
                   Saved.
                 </p>
               )}
               {error && (
-                <p role="alert" className="text-sm leading-relaxed text-ember">
+                <p role="alert" className="font-product text-sm leading-relaxed text-dark-accent">
                   {error}
                 </p>
               )}
-              <p className="text-sm leading-relaxed text-graphite/55">
+              <p className="font-product text-sm leading-relaxed text-dark-ink/55">
                 You can change this until we accept the song. After that it is what the work
                 started from.
               </p>

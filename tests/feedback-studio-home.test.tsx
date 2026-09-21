@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { PLANS } from '@/lib/plans'
 
 /**
  * The Door-2 studio home, rendered. Every read is the user's client (mocked as thenable
@@ -41,9 +42,10 @@ beforeEach(() => {
 })
 
 describe('studio home', () => {
-  it('shows the plan card with tracks left and the billing link, or the empty state with the deck copy', async () => {
+  it('shows the plan card as stat chips with tracks left and the billing link, or the empty state with the deck copy', async () => {
+    // The plan name is read from lib/plans.ts, never typed here: Henry renames plans there.
     let h = await render()
-    expect(h).toContain('Plus'); expect(h).toContain('3 tracks left'); expect(h).toContain('href="/studio/billing"')
+    expect(h).toContain(`>${PLANS.fan.name}<`); expect(h).toContain('Tracks left'); expect(h).toMatch(/Tracks left<\/span><span[^>]*>3</); expect(h).toContain('href="/studio/billing"')
     entitlement.mockResolvedValue({ ok: false, reason: 'no_plan' })
     h = await render()
     expect(h).toContain('No plan yet')
