@@ -276,11 +276,13 @@ Order: Bot 0 alone → A, B, C, D, F in parallel → merge in the order A, C, B,
 - **2026-09-22 (morning review, Henry):** home page keeps the ORIGINAL seven-section flow and hero word for word, plus one two-doors section right before the closing ask; the word "beta" appears only in the licence terms and one founding-price sentence on /pricing; no side-by-side comparison tables anywhere (plan cards get a "good for" line and their own feature list, /artists describes Door 1 on its own terms); plan cards drop the struck standard prices; calculator shows GROSS new-language receipts only (no lyrical share), up to 8 languages, default audience share 80%; the studio adopts the local dashboard's look in full (sidebar tabs, animated wave mark, its tokens); /about gets a "For investors" button under the team.
 - **2026-09-22 (overnight proof run):** two pipeline gaps found and fixed: self-serve jobs must carry lyrics (website #7); the website sends language codes and the pipeline wants names (lyrical-studio #3). The site offers Japanese but the pipeline has no Japanese pack: JA jobs fail loud. A job that fails at our end still consumes a track (open item).
 
+- **2026-09-22 (proof run PASSED, ~02:46 AEST):** through the real omega form, a 75 s Callaita clip rendered on the OptiPlex and delivered (watermark probability 1.000, id 2266, ID3 tags, stems purged from Supabase, local stems + manifest kept); thumbs-down + note + Re-roll produced "Take 2" (own watermark id 43254, no asset rows, parent prep reused). Unproven: the Stripe checkout leg (no test keys). Morning revisions merged: #8 artists, #9 marketing, #10 studio shell. Plans renamed Plus / Pro (ids unchanged). Omega env now carries INVESTOR_PASSWORD, ADMIN_PASSWORD and GATE_SECRET (set through Henry's Chrome; the Vercel MCP token cannot write env vars). The /investors gate verified with a server-valid token; a hand-minted token failed only because the desktop clock runs two seconds ahead of Vercel.
+
 ## 14. Open items Henry owns
 
-1. Stripe test keys + webhook secret + price ids into the omega Vercel env (after Bot A's setup script prints the ids).
+1. Stripe test keys + webhook secret + price ids into the omega Vercel env (after Bot A's setup script prints the ids). Also RESEND_API_KEY + ENQUIRY_* so enquiry and EOI emails send from omega (rows save without them).
 2. Coffey Anderson original + new-language files: the folder or bucket path.
-3. `INVESTOR_PASSWORD` value into the omega Vercel env.
+3. DONE: `INVESTOR_PASSWORD` = lyrical on omega (also ADMIN_PASSWORD, GATE_SECRET).
 4. Supabase plan confirmation (Bot E reports what the dashboard says).
 5. A "go" on the backfill purge dry-run list, when there is one.
 6. Open from the proof run: a job that fails at our end (any `pipeline_state='failed'` other than `stems_expired`) still reads "Being made" to the customer, forever; decide whether the poller should also set `status='rejected'` plus a customer-visible reason, and whether a failed track should refund the quota. The ID3 comment on delivered MP3s still says "lyrical beta"; change to "lyrical" when the pipeline next ships.
