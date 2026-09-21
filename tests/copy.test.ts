@@ -251,3 +251,44 @@ describe('the two doors pages', () => {
     }
   })
 })
+
+import Home from '@/app/page'
+import About from '@/app/about/page'
+import Pricing from '@/app/pricing/page'
+import Hear from '@/app/hear/page'
+import Contact from '@/app/contact/page'
+
+describe('no "beta" on a marketing page', () => {
+  /**
+   * Henry, 2026-09-22: the word left every visitor-facing page. It survives in exactly two
+   * places, neither of them here: the personal-use licence text in lib/terms.ts, which is a
+   * legal document, and the one founding-price sentence on /pricing, which says "founding"
+   * and not "beta". So the rendered marketing pages contain the word nowhere at all, and the
+   * pricing page carries the founding sentence exactly once.
+   */
+  const pages: [string, () => React.ReactNode][] = [
+    ['/', Home],
+    ['/about', About],
+    ['/pricing', Pricing],
+    ['/hear', Hear],
+    ['/contact', Contact],
+  ]
+
+  it.each(pages)('%s renders without the word', (_path, Page) => {
+    const html = renderToStaticMarkup(createElement(Page))
+    expect(html).not.toMatch(/beta/i)
+  })
+
+  it('/pricing says "founding" once, in the locked sentence', () => {
+    const html = renderToStaticMarkup(createElement(Pricing))
+    expect(html.match(/Founding prices for early sign-ups, kept for life\./g)?.length).toBe(1)
+  })
+
+  it('never says "fan" on the home or pricing page', () => {
+    // It reads as unauthorised material. Door 2 is for your own songs, or songs you have the
+    // rights to, and the plan names are Single, Plus and Pro.
+    for (const Page of [Home, Pricing]) {
+      expect(renderToStaticMarkup(createElement(Page))).not.toMatch(/\bfans?\b/i)
+    }
+  })
+})
