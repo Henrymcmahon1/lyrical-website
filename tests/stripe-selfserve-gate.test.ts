@@ -31,6 +31,7 @@ const raw = {
   targetLanguage: 'ES',
   rightsWarranty: true,
   licenceAccepted: true,
+  lyrics: 'Ella es callaíta',
   assets: [
     { kind: 'instrumental', path: `u1/${jobId}/inst.wav`, filename: 'inst.wav', bytes: 10 },
     { kind: 'vocal', path: `u1/${jobId}/vox.wav`, filename: 'vox.wav', bytes: 10 },

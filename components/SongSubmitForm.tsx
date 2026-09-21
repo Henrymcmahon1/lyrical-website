@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { LANGUAGES, type LanguageCode } from '@/lib/languages'
 import { turnaroundNote } from '@/lib/language-pairs'
 import { detectLyrics, lyricsLanguageWarning } from '@/lib/lyrics-language'
+import { LYRICS_REQUIRED_MESSAGE } from '@/lib/song-job-schema'
 import { Turnstile } from '@/components/Turnstile'
 import { turnstileSiteKey } from '@/lib/turnstile'
 import { RightsWarranty } from '@/components/RightsWarranty'
@@ -178,6 +179,10 @@ export function SongSubmitForm({
     }
     if (selfServe && !licence) {
       setError('Tick the personal-use terms before sending it.')
+      return
+    }
+    if (selfServe && !normaliseLyrics(lyrics)) {
+      setError(LYRICS_REQUIRED_MESSAGE)
       return
     }
     if (!voiceChoice) {
@@ -532,12 +537,15 @@ export function SongSubmitForm({
       */}
       <div className="flex flex-col gap-3">
         <div>
-          <span className={labelText}>Lyrics</span>
+          <span className={labelText}>{selfServe ? 'Lyrics (required)' : 'Lyrics'}</span>
           <p className="mt-2 text-sm leading-relaxed text-graphite/65">
             Paste the words, in the language they are sung in. One line per sung line, and keep
             any <span className="font-mono text-xs">[Verse 1]</span> markers if you have them.
             This is what the translation is built from, so it is the single thing that most
-            improves what comes back. You can add it later if you do not have it to hand.
+            improves what comes back.{' '}
+            {selfServe
+              ? 'The automated studio cannot start without it.'
+              : 'You can add it later if you do not have it to hand.'}
           </p>
         </div>
 
