@@ -15,7 +15,9 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
  * `song_job_assets` rows: the poller resolves stems from the parent.
  */
 export type RerollResult = { ok: true; childId: string } | { ok: false; error: string }
-export const REROLL_CLOSED = 'The re-roll window for this song has closed. Make it again to start fresh.'
+// Not exported: a 'use server' module may only export async functions. The bar and the studio
+// page carry the same deck string.
+const REROLL_CLOSED = 'The re-roll window for this song has closed. Make it again to start fresh.'
 const JOB_COLUMNS =
   'id, user_id, status, parent_job_id, title, primary_artist, source_language, target_language, lyrics, voice_id, voice_preference, licence_terms_version'
 
