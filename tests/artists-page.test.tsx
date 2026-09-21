@@ -16,7 +16,38 @@ const render = async (eoi?: string) =>
 describe('/artists', () => {
   it('renders the worked example numbers without JavaScript', async () => {
     const html = await render()
-    for (const s of ['$1,920', '$1,344', '$576', '$0 upfront']) expect(html).toContain(s)
+    // 100000 * 12 * 0.8 * 2 * 0.004 = 7680 gross a year, 3840 per language.
+    for (const s of ['$7,680', '$3,840', '$0 upfront', 'default 80%', 'an assumption']) {
+      expect(html).toContain(s)
+    }
+    expect(html).toContain('100,000 monthly streams, 12 songs, two languages and an 80%')
+  })
+
+  it('shows the gross estimate only: no share figures, terms once as prose', async () => {
+    const html = await render()
+    expect(html).not.toContain('70%')
+    expect(html).not.toMatch(/\$1,920|\$1,344|\$576/)
+    expect(html).toContain(
+      '30% of net streaming receipts on the new-language masters, perpetual and exclusive, $0',
+    )
+    // Once in the visible prose. The JSON-LD description in the head is metadata, not copy.
+    const body = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '')
+    expect((body.match(/30%/g) ?? []).length).toBe(1)
+  })
+
+  it('offers 1 to 8 languages', async () => {
+    const html = await render()
+    for (const n of [1, 2, 8]) expect(html).toContain(`<option value="${n}"`)
+    expect(html).not.toContain('<option value="9"')
+  })
+
+  it('has no comparison table and no beta wording', async () => {
+    const html = await render()
+    expect(html).not.toContain('<table')
+    expect(html).not.toMatch(/door 2|beta/i)
+    for (const s of ['Lossless stems', 'Full commercial release rights', 'Your own trained voice']) {
+      expect(html).toContain(s)
+    }
   })
 
   it('carries the copy-deck strings verbatim and labels the estimates', async () => {
