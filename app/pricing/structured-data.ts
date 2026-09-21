@@ -7,7 +7,7 @@ export function pricingLd(origin: string) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: 'lyrical self-serve',
-    description: 'Your song, re-sung in another language in the same voice. Personal use, beta.',
+    description: 'Your song, re-sung in another language in the same voice. Personal use only.',
     brand: { '@id': `${origin}/#organization` },
     offers: PLAN_IDS.map((id) => ({ '@type': 'Offer', name: PLANS[id].name, price: priceFor(id), priceCurrency: 'USD', url: `${origin}/pricing` })),
   }

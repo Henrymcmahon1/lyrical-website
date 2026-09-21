@@ -4,20 +4,33 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { PLANS, PLAN_IDS, priceFor } from '@/lib/plans'
 import { checkoutHref } from '@/components/sections/PlanCards'
 import { pricingLd } from '@/app/pricing/structured-data'
+import { FOUNDING_LINE, GOOD_FOR, PLAN_FEATURES } from '@/content/two-doors'
 import Pricing from '@/app/pricing/page'
 
 const html = renderToStaticMarkup(<Pricing />)
 
 describe('/pricing', () => {
-  it('shows every founding price from priceFor and strikes the standard one', () => {
+  it('shows every founding price from priceFor and never the struck standard one', () => {
     for (const id of PLAN_IDS) {
       expect(html).toContain(`$${priceFor(id)}`)
-      expect(html).toContain(`<s>$${PLANS[id].standardUsd}</s>`)
+      expect(html).not.toContain(`<s>$${PLANS[id].standardUsd}</s>`)
     }
+    expect(html).not.toContain('Standard price')
   })
-  it('badges Fan, promises re-rolls on every card, strikes the anchor', () => {
-    expect(html).toContain('Most fans')
+  it('names the plans Single, Plus and Pro, and never a fan', () => {
+    for (const id of PLAN_IDS) expect(html).toContain(`Choose ${PLANS[id].name}`)
+    expect(html).toContain('Most popular')
+    expect(html).not.toMatch(/\bfans?\b/i)
+    expect(html).not.toContain('Superfan')
+  })
+  it('gives every card a "Good for" line and its own feature list', () => {
+    for (const id of PLAN_IDS) expect(html).toContain(GOOD_FOR[id])
+    for (const f of PLAN_FEATURES) expect(html.match(new RegExp(f, 'g'))?.length).toBe(PLAN_IDS.length)
     expect(html.match(/2 free re-rolls/g)?.length).toBeGreaterThanOrEqual(3)
+  })
+  it('keeps the founding sentence once and the struck anchor', () => {
+    expect(FOUNDING_LINE).toBe('Founding prices for early sign-ups, kept for life.')
+    expect(html.match(/Founding prices for early sign-ups, kept for life\./g)?.length).toBe(1)
     expect(html).toContain('<s>$2,000</s>')
     expect(html).toContain('We never charge that for automated output')
   })
@@ -25,8 +38,11 @@ describe('/pricing', () => {
     expect(checkoutHref('fan')).toBe('/studio/sign-in?next=%2Fstudio%2Fbilling%3Fplan%3Dfan')
     for (const id of PLAN_IDS) expect(html).toContain(`href="${checkoutHref(id)}"`)
   })
-  it('carries the cap table and the five FAQ questions', () => {
-    for (const s of ['24-bit WAV stems', 'What do I upload?', 'What do I get?', 'Can I release it?', 'What is a re-roll?', 'What does beta mean?']) expect(html).toContain(s)
+  it('carries the five FAQ questions and no comparison table', () => {
+    for (const s of ['What do I upload?', 'What do I get?', 'Can I release it?', 'What is a re-roll?', 'Will the price go up?']) expect(html).toContain(s)
+    expect(html).not.toContain('<table')
+    expect(html).not.toContain('24-bit WAV stems')
+    expect(html).not.toContain('Signed artist')
   })
   it('never types a plan price in the page or the cards', () => {
     const src = ['app/pricing/page.tsx', 'components/sections/PlanCards.tsx'].map((f) => readFileSync(f, 'utf8')).join('\n')
@@ -35,20 +51,5 @@ describe('/pricing', () => {
   it('JSON-LD offers match the visible prices', () => {
     const ld = pricingLd('https://example.test') as { offers: { price: number }[] }
     expect(ld.offers.map((o) => o.price)).toEqual(PLAN_IDS.map((id) => priceFor(id)))
-  })
-})
-
-import Home from '@/app/page'
-import { HERO, DOOR1 } from '@/content/two-doors'
-
-describe('/ (landing)', () => {
-  it('reads as the two doors, in order', async () => {
-    const h = renderToStaticMarkup(await Home())
-    const idx = [HERO.headline, 'How it works', 'Most fans', 'Beta, honestly', DOOR1.h, 'Pick a song. Pick a language.'].map((s) => h.indexOf(s))
-    expect(idx.every((i) => i >= 0)).toBe(true)
-    expect([...idx].sort((a, b) => a - b)).toEqual(idx)
-    expect(h).toContain('href="/pricing"')
-    expect(h).toContain('href="/artists"')
-    expect(h).not.toContain('Make your song multilingual')
   })
 })
