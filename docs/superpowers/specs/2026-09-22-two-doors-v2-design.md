@@ -283,3 +283,4 @@ Order: Bot 0 alone → A, B, C, D, F in parallel → merge in the order A, C, B,
 3. `INVESTOR_PASSWORD` value into the omega Vercel env.
 4. Supabase plan confirmation (Bot E reports what the dashboard says).
 5. A "go" on the backfill purge dry-run list, when there is one.
+6. Open from the proof run: a job that fails at our end (any `pipeline_state='failed'` other than `stems_expired`) still reads "Being made" to the customer, forever; decide whether the poller should also set `status='rejected'` plus a customer-visible reason, and whether a failed track should refund the quota. The ID3 comment on delivered MP3s still says "lyrical beta"; change to "lyrical" when the pipeline next ships.
