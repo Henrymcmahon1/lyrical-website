@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { SongSubmitForm } from '@/components/SongSubmitForm'
+import { PageHead, Panel } from '@/components/studio/ui'
 import { getEntitlementFor } from '@/lib/entitlement-db'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 
@@ -45,21 +46,18 @@ export default async function NewSong() {
   const voices = (voiceRows ?? []).filter((v) => v.status !== 'retired')
 
   return (
-    <section className="mx-auto max-w-2xl px-6 py-24 sm:py-28">
-      <span className="font-mono text-xs tracking-[0.18em] text-graphite/45">The studio</span>
-      <h1 className="mt-5 font-brand text-4xl leading-[1.1] tracking-tight text-balance">
-        Make your song multilingual.
-      </h1>
-      <p className="mt-6 leading-relaxed text-graphite/75">
-        Upload your stems, pick a language, and hear it re-sung in the same voice. Beta output.
-        Personal use only.
-      </p>
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <PageHead
+        eyebrow="Create"
+        title="Make your song multilingual."
+        lead="Upload your stems, pick a language, and hear it re-sung in the same voice. Personal use only."
+      />
 
-      <div className="mt-12">
+      <Panel className="sm:p-6">
         {/* v2: the automated self-serve path. Queues the job for the render worker rather than
             the manual /queue funnel. */}
         <SongSubmitForm voices={voices} selfServe />
-      </div>
-    </section>
+      </Panel>
+    </div>
   )
 }

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { VoiceUploadForm } from '@/components/VoiceUploadForm'
+import { Notice, PageHead, Panel } from '@/components/studio/ui'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { TRAINING_MINIMUM_SECONDS, TRAINING_TARGET_SECONDS } from '@/lib/voice-training'
 
@@ -50,45 +51,41 @@ export default async function NewVoice({
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-6 py-20 sm:py-28">
-      <span className="font-mono text-xs tracking-[0.18em] text-graphite/45">The studio</span>
-
-      <h1 className="mt-5 font-brand text-4xl leading-[1.08] tracking-tight text-balance">
-        {addTo ? `Add takes to ${addTo.artist_name}.` : 'Build a voice model.'}
-      </h1>
-
-      <p className="mt-6 leading-relaxed text-graphite/75">
-        {addTo ? (
-          <>More clean vocal for this voice, in the same shape as before. It adds to what is
-          already collected rather than replacing it.</>
-        ) : (
-          <>To sing in an artist&rsquo;s voice we first have to learn it, and that takes{' '}
-          {MINUTES_MIN} to {MINUTES_TARGET} minutes of them singing on their own. You only do this
-          once per artist. Every song you send us afterwards uses the same voice.</>
-        )}
-      </p>
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <PageHead
+        eyebrow="Voices"
+        title={addTo ? `Add takes to ${addTo.artist_name}.` : 'Build a voice model.'}
+        lead={
+          addTo ? (
+            <>More clean vocal for this voice, in the same shape as before. It adds to what is
+            already collected rather than replacing it.</>
+          ) : (
+            <>To sing in an artist&rsquo;s voice we first have to learn it, and that takes{' '}
+            {MINUTES_MIN} to {MINUTES_TARGET} minutes of them singing on their own. You only do this
+            once per artist. Every song you send us afterwards uses the same voice.</>
+          )
+        }
+      />
 
       {/*
         What "clean" means, stated before the file picker rather than in a tooltip after it.
         The commonest failure is somebody uploading a full mix and waiting through it, and the
         cost of that is measured in their patience and in our storage.
       */}
-      <div className="mt-10 rounded-card border-l-[3px] border-indigo bg-indigo/5 px-5 py-4">
-        <p className="text-sm leading-relaxed text-graphite/80">
-          <strong className="font-semibold text-graphite">Clean means the vocal alone.</strong>{' '}
-          No instrumental underneath, no other singer, no bleed from the backing. Acapella
-          stems, tracked vocals from the session, or anything your engineer can bounce solo.
-          Dry is better than wet: heavy reverb or tuning gets learned as part of the voice.
-        </p>
-      </div>
+      <Notice>
+        <strong className="font-semibold text-dark-ink">Clean means the vocal alone.</strong>{' '}
+        No instrumental underneath, no other singer, no bleed from the backing. Acapella
+        stems, tracked vocals from the session, or anything your engineer can bounce solo.
+        Dry is better than wet: heavy reverb or tuning gets learned as part of the voice.
+      </Notice>
 
-      <div className="mt-12">
+      <Panel className="sm:p-6">
         <VoiceUploadForm
           existingVoiceId={addTo?.id}
           existingArtist={addTo?.artist_name}
           startIndex={addTo?.count ?? 0}
         />
-      </div>
-    </section>
+      </Panel>
+    </div>
   )
 }

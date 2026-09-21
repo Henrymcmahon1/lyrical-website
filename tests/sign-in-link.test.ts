@@ -48,7 +48,7 @@ vi.mock('next/headers', () => ({
     new Headers({ 'x-forwarded-for': pinnedIp ?? `198.51.100.${++ipCounter % 250}` }),
 }))
 
-const { requestSignInLink } = await import('@/app/studio/sign-in/actions')
+const { requestSignInLink } = await import('@/app/(public)/studio/sign-in/actions')
 
 /** The link the email was actually given. */
 const sentLink = () => {

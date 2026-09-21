@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { TRAINING_MINIMUM_SECONDS, formatDuration } from '@/lib/voice-training'
 import type { VoiceStatus } from '@/lib/voice-schema'
+import { Notice, PageHead, Panel, button, control, link } from '@/components/studio/ui'
 import { renameVoice, retireVoice } from './actions'
 
 /**
@@ -38,6 +39,19 @@ const STATE: Record<VoiceStatus, string> = {
   retired: 'Retired. Training audio removed, consent record kept.',
 }
 
+/** The status word, in the dashboard's uppercase tracked style, lit while something is moving. */
+const STATE_TONE: Record<VoiceStatus, string> = {
+  collecting: 'text-dark-ink/50',
+  approved: 'text-dark-accent',
+  training: 'text-dark-accent',
+  ready: 'text-dark-ink',
+  rejected: 'text-dark-ink/50',
+  retired: 'text-dark-ink/40',
+}
+
+const summary =
+  'nudge inline-flex min-h-11 cursor-pointer list-none items-center [&::-webkit-details-marker]:hidden'
+
 export default async function Voices({
   searchParams,
 }: {
@@ -66,66 +80,64 @@ export default async function Voices({
   const list = (voices ?? []) as Voice[]
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-20 sm:py-28">
-      <span className="font-mono text-xs tracking-[0.18em] text-graphite/45">The studio</span>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+      <PageHead
+        eyebrow="Voices"
+        title="Voices."
+        lead={
+          <>
+            An artist&rsquo;s voice is learned once from their clean vocal, then reused by every
+            song you send us for them.
+          </>
+        }
+        aside={
+          <a href="/studio" className={`inline-flex min-h-11 items-center ${link}`}>
+            Your songs
+          </a>
+        }
+      />
 
-      <div className="mt-5 flex flex-wrap items-baseline justify-between gap-4">
-        <h1 className="font-brand text-4xl leading-[1.08] tracking-tight">Voices.</h1>
-        <a
-          href="/studio"
-          className="nudge inline-flex min-h-11 items-center text-sm text-graphite/60 underline decoration-graphite/25 underline-offset-4 transition-colors hover:text-graphite"
-        >
-          Your songs
+      {params.added && (
+        <Notice>
+          That is with us. We will check the recordings over, and nothing is trained until we do.
+        </Notice>
+      )}
+
+      <div>
+        <a href="/studio/voices/new" className={button.primary}>
+          {list.length ? 'Add another voice' : 'Build a voice model'}
+          <span className="shift-arrow">&rarr;</span>
         </a>
       </div>
 
-      <p className="mt-4 max-w-xl leading-relaxed text-graphite/75">
-        An artist&rsquo;s voice is learned once from their clean vocal, then reused by every
-        song you send us for them.
-      </p>
-
-      {params.added && (
-        <p
-          role="status"
-          className="mt-8 rounded-card border-l-[3px] border-indigo bg-indigo/5 px-5 py-4 leading-relaxed"
-        >
-          That is with us. We will check the recordings over, and nothing is trained until we do.
-        </p>
-      )}
-
-      <a
-        href="/studio/voices/new"
-        className="nudge mt-8 inline-flex items-center gap-1.5 rounded-card bg-ember px-7 py-4 text-cream"
-      >
-        {list.length ? 'Add another voice' : 'Build a voice model'}
-        <span className="shift-arrow">&rarr;</span>
-      </a>
-
       {!list.length ? (
-        <p className="mt-12 leading-relaxed text-graphite/75">
-          No voices yet.
-        </p>
+        <Panel>
+          <p className="py-4 text-center font-product text-sm text-dark-ink/60">No voices yet.</p>
+        </Panel>
       ) : (
-        <ul className="mt-12 flex flex-col gap-5">
+        <ul className="flex flex-col gap-4">
           {list.map((v) => {
             const seconds = secondsByVoice.get(v.id) ?? 0
             const retired = v.status === 'retired'
             const short = !retired && seconds < TRAINING_MINIMUM_SECONDS
+            const status = v.status as VoiceStatus
             return (
-              <li
-                key={v.id}
-                className={`rounded-card border border-graphite/15 p-6 ${retired ? 'opacity-60' : ''}`}
-              >
+              <Panel as="li" key={v.id} className={retired ? 'opacity-60' : ''}>
                 <div className="flex flex-wrap items-baseline justify-between gap-3">
-                  <span className="font-brand text-xl tracking-tight">{v.artist_name}</span>
-                  {!retired && (
-                    <span className="font-mono text-[11px] tabular-nums text-graphite/45">
-                      {formatDuration(seconds)}
+                  <h2 className="font-brand text-lg font-semibold leading-tight text-dark-ink">{v.artist_name}</h2>
+                  <span className="flex items-baseline gap-3">
+                    <span className={`font-product text-[11px] font-semibold uppercase tracking-[0.1em] ${STATE_TONE[status] ?? 'text-dark-ink/50'}`}>
+                      {v.status}
                     </span>
-                  )}
+                    {!retired && (
+                      <span className="font-mono text-[11px] tabular-nums text-dark-ink/45">
+                        {formatDuration(seconds)}
+                      </span>
+                    )}
+                  </span>
                 </div>
-                <p className="mt-2 text-sm text-graphite/70">
-                  {STATE[v.status as VoiceStatus] ?? v.status}
+                <p className="mt-2 font-product text-sm text-dark-ink/70">
+                  {STATE[status] ?? v.status}
                 </p>
                 {short && (
                   /*
@@ -134,7 +146,7 @@ export default async function Voices({
                    * well, and finding that out from us rather than from a poor result is the
                    * whole point of showing the number.
                    */
-                  <p className="mt-3 text-sm leading-relaxed text-ember">
+                  <p className="mt-3 font-product text-sm leading-relaxed text-dark-accent">
                     Under 20 minutes. Add more takes when you can, or this voice will be a rough
                     likeness rather than a match.
                   </p>
@@ -146,18 +158,18 @@ export default async function Voices({
                   at any point. All native <details>/<form>, so the manager works with JS off.
                 */}
                 {!retired && (
-                  <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+                  <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-dark-ink/10 pt-4">
                     {v.status === 'collecting' && (
                       <a
                         href={`/studio/voices/new?voice=${v.id}`}
-                        className="nudge inline-flex min-h-11 items-center text-sm text-indigo underline decoration-indigo/30 underline-offset-4 transition-colors hover:decoration-indigo"
+                        className={`inline-flex min-h-11 items-center ${link}`}
                       >
                         Add more takes
                       </a>
                     )}
 
                     <details className="w-full sm:w-auto">
-                      <summary className="nudge inline-flex min-h-11 cursor-pointer list-none items-center text-sm text-graphite/60 underline decoration-graphite/25 underline-offset-4 hover:text-graphite [&::-webkit-details-marker]:hidden">
+                      <summary className={`${summary} ${link}`}>
                         Rename
                       </summary>
                       <form action={renameVoice} className="mt-3 flex max-w-md flex-col gap-3">
@@ -167,7 +179,7 @@ export default async function Voices({
                           defaultValue={v.artist_name}
                           required
                           maxLength={200}
-                          className="rounded-card border border-graphite/20 bg-cream px-3 py-2 text-sm outline-none transition-colors focus:border-indigo"
+                          className={control}
                         />
                         <textarea
                           name="notes"
@@ -175,33 +187,27 @@ export default async function Voices({
                           rows={2}
                           maxLength={2000}
                           placeholder="Note (optional)"
-                          className="rounded-card border border-graphite/20 bg-cream px-3 py-2 text-sm outline-none transition-colors focus:border-indigo"
+                          className={control}
                         />
-                        <button
-                          type="submit"
-                          className="nudge inline-flex min-h-11 w-fit items-center rounded-card border border-graphite/25 px-4 text-sm transition-colors hover:border-indigo hover:text-indigo"
-                        >
+                        <button type="submit" className={`w-fit ${button.ghost}`}>
                           Save
                         </button>
                       </form>
                     </details>
 
                     <details className="w-full sm:w-auto">
-                      <summary className="nudge inline-flex min-h-11 cursor-pointer list-none items-center text-sm text-graphite/45 underline decoration-graphite/20 underline-offset-4 hover:text-ember [&::-webkit-details-marker]:hidden">
+                      <summary className={`${summary} ${link} hover:text-dark-accent`}>
                         Retire
                       </summary>
-                      <div className="mt-3 max-w-md rounded-card border border-ember/40 p-4">
-                        <p className="text-sm leading-relaxed text-graphite/80">
+                      <div className="mt-3 max-w-md rounded-card border border-dark-accent/40 bg-dark-accent/10 p-4">
+                        <p className="font-product text-sm leading-relaxed text-dark-ink/80">
                           Retire {v.artist_name}? This removes the training audio to free space and
                           stops the voice being offered on new songs. The record that you had
                           permission is kept, and this cannot be undone.
                         </p>
                         <form action={retireVoice} className="mt-4">
                           <input type="hidden" name="id" value={v.id} />
-                          <button
-                            type="submit"
-                            className="nudge inline-flex min-h-11 items-center rounded-card bg-ember px-4 text-sm text-cream"
-                          >
+                          <button type="submit" className={button.primary}>
                             Yes, retire it
                           </button>
                         </form>
@@ -209,11 +215,11 @@ export default async function Voices({
                     </details>
                   </div>
                 )}
-              </li>
+              </Panel>
             )
           })}
         </ul>
       )}
-    </section>
+    </div>
   )
 }

@@ -14,6 +14,10 @@ import type { JobStatus as Status } from '@/lib/song-job-schema'
  * The state is carried by TEXT and COLOUR. The pulse is decoration on top, and it stops
  * entirely under `prefers-reduced-motion`, where nothing is lost. Anything that only animation
  * communicates is invisible to a reader who has turned animation off.
+ *
+ * Drawn for the studio's dark ground since 2026-09-22, in the dashboard's ProgressBar language:
+ * an ink track, an accent fill, the eyebrow label. The `.status-rail` track colour for the dark
+ * ground is set in `app/studio/studio.css`.
  */
 
 const STEPS: { key: Status; label: string; blurb: string }[] = [
@@ -30,14 +34,14 @@ export function JobStatus({ status }: { status: string }) {
   if (status === 'rejected') {
     return (
       <div className="flex items-center gap-2.5">
-        <span className="status-dot bg-graphite/35" data-live="false" aria-hidden="true" />
+        <span className="status-dot bg-dark-ink/35" data-live="false" aria-hidden="true" />
         {/*
           Corrected 2026-08-11. This used to read "We will have been in touch about why", and
           nobody will have been: rejection sends no email at all, on Henry's instruction. A
           status line that claims contact the system never makes is worse than a blunt one,
           because the customer waits for a message that is not coming.
         */}
-        <span className="text-sm text-graphite/70">
+        <span className="font-product text-sm text-dark-ink/70">
           Not taken on this time. Write to us if you would like to know why.
         </span>
       </div>
@@ -58,27 +62,28 @@ export function JobStatus({ status }: { status: string }) {
     <div>
       <div className="flex items-center gap-2.5">
         <span
-          className={`status-dot ${live ? 'bg-ember' : 'bg-indigo'}`}
+          className={`status-dot ${live ? 'bg-dark-accent' : 'bg-dark-ink'}`}
           data-live={live ? 'true' : 'false'}
           aria-hidden="true"
         />
         {/* The whole state in words, for a screen reader and for anyone with motion off. */}
-        <span className="text-sm text-graphite">
+        <span className="font-product text-sm text-dark-ink">
           {current.label}
-          <span className="text-graphite/60"> &middot; {current.blurb}</span>
+          <span className="text-dark-ink/60"> &middot; {current.blurb}</span>
         </span>
       </div>
 
-      <div className="status-rail mt-4 overflow-hidden rounded-full" aria-hidden="true">
+      <div className="status-rail mt-4 overflow-hidden rounded-card" aria-hidden="true">
         <div
-          className="status-rail-fill bg-indigo"
+          className="status-rail-fill bg-dark-accent"
           style={{ transform: `scaleX(${fill})` }}
         />
       </div>
 
-      <ol className="mt-2 flex justify-between text-[11px] tracking-wide" aria-hidden="true">
+      {/* Sentence case at 11px: four uppercase tracked labels collide at 375px inside a nested take. */}
+      <ol className="mt-2 flex justify-between gap-2 font-product text-[11px] tracking-wide" aria-hidden="true">
         {STEPS.map((s, i) => (
-          <li key={s.key} className={i <= index ? 'text-graphite/70' : 'text-graphite/35'}>
+          <li key={s.key} className={i <= index ? 'text-dark-ink/70' : 'text-dark-ink/35'}>
             {s.label}
           </li>
         ))}

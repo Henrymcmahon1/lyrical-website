@@ -33,6 +33,7 @@ import type { AssetInput, AssetKind } from '@/lib/song-job-schema'
 import { supabaseBrowser } from '@/lib/supabase-client'
 import { submitSongJob } from '@/app/studio/submit-actions'
 import { submitSelfServeJob } from '@/app/studio/self-serve-actions'
+import { button, chip, control, eyebrow, link } from '@/components/studio/ui'
 
 /**
  * The submission form.
@@ -46,10 +47,12 @@ import { submitSelfServeJob } from '@/app/studio/self-serve-actions'
  * the thing being uploaded is somebody's unreleased master and they are watching closely.
  */
 
-const field =
-  'w-full rounded-card border border-graphite/20 bg-cream px-4 py-3 text-graphite outline-none transition-colors focus:border-indigo'
-const label = 'flex flex-col gap-2'
-const labelText = 'text-sm'
+// The dashboard's Field language (components/studio/ui.tsx): uppercase Archivo label, the
+// control lifted a shade off the panel, hint lines at 55% ink. Every field, check and upload
+// below is unchanged in what it does; only the classes moved.
+const field = control
+const label = 'flex flex-col gap-1.5'
+const labelText = eyebrow
 
 type Feature = { name: string; part: string; file: File | null }
 type Stage = 'idle' | 'uploading' | 'saving' | 'error'
@@ -330,12 +333,12 @@ export function SongSubmitForm({
             <option value="let_us_decide">Let us decide</option>
           </optgroup>
         </select>
-        <span className="text-sm leading-relaxed text-graphite/55">
-          Not sure? <strong className="font-medium text-graphite/75">Let us decide</strong> means
+        <span className="font-product text-sm leading-relaxed text-dark-ink/55">
+          Not sure? <strong className="font-medium text-dark-ink/85">Let us decide</strong> means
           we pick a voice that fits the song, so you do not need a specific one in mind. Or{' '}
           <a
             href="/studio/voices/new"
-            className="text-indigo underline decoration-indigo/30 underline-offset-2 hover:decoration-indigo"
+            className="text-dark-ink underline decoration-dark-ink/40 underline-offset-2 hover:decoration-dark-ink"
           >
             build a voice model
           </a>{' '}
@@ -376,7 +379,7 @@ export function SongSubmitForm({
       </div>
 
       {/* Reads from the pair config, so an unguaranteed pair never shows a number. */}
-      <p aria-live="polite" className="-mt-3 text-sm text-graphite/60">
+      <p aria-live="polite" className="-mt-3 font-product text-sm text-dark-ink/60">
         {timing}
       </p>
 
@@ -391,11 +394,7 @@ export function SongSubmitForm({
           ).map(([value, text]) => (
             <label
               key={value}
-              className={`cursor-pointer rounded-card border px-4 py-2 text-sm transition-colors ${
-                mode === value
-                  ? 'border-indigo text-indigo'
-                  : 'border-graphite/20 hover:border-graphite/40'
-              }`}
+              className={`${chip} px-4 py-2 font-product text-sm`}
             >
               <input
                 type="radio"
@@ -408,7 +407,7 @@ export function SongSubmitForm({
             </label>
           ))}
         </div>
-        <p className="text-sm leading-relaxed text-graphite/55">
+        <p className="font-product text-sm leading-relaxed text-dark-ink/55">
           Stems give the best result, because the original backing stays untouched. If you do
           not have them, send the mix and we will separate it.
         </p>
@@ -457,7 +456,7 @@ export function SongSubmitForm({
       <div className="flex flex-col gap-4">
         <div>
           <span className={labelText}>Other voices on this track</span>
-          <p className="mt-2 text-sm leading-relaxed text-graphite/55">
+          <p className="mt-2 font-product text-sm leading-relaxed text-dark-ink/55">
             A featured or backing singer, one row each. Name whose voice it is and, if it helps,
             the part they sing, so we re-sing the right voice on the right section.
           </p>
@@ -465,7 +464,7 @@ export function SongSubmitForm({
         {features.map((f, i) => (
           <div key={i} className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
             <label className={label}>
-              <span className="text-xs text-graphite/55">Name</span>
+              <span className="font-product text-[10px] uppercase tracking-[0.14em] text-dark-ink/55">Name</span>
               <input
                 value={f.name}
                 onChange={(e) =>
@@ -477,7 +476,7 @@ export function SongSubmitForm({
               />
             </label>
             <label className={label}>
-              <span className="text-xs text-graphite/55">Part (optional)</span>
+              <span className="font-product text-[10px] uppercase tracking-[0.14em] text-dark-ink/55">Part (optional)</span>
               <input
                 value={f.part}
                 onChange={(e) =>
@@ -491,7 +490,7 @@ export function SongSubmitForm({
               />
             </label>
             <label className={label}>
-              <span className="text-xs text-graphite/55">Their vocal</span>
+              <span className="font-product text-[10px] uppercase tracking-[0.14em] text-dark-ink/55">Their vocal</span>
               <input
                 type="file"
                 accept={ACCEPT_ATTRIBUTE}
@@ -508,7 +507,7 @@ export function SongSubmitForm({
             <button
               type="button"
               onClick={() => setFeatures((prev) => prev.filter((_, j) => j !== i))}
-              className="nudge inline-flex min-h-11 items-center text-sm text-graphite/60 underline decoration-graphite/25 underline-offset-4 hover:text-graphite"
+              className={`nudge inline-flex min-h-11 items-center ${link}`}
             >
               Remove
             </button>
@@ -517,7 +516,7 @@ export function SongSubmitForm({
         <button
           type="button"
           onClick={() => setFeatures((prev) => [...prev, { name: '', part: '', file: null }])}
-          className="nudge inline-flex min-h-11 w-fit items-center rounded-card border border-graphite/25 px-4 text-sm transition-colors hover:border-indigo hover:text-indigo"
+          className={`w-fit ${button.ghost}`}
         >
           Add another voice
         </button>
@@ -538,7 +537,7 @@ export function SongSubmitForm({
       <div className="flex flex-col gap-3">
         <div>
           <span className={labelText}>{selfServe ? 'Lyrics (required)' : 'Lyrics'}</span>
-          <p className="mt-2 text-sm leading-relaxed text-graphite/65">
+          <p className="mt-2 font-product text-sm leading-relaxed text-dark-ink/65">
             Paste the words, in the language they are sung in. One line per sung line, and keep
             any <span className="font-mono text-xs">[Verse 1]</span> markers if you have them.
             This is what the translation is built from, so it is the single thing that most
@@ -561,11 +560,11 @@ export function SongSubmitForm({
           placeholder={`[Verse 1]
 First line as it is sung
 Second line`}
-          className={`${field} font-mono text-sm leading-relaxed`}
+          className={`${field} font-mono leading-relaxed`}
         />
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <label className="nudge inline-flex min-h-11 cursor-pointer items-center rounded-card border border-graphite/25 px-4 text-sm transition-colors hover:border-indigo hover:text-indigo">
+          <label className={`cursor-pointer ${button.ghost}`}>
             <input
               type="file"
               accept={LYRICS_ACCEPT_ATTRIBUTE}
@@ -601,7 +600,7 @@ Second line`}
           </label>
 
           {lyrics.trim() && (
-            <span className="font-mono text-[11px] tabular-nums text-graphite/50">
+            <span className="font-mono text-[11px] tabular-nums text-dark-ink/50">
               {lyricStats(lyrics).lines} lines
             </span>
           )}
@@ -613,7 +612,7 @@ Second line`}
                 setLyrics('')
                 setLyricsNote('')
               }}
-              className="nudge inline-flex min-h-11 items-center font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/45 transition-colors hover:text-ember"
+              className="nudge inline-flex min-h-11 items-center font-product text-[11px] uppercase tracking-[0.14em] text-dark-ink/45 transition-colors hover:text-dark-accent"
             >
               Clear
             </button>
@@ -626,7 +625,7 @@ Second line`}
           trying to judge whether words are lyrics.
         */}
         {(lyricsNote || describeLyricsWarning(lyrics)) && (
-          <p role="status" className="text-sm leading-relaxed text-graphite/70">
+          <p role="status" className="font-product text-sm leading-relaxed text-dark-ink/70">
             {lyricsNote || describeLyricsWarning(lyrics)}
           </p>
         )}
@@ -639,7 +638,7 @@ Second line`}
         {languageWarning && (
           <p
             role="status"
-            className="rounded-card border border-graphite/20 p-3 text-sm leading-relaxed text-graphite"
+            className="rounded-card border border-dark-accent/40 bg-dark-accent/10 px-4 py-3 font-product text-sm leading-relaxed text-dark-ink"
           >
             {languageWarning}
           </p>
@@ -687,7 +686,7 @@ Second line`}
       />
 
       {error && (
-        <p role="alert" className="text-sm leading-relaxed text-graphite">
+        <p role="alert" className="font-product text-sm leading-relaxed text-dark-accent">
           {error}
         </p>
       )}
@@ -695,7 +694,7 @@ Second line`}
       <button
         type="submit"
         disabled={busy}
-        className="nudge rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
+        className={`${button.primary} px-6 py-3`}
       >
         {/*
           The last button in the journey says the same thing as the first one. Somebody who
@@ -709,8 +708,8 @@ Second line`}
             : 'Make it multilingual'}
       </button>
 
-      <p className="text-sm leading-relaxed text-graphite/55">
-        {selfServe ? 'Beta output. Personal use only.' : 'Nothing is made until we accept it, and nothing is released without your approval.'}
+      <p className="font-product text-sm leading-relaxed text-dark-ink/55">
+        {selfServe ? 'Personal use only.' : 'Nothing is made until we accept it, and nothing is released without your approval.'}
       </p>
     </form>
   )
