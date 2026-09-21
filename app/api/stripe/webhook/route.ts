@@ -46,6 +46,9 @@ export async function POST(request: Request) {
     await handleStripeEvent(event, deps)
   } catch (e) {
     console.error('stripe webhook failed', event.id, event.type, e)
+    // Release the claim, or Stripe's retry would read "already processed" and the event would
+    // be lost for good. A claim only sticks once the handler has finished.
+    await admin.from('stripe_events').delete().eq('id', event.id)
     return new Response('handler failed', { status: 500 })
   }
   await admin.from('stripe_events').update({ processed_at: new Date().toISOString() }).eq('id', event.id)

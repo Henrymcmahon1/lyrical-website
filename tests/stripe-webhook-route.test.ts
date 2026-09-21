@@ -11,7 +11,9 @@ const insert = vi.fn()
 const updateEq = vi.fn().mockResolvedValue({ error: null })
 const update = vi.fn(() => ({ eq: updateEq }))
 const upsert = vi.fn().mockResolvedValue({ error: null })
-const from = vi.fn(() => ({ insert, update, upsert }))
+const deleteEq = vi.fn().mockResolvedValue({ error: null })
+const del = vi.fn(() => ({ eq: deleteEq }))
+const from = vi.fn(() => ({ insert, update, upsert, delete: del }))
 vi.mock('@/lib/supabase-admin', () => ({ supabaseAdmin: () => ({ from }) }))
 process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test'
 const { POST } = await import('@/app/api/stripe/webhook/route')
@@ -70,6 +72,10 @@ describe('POST /api/stripe/webhook', () => {
     handle.mockRejectedValueOnce(new Error('db down'))
     expect((await POST(req())).status).toBe(500)
     expect(update).not.toHaveBeenCalled()
+    // The claim is released, so Stripe's retry runs the handler again instead of reading
+    // "already processed" and dropping the event for good.
+    expect(del).toHaveBeenCalledOnce()
+    expect(deleteEq).toHaveBeenCalledWith('id', 'evt_1')
   })
 
   it('a claim error other than a duplicate is 500', async () => {
