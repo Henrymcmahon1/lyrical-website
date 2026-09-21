@@ -35,11 +35,16 @@ export function Nav() {
           <Wordmark />
         </Link>
 
-        <div className="ml-auto flex items-center gap-4 text-sm sm:gap-7">
-          <Link href="/" className="inline-flex min-h-11 items-center hover:text-indigo">Home</Link>
+        {/*
+          At 375px the wordmark (116px) plus four labels overflowed by about 20px and the page
+          scrolled sideways. Below `sm` the wordmark is the way home, so Home hides there; the
+          other three never wrap and the gaps tighten. All four show from `sm` up.
+        */}
+        <div className="ml-auto flex items-center gap-3 whitespace-nowrap text-sm sm:gap-7">
+          <Link href="/" className="hidden min-h-11 items-center hover:text-indigo sm:inline-flex">Home</Link>
           <Link href="/pricing" className="inline-flex min-h-11 items-center hover:text-indigo">Pricing</Link>
           <Link href="/artists" className="inline-flex min-h-11 items-center hover:text-indigo">For artists</Link>
-          <Link href="/studio" className="inline-flex min-h-11 items-center rounded-card bg-indigo px-4 text-cream transition-colors hover:bg-graphite">Studio</Link>
+          <Link href="/studio" className="inline-flex min-h-11 items-center rounded-card bg-indigo px-3 text-cream transition-colors hover:bg-graphite sm:px-4">Studio</Link>
         </div>
       </nav>
     </header>
