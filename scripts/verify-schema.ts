@@ -1,0 +1,62 @@
+// Verifies the v2 schema landed on the live project, using only the public anon key.
+// Run: npx tsx scripts/verify-schema.ts
+//
+// Method: PostgREST answers `select=<column>&limit=0` with 200 when the column exists (rows
+// are filtered by RLS, so nothing leaks), 400 when the column does not exist, and 401 when
+// the column exists but the role has no grant on it. That last case is what keeps `seed`
+// and `pipeline_error` staff-only on song_jobs, and this script asserts it.
+import { readFileSync } from 'node:fs'
+
+function env(name: string): string {
+  const line = readFileSync('.env.local', 'utf8')
+    .split('\n')
+    .find((l) => l.startsWith(name + '='))
+  const v = line?.slice(name.length + 1).trim().replace(/^"|"$/g, '')
+  if (!v) throw new Error(`${name} missing from .env.local`)
+  return v
+}
+
+const EXISTS: Record<string, string[]> = {
+  song_credits: ['delta', 'reason', 'stripe_event_id'],
+  stripe_events: ['id', 'processed_at'],
+  job_feedback: ['rating', 'note', 'tags'],
+  worker_heartbeat: ['worker', 'seen_at'],
+  song_jobs: ['parent_job_id', 'reroll_index', 'licence_terms_version', 'delivery_profile'],
+  song_job_assets: ['purged_at'],
+  song_job_deliveries: ['watermark_id'],
+  profiles: ['stripe_customer_id', 'licence_terms_version'],
+}
+// Exist, but must NOT be readable by customers (column grant on song_jobs).
+const HIDDEN: Record<string, string[]> = { song_jobs: ['seed', 'pipeline_error'] }
+
+async function main() {
+  const url = env('NEXT_PUBLIC_SUPABASE_URL')
+  const key = env('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  const probe = async (table: string, col: string) =>
+    (await fetch(`${url}/rest/v1/${table}?select=${col}&limit=0`, { headers: { apikey: key } })).status
+
+  let failed = false
+  const report = (ok: boolean, line: string) => {
+    if (!ok) failed = true
+    console.log(`${ok ? 'ok     ' : 'FAILED '} ${line}`)
+  }
+  for (const [table, cols] of Object.entries(EXISTS)) {
+    for (const c of cols) {
+      const s = await probe(table, c)
+      report(s !== 400 && s !== 404, `${table}.${c} exists (${s})`)
+    }
+  }
+  for (const [table, cols] of Object.entries(HIDDEN)) {
+    for (const c of cols) {
+      const s = await probe(table, c)
+      report(s === 401 || s === 403, `${table}.${c} hidden from customers (${s})`)
+    }
+  }
+  if (failed) process.exit(1)
+  console.log('schema verified')
+}
+
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})
