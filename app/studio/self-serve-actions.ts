@@ -7,6 +7,8 @@ import { RIGHTS_TERMS_VERSION } from '@/lib/terms'
 import { pathBelongsTo } from '@/lib/song-upload'
 import { currentUser } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getEntitlementFor } from '@/lib/entitlement-db'
+import { consumeCredit } from '@/lib/credits'
 
 /**
  * Door 2: the AUTOMATED self-serve submit.
@@ -60,10 +62,6 @@ export async function getDeliveredCoverUrl(jobId: string): Promise<string | null
   return signed?.signedUrl ?? null
 }
 
-// Covers included per active billing period, by tier. Mirrors the studio serverless gate.
-const ALLOWANCE: Record<string, number> = { starter: 3, creator: 12, pro: 40 }
-const ACTIVE_STATUSES = new Set(['active', 'trialing'])
-
 export async function submitSelfServeJob(raw: unknown): Promise<SelfServeResult> {
   const user = await currentUser()
   if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
@@ -116,26 +114,10 @@ export async function submitSelfServeJob(raw: unknown): Promise<SelfServeResult>
     voiceId = owned?.id ?? null
   }
 
-  // Quota gate: an active subscription with covers left this period. Fail closed.
-  const { data: sub } = await admin
-    .from('subscriptions')
-    .select('tier,status,current_period_start')
-    .eq('user_id', user.id)
-    .maybeSingle()
-  const active = !!sub && ACTIVE_STATUSES.has((sub.status as string) ?? '')
-  const allowance = active ? ALLOWANCE[(sub!.tier as string) ?? ''] ?? 0 : 0
-  let used = 0
-  if (active) {
-    let q = admin
-      .from('song_jobs')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-    if (sub!.current_period_start) q = q.gte('quota_consumed_at', sub!.current_period_start as string)
-    const { count } = await q
-    used = count ?? 0
-  }
-  if (!(active && allowance - used > 0)) {
-    return { ok: false, error: 'You are out of covers for this period. Upgrade or wait for it to renew.' }
+  // Entitlement gate: an active plan with tracks left, else a Single credit. Fails closed.
+  const entitlement = await getEntitlementFor(user.id, admin)
+  if (!entitlement.ok) {
+    return { ok: false, error: 'You are out of tracks for this period. Upgrade, buy a Single, or wait for it to renew.' }
   }
 
   const now = new Date().toISOString()
@@ -177,6 +159,16 @@ export async function submitSelfServeJob(raw: unknown): Promise<SelfServeResult>
   if (assetError) {
     await admin.from('song_jobs').delete().eq('id', jobId)
     return { ok: false, error: 'We could not save the files. Try again in a moment.' }
+  }
+
+  // A credit-funded track spends the credit in the same path as the job insert. If the ledger
+  // write fails the job goes too (assets cascade), so nobody gets a free render.
+  if (entitlement.source === 'credit') {
+    const consumed = await consumeCredit(admin, { userId: user.id, jobId })
+    if (!consumed) {
+      await admin.from('song_jobs').delete().eq('id', jobId)
+      return { ok: false, error: 'We could not apply your credit. Try again in a moment.' }
+    }
   }
 
   return { ok: true, jobId }
