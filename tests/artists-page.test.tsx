@@ -50,7 +50,7 @@ describe('/artists', () => {
 
   it('has no em dash and no banned phrase', async () => {
     const html = await render()
-    expect(html).not.toMatch(/—|&mdash;/)
+    expect(html).not.toMatch(/\u2014|&mdash;/)
     expect(html).not.toMatch(/AI[-\s]generated/i)
   })
 })
