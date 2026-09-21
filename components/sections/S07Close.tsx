@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { CLOSE } from '@/content/two-doors'
 import { Reveal } from '../Reveal'
 
-/** The fan close. S10Start keeps serving /about and /ai-music-translation. */
+/** The creator close, off the home page since 2026-09-22. S10Start serves /, /about and /ai-music-translation. */
 export default function S07Close() {
   return (
     <section id="start" className="bg-graphite py-24 text-cream sm:py-28">

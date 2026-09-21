@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { PlanCards } from '@/components/sections/PlanCards'
-import { CapTable } from '@/components/sections/CapTable'
 import { ANCHOR_WEDGE, FAQ, FOUNDING_LINE, REROLL_LINE } from '@/content/two-doors'
 import { ldJson } from '@/lib/structured-data'
 import { SITE_URL } from '@/lib/site'
@@ -9,10 +7,15 @@ import { faqLd, pricingLd } from './structured-data'
 
 export const metadata: Metadata = {
   title: 'Pricing',
-  description: 'Founding beta prices for lyrical self-serve: Single, Fan and Superfan. Two free re-rolls on every track. Personal use only.',
+  description: 'Founding prices for lyrical self-serve: Single, Plus and Pro. Two free re-rolls on every track. Personal use only.',
   alternates: { canonical: '/pricing' },
 }
 
+/**
+ * Three cards, the anchor line, the questions. The self-serve-against-signed-artist table that
+ * sat between the cards and the FAQ was removed on 2026-09-22 on Henry's instruction: no
+ * side-by-side comparison on this page. The table itself still serves /investors.
+ */
 export default function Pricing() {
   return (
     <>
@@ -24,11 +27,6 @@ export default function Pricing() {
         <div className="mt-14"><PlanCards /></div>
         {/* The deck's anchor line with its figure struck; the figure is typed once, here. */}
         <p className="mt-10 max-w-xl text-sm leading-relaxed text-graphite/60">A human singer costs <s>$2,000</s> a language. {ANCHOR_WEDGE}</p>
-      </section>
-      <section className="mx-auto max-w-3xl px-6 py-16">
-        <h2 className="font-brand text-3xl tracking-tight">What self-serve delivers, and what a signed artist gets</h2>
-        <div className="mt-8"><CapTable /></div>
-        <p className="mt-6 text-sm text-graphite/60">Want the right-hand column? <Link href="/artists" className="underline underline-offset-4 hover:text-indigo">Read the artist terms</Link>.</p>
       </section>
       <section className="mx-auto max-w-3xl px-6 py-16">
         <h2 className="font-brand text-3xl tracking-tight">Questions</h2>

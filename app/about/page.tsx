@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Fold } from '@/components/Fold'
 import { FoldBody } from '@/components/FoldBody'
 import { ABOUT_FOLDS } from '@/content/about-folds'
@@ -71,6 +72,23 @@ export default function About() {
       </div>
 
       <S09Team detail />
+
+      {/*
+        The investor door, added 2026-09-22 on Henry's instruction. Quiet on purpose: the same
+        outline button the rest of the site uses for its secondary action, under the team and
+        before the rights position, because the people it is for have just read who they would
+        be backing. /investors itself is password-gated and off the sitemap; this is the one
+        place the site points at it.
+      */}
+      <div className="mx-auto max-w-3xl px-6 pb-8 text-center">
+        <Link
+          href="/investors"
+          className="nudge inline-flex min-h-11 items-center rounded-card border border-graphite/30 px-7 py-4 transition-colors hover:border-indigo hover:text-indigo"
+        >
+          For investors
+        </Link>
+      </div>
+
       <S08Rights />
       <S10Start />
     </>
