@@ -20,7 +20,9 @@
    Phone first: a bar across the top, lockup and sign out on one
    row, the four tabs in a row beneath it, glyph above label.
    From `sm` it is the dashboard's 15rem column, sticky so the
-   tabs stay in reach down a long song list.
+   tabs stay in reach down a long song list. Sticky makes the
+   rail content-height, so the divider is drawn on the main's
+   left edge (full height) rather than the rail's right.
    ───────────────────────────────────────────────────────────── */
 .studio-rail {
   display: flex;
@@ -82,7 +84,6 @@
     width: 15rem;
     max-height: calc(100vh - 3rem);
     border-bottom: 0;
-    border-right: 1px solid color-mix(in srgb, var(--color-dark-ink) 10%, transparent);
     padding: 1.25rem 0.75rem;
   }
 

@@ -61,7 +61,7 @@ export default async function StudioLayout({ children }: { children: React.React
           </form>
         </aside>
 
-        <main id="main" className="min-w-0 flex-1 p-5 sm:p-8">
+        <main id="main" className="min-w-0 flex-1 p-5 sm:border-l sm:border-dark-ink/10 sm:p-8">
           {children}
         </main>
       </div>

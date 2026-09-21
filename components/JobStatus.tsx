@@ -80,7 +80,8 @@ export function JobStatus({ status }: { status: string }) {
         />
       </div>
 
-      <ol className="mt-2 flex justify-between font-product text-[10px] uppercase tracking-[0.14em]" aria-hidden="true">
+      {/* Sentence case at 11px: four uppercase tracked labels collide at 375px inside a nested take. */}
+      <ol className="mt-2 flex justify-between gap-2 font-product text-[11px] tracking-wide" aria-hidden="true">
         {STEPS.map((s, i) => (
           <li key={s.key} className={i <= index ? 'text-dark-ink/70' : 'text-dark-ink/35'}>
             {s.label}
