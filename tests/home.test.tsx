@@ -1,17 +1,34 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import Home from '@/app/page'
 import { DOORS } from '@/content/two-doors'
+
+/**
+ * `supabase-admin` is mocked at the top so the static import of `Home` below (which chains
+ * through `S02Coffey`) never needs real Supabase credentials. Every test except the last one
+ * runs with no `COFFEY_*` env set, so `createSignedUrls` is never even called for them: the
+ * mock exists for the one test that flips the env on.
+ */
+const createSignedUrls = vi.fn()
+vi.mock('@/lib/supabase-admin', () => ({
+  supabaseAdmin: () => ({
+    storage: { from: () => ({ createSignedUrls: (...a: unknown[]) => createSignedUrls(...a) }) },
+  }),
+}))
+
+const { default: Home } = await import('@/app/page')
+const html = renderToStaticMarkup(await Home())
 
 /**
  * The home page order, pinned. Restored to the original flow on 2026-09-22 with one addition,
  * the two doors, which since Henry's second review the same day is the closing section on the
  * dark ground; `S10Start` is off this page. Each anchor is a string only that section
  * renders, in page order.
+ *
+ * `Home` is an async server component since it now awaits the Coffey slot (its signed URLs
+ * need `supabaseAdmin`), so the page function is called and awaited directly rather than
+ * rendered as `<Home />`, the same pattern `/artists` already uses.
  */
 describe('/ (home)', () => {
-  const html = renderToStaticMarkup(<Home />)
-
   it('reads hero, audience, wheels, fidelity, how, turn, two doors, in that order', () => {
     const anchors = [
       'Every song. Any language.', // S01Hero
@@ -65,9 +82,38 @@ describe('/ (home)', () => {
     expect(html).not.toMatch(/human in the loop|human qa|by ear/i)
   })
 
-  it('carries none of the v2 landing sections', () => {
+  it('carries none of the v2 landing sections, and no Coffey player without the env set', () => {
     for (const s of ['Most popular', 'Rough edges, honestly', 'Pick a song. Pick a language.', 'Coffey Anderson']) {
       expect(html).not.toContain(s)
+    }
+    expect(createSignedUrls).not.toHaveBeenCalled()
+  })
+})
+
+describe('/ (home), the Coffey slot wired into the audience section', () => {
+  it('renders the Coffey player inside the audience section, before the doors close it, once both env paths are set', async () => {
+    process.env.COFFEY_ORIGINAL_PATH = 'a.mp3'
+    process.env.COFFEY_COVER_PATH = 'b.mp3'
+    createSignedUrls.mockResolvedValue({
+      data: [
+        { path: 'a.mp3', signedUrl: 'https://sb/a', error: null },
+        { path: 'b.mp3', signedUrl: 'https://sb/b', error: null },
+      ],
+      error: null,
+    })
+    try {
+      const html = renderToStaticMarkup(await Home())
+      const audienceStart = html.indexOf('Everyone who was always going to love it.')
+      const doorsStart = html.indexOf('id="doors"')
+      const coffeyAt = html.indexOf('Coffey Anderson, in a language he never recorded.')
+      expect(audienceStart).toBeGreaterThanOrEqual(0)
+      expect(coffeyAt).toBeGreaterThan(audienceStart)
+      expect(coffeyAt).toBeLessThan(doorsStart)
+      expect(html).toContain('https://sb/a')
+      expect(html).toContain('https://sb/b')
+    } finally {
+      delete process.env.COFFEY_ORIGINAL_PATH
+      delete process.env.COFFEY_COVER_PATH
     }
   })
 })

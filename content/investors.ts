@@ -39,3 +39,14 @@ export const COMPS: string[][] = [
   ['HeyGen', 'Free tier carries a watermark'],
   ['DistroKid', 'From about $2 a month'],
 ]
+
+/**
+ * The pitch flyer: the same title, frame and section headlines as the page above, condensed
+ * to one line each. No new claim is made here, only `SECTIONS`' own first sentence, section by
+ * section, so the flyer can never say something the full page does not already say.
+ */
+export const FLYER = {
+  title: INVESTORS.title,
+  frame: INVESTORS.frame,
+  points: SECTIONS.map((s) => ({ n: s.n, h: s.h, line: s.p[0] })),
+}

@@ -44,29 +44,6 @@ function artistsPageLd(origin: string) {
   }
 }
 
-const STEPS = [
-  {
-    h: 'Send stems',
-    p: 'Your finished master, the instrumental and the dry vocal stem. Nothing else is required.',
-  },
-  {
-    h: 'We produce',
-    p: 'The song is re-sung in your voice in the new language over your untouched backing. You can be as involved in this step as you like.',
-  },
-  {
-    h: 'You approve',
-    p: 'You hear it first. Nothing is released without your sign-off, and you can send it back.',
-  },
-  {
-    h: 'We release',
-    p: 'You get 24-bit WAV stems, no watermark, with a commercial license, ready for your distributor.',
-  },
-  {
-    h: 'Royalties flow',
-    p: 'The new-language masters earn wherever they are released, and your share comes back to you for as long as they do.',
-  },
-]
-
 /**
  * The three Door 1 benefits, in the copy deck's order and wording. Since Henry's second review
  * on 2026-09-22 there is no human-review claim here and no royalty figure anywhere on the
@@ -147,24 +124,9 @@ export default async function ArtistsPage({
           ))}
         </ul>
         <p className="mt-8 leading-relaxed text-graphite/75">
-          The precedent is Coffey Anderson, our first signed artist, on these same terms.
+          The precedent is Coffey Anderson, our first signed artist, on these same terms. Send
+          your stems, hear it before anyone else does, and release it when you are ready.
         </p>
-      </section>
-
-      <section className="mx-auto max-w-3xl px-6 py-20">
-        <span className={eyebrow}>How it works</span>
-        <h2 className={h2}>Five steps, and you hold the approval at every one.</h2>
-        <ol className="mt-8 grid gap-6 sm:grid-cols-2">
-          {STEPS.map((s, i) => (
-            <li key={s.h} className="rounded-card border border-graphite/15 p-5">
-              <span className="font-mono text-[11px] tracking-[0.18em] text-graphite/45">
-                0{i + 1}
-              </span>
-              <h3 className="mt-2 font-brand text-xl">{s.h}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-graphite/75">{s.p}</p>
-            </li>
-          ))}
-        </ol>
       </section>
 
       <section className="mx-auto max-w-5xl px-6 py-20" aria-labelledby="calc">

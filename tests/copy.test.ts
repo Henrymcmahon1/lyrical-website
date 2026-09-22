@@ -273,16 +273,19 @@ describe('no "beta" on a marketing page', () => {
    * and not "beta". So the rendered marketing pages contain the word nowhere at all, and the
    * pricing page carries the founding sentence exactly once.
    */
-  const pages: [string, () => React.ReactNode][] = [
-    ['/', Home],
-    ['/about', About],
-    ['/pricing', Pricing],
-    ['/hear', Hear],
-    ['/contact', Contact],
+  // `Home` is an async server component since 2026-09-22 (it awaits the Coffey slot), so
+  // every page here is rendered through the same `async () => ...` shape, whether or not
+  // that particular page needs the await.
+  const pages: [string, () => Promise<React.ReactNode>][] = [
+    ['/', async () => Home()],
+    ['/about', async () => createElement(About)],
+    ['/pricing', async () => createElement(Pricing)],
+    ['/hear', async () => createElement(Hear)],
+    ['/contact', async () => createElement(Contact)],
   ]
 
-  it.each(pages)('%s renders without the word', (_path, Page) => {
-    const html = renderToStaticMarkup(createElement(Page))
+  it.each(pages)('%s renders without the word', async (_path, render) => {
+    const html = renderToStaticMarkup(await render())
     expect(html).not.toMatch(/beta/i)
   })
 
@@ -291,12 +294,11 @@ describe('no "beta" on a marketing page', () => {
     expect(html.match(/Founding prices for early sign-ups, kept for life\./g)?.length).toBe(1)
   })
 
-  it('never says "fan" on the home or pricing page', () => {
+  it('never says "fan" on the home or pricing page', async () => {
     // It reads as unauthorised material. Door 2 is for your own songs, or songs you have the
     // rights to, and the plan names are Single, Plus and Pro.
-    for (const Page of [Home, Pricing]) {
-      expect(renderToStaticMarkup(createElement(Page))).not.toMatch(/\bfans?\b/i)
-    }
+    expect(renderToStaticMarkup(await Home())).not.toMatch(/\bfans?\b/i)
+    expect(renderToStaticMarkup(createElement(Pricing))).not.toMatch(/\bfans?\b/i)
   })
 })
 
@@ -310,7 +312,7 @@ describe('no royalty figure and no human-review claim on a public page', () => {
    * pages that carried them.
    */
   const rendered: [string, () => Promise<string>][] = [
-    ['/', async () => renderToStaticMarkup(createElement(Home))],
+    ['/', async () => renderToStaticMarkup(await Home())],
     ['/pricing', async () => renderToStaticMarkup(createElement(Pricing))],
     ['/artists', async () => renderToStaticMarkup(await ArtistsPage({ searchParams: Promise.resolve({}) }))],
   ]

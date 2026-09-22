@@ -449,6 +449,24 @@ body {
   .drift-up, .drift-down { animation: none; transform: translateY(-25%); }
 }
 
+/* ── Earnings graph bars ──────────────────────────────────────
+   Bars are drawn at their real, final SVG geometry (height/position never animated); the
+   "grow from zero" motion is a keyframe on `transform: scaleY()` only, gated by `.js-motion`
+   exactly like the rest of the page. `EarningsGraph.tsx` keys each bar by the calculator's
+   current values, so a remount (not a JS effect) replays this animation when the inputs
+   change.
+   ───────────────────────────────────────────────────────────── */
+.bar-grow { transform-box: fill-box; transform-origin: bottom; }
+
+.js-motion .bar-grow {
+  animation: bar-grow-in 650ms cubic-bezier(.16, .84, .34, 1) both;
+}
+
+@keyframes bar-grow-in {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
 /* ─────────────────────────────────────────────────────────────
    Reduced motion. Durations COLLAPSE rather than being removed,
    so `both`-filled animations still land on their END state and

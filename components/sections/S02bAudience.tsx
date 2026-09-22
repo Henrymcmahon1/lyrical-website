@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { lerpOutline, toPath } from '@/lib/mark'
 import { APPROX, EQUAL } from '@/lib/mark-states'
 import { LANGUAGES } from '@/lib/languages'
@@ -31,8 +31,14 @@ const OTHERS = LANGUAGES.filter((l) => l.code !== 'EN')
  * Both states are in the DOM and CSS decides which is visible, so with JavaScript off
  * the section renders its RESOLVED state (the meaningful one) rather than freezing on
  * the "before" half with seven languages stuck at opacity 0.
+ *
+ * `coffey`: an optional slot rendered by the server page. Coffey's before/after player needs
+ * signed URLs minted with `supabaseAdmin`, which is server-only, so this client component
+ * never reaches for it directly; the server page renders `S02Coffey` and passes the result
+ * in as a prop. It sits after the pinned track, in normal flow, so it never has to fit
+ * inside the pinned panel's fixed `100vh - nav` height.
  */
-export default function S02bAudience() {
+export default function S02bAudience({ coffey }: { coffey?: ReactNode } = {}) {
   const trackRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const groupRef = useRef<SVGGElement>(null)
@@ -192,6 +198,7 @@ export default function S02bAudience() {
           </div>
         </div>
       </div>
+      {coffey && <div className="mx-auto max-w-4xl px-6 pb-16 sm:pb-24">{coffey}</div>}
     </section>
   )
 }
