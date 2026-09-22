@@ -1,0 +1,27 @@
+-- 006: Door-2 copyright check on submission.
+--
+-- Henry's stance (handover section H, 22 Sep): a fan cannot make a version of a commercial
+-- recording they do not own. Before a Door-2 job is queued, the vocal and/or instrumental is
+-- fingerprinted against a commercial-recognition provider (ACRCloud primary, AudD fallback; see
+-- `docs/bots/v3/copyright-research.md` for the provider decision). The result is stored here so
+-- every submission's check is auditable, whichever way it came out.
+--
+-- Staff only, on purpose: a customer does not need to see the raw provider payload (title,
+-- artists, confidence) for a job that passed, and for a job that was refused the submission
+-- never became a row at all, so the ONLY jobs this column exists on are ones that passed. It is
+-- kept staff-side so `/admin` (Bot 4) can show the check that let a job through, without ever
+-- exposing provider internals to the customer who submitted it.
+--
+-- Shape: { provider, match: bool, title, artists, isrc, confidence, checked_at,
+--          part: 'vocal' | 'instrumental' | 'both' }
+-- `match` is always false here, because a true match is refused before the insert this column
+-- lives on (see `lib/copyright.ts` `isCommercialMatch` and the submit-time check in
+-- `app/studio/self-serve-actions.ts`). It is still stored, not just a boolean, so a later change
+-- of mind about the threshold can be checked against what was actually seen at submit time.
+alter table public.song_jobs add column if not exists copyright_check jsonb;
+
+-- Same rule as every other song_jobs column (see schema.sql, `internal_notes` and the note
+-- above `grant select` further down): this is a column-level grant, so a new column is NOT
+-- readable by anon/authenticated until it is explicitly added to that grant. Deliberately not
+-- added here. No revoke/re-grant dance is needed because there is nothing to revoke: the column
+-- did not exist under the old grant, so it was never selectable in the first place.
