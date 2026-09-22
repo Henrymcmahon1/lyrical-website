@@ -12,7 +12,7 @@ beforeEach(() => { createSignedUrls.mockReset(); vi.spyOn(console, 'error').mock
 afterEach(() => { for (const k of ['COFFEY_ORIGINAL_PATH', 'COFFEY_COVER_PATH', 'COFFEY_BUCKET']) delete process.env[k] })
 const withEnv = () => { process.env.COFFEY_ORIGINAL_PATH = 'a.mp3'; process.env.COFFEY_COVER_PATH = 'b.mp3' }
 
-describe('S02Coffey', () => {
+describe('S02Coffey (the audience-section slot)', () => {
   it('coffeyConfig needs both paths and defaults the bucket to listen', () => {
     expect(coffeyConfig({})).toBeNull()
     expect(coffeyConfig({ COFFEY_ORIGINAL_PATH: 'a.mp3' })).toBeNull()
@@ -29,7 +29,7 @@ describe('S02Coffey', () => {
     createSignedUrls.mockRejectedValue(new Error('ECONNREFUSED'))
     expect(renderToStaticMarkup(await S02Coffey())).toBe('')
   })
-  it('renders the player with both signed URLs', async () => {
+  it('renders the player with both signed URLs, as a contained slot, not a standalone section', async () => {
     withEnv()
     createSignedUrls.mockResolvedValue({ data: [row('a.mp3', 'https://sb/a?t=1'), row('b.mp3', 'https://sb/b?t=2')], error: null })
     const html = renderToStaticMarkup(await S02Coffey())
@@ -37,5 +37,9 @@ describe('S02Coffey', () => {
     expect(html).toContain('https://sb/a?t=1')
     expect(html).toContain('https://sb/b?t=2')
     expect(createSignedUrls).toHaveBeenCalledWith(['a.mp3', 'b.mp3'], 4 * 60 * 60)
+    // It is a slot to embed inside S02bAudience, so it carries no top-level <section> of its
+    // own (that would nest a section inside a section) and no aria-label of its own.
+    expect(html).not.toMatch(/^<section/)
+    expect(html).not.toContain('aria-label="Coffey Anderson, before and after"')
   })
 })

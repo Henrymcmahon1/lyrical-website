@@ -31,19 +31,26 @@ async function signBoth(cfg: CoffeyConfig): Promise<{ original: string; cover: s
   }
 }
 
+/**
+ * A slot, not a section: this used to be its own full-bleed dark `<section>` on the home
+ * page and was never wired to one. Since 2026-09-22 it is embedded inside the audience
+ * section (`S02bAudience`) as a contained block, so it carries the dark listening treatment
+ * on a rounded card rather than owning the page's background, and no `<section>` or
+ * `aria-label` of its own (the parent section already has one).
+ */
 export default async function S02Coffey() {
   const cfg = coffeyConfig(process.env)
   if (!cfg) return null
   const urls = await signBoth(cfg)
   if (!urls) return null
   return (
-    <section aria-label="Coffey Anderson, before and after" className="bg-dark-ground py-24 text-dark-ink sm:py-28">
-      <div className="mx-auto flex max-w-4xl flex-col items-center px-6 text-center">
-        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-dark-ink/50">Hear it</span>
-        <h2 className="mt-5 font-brand text-4xl leading-tight tracking-tight text-balance sm:text-5xl">Coffey Anderson, in a language he never recorded.</h2>
-        <p className="mt-6 max-w-xl leading-relaxed text-dark-ink/70">Same voice, same melody, the original backing untouched. Switch between the two and listen for what changed: only the words.</p>
+    <div className="mt-14 rounded-card bg-dark-ground px-6 py-10 text-center text-dark-ink sm:mt-20 sm:px-10 sm:py-14">
+      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-dark-ink/50">Hear it</span>
+      <h3 className="mt-5 font-brand text-2xl leading-tight tracking-tight text-balance sm:text-3xl">Coffey Anderson, in a language he never recorded.</h3>
+      <p className="mx-auto mt-4 max-w-xl leading-relaxed text-dark-ink/70">Same voice, same melody, the original backing untouched. Switch between the two and listen for what changed: only the words.</p>
+      <div className="flex justify-center">
         <CoffeyPlayer originalUrl={urls.original} coverUrl={urls.cover} />
       </div>
-    </section>
+    </div>
   )
 }

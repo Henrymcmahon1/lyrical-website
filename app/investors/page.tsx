@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { Mark } from '@/components/Mark'
 import { Trademark } from '@/components/Trademark'
 import { CapTable } from '@/components/sections/CapTable'
+import InvestorMedia from '@/components/sections/InvestorMedia'
 import { COMPS, INVESTORS, SECTIONS } from '@/content/investors'
 import { INVESTOR_COOKIE, verifyInvestorSession } from '@/lib/investor-auth'
 import { lock, unlock } from './actions'
@@ -40,6 +41,7 @@ export default async function Investors({ searchParams }: { searchParams: Promis
       </div>
       <h1 className="mt-8 font-brand text-4xl leading-tight tracking-tight text-balance sm:text-5xl">{INVESTORS.title}</h1>
       <p className="mt-6 text-lg leading-relaxed text-graphite/75">{INVESTORS.frame}</p>
+      {await InvestorMedia()}
       {SECTIONS.map((s) => (
         <section key={s.n} className="mt-16">
           <div className="flex items-baseline gap-4"><span className="font-mono text-xs tabular-nums text-indigo">{s.n}</span><h2 className="font-brand text-2xl leading-tight tracking-tight">{s.h}</h2></div>

@@ -91,4 +91,19 @@ describe('/artists', () => {
     expect(html).not.toMatch(/\u2014|&mdash;/)
     expect(html).not.toMatch(/AI[-\s]generated/i)
   })
+
+  it('is leaner: no dense step-by-step list, the calculator and its graph are the centrepiece, no royalty figure', async () => {
+    const html = await render()
+    // The five-card "how it works" list read as dense and duplicated what "What you
+    // receive" already said; the page is shorter without it.
+    expect(html).not.toContain('Five steps')
+    expect(html).not.toContain('We produce')
+    // The animated graph (Task 1) renders inside the calculator: this is the page's
+    // centrepiece, so it must actually be on the page, not just importable.
+    expect(html).toContain('role="img"')
+    expect(html).toContain('id="eoi"')
+    expect(html).not.toContain('30%')
+    // Fewer sections: pitch, what you receive, the calculator, the EOI form.
+    expect((html.match(/<section/g) ?? []).length).toBeLessThanOrEqual(4)
+  })
 })
