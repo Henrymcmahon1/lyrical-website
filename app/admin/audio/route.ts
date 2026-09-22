@@ -72,7 +72,7 @@ export async function GET(request: Request) {
     .createSignedUrl(asset.path, SIGNED_URL_TTL_S)
 
   if (signError || !signed?.signedUrl) {
-    console.error('[queue] could not sign a submission', signError)
+    console.error('[admin] could not sign a submission', signError)
     return new Response('That file could not be opened.', { status: 502 })
   }
 

@@ -63,7 +63,7 @@ describe('the admin session token', () => {
 
   it('will NOT accept an unnamespaced token as an admin session', () => {
     // GATE_SECRET signs more than one thing, and all of them are HMACs of arbitrary text under
-    // one key. Without the `admin:` prefix, any other token signed with it would open /queue.
+    // one key. Without the `admin:` prefix, any other token signed with it would open /admin.
     expect(verifyAdminSession(unnamespacedToken('someone@example.com'), NOW)).toBe(false)
     expect(verifyAdminSession(unnamespacedToken('1754870000000'), NOW)).toBe(false)
   })

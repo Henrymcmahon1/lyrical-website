@@ -256,7 +256,7 @@ export async function VoicesTab({ showAll }: { showAll: boolean }) {
                 {samples.map((s) => (
                   <li key={s.id} className="flex flex-wrap items-baseline gap-x-3 text-sm">
                     <a
-                      href={`/queue/audio?voice=${s.id}`}
+                      href={`/admin/audio?voice=${s.id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-indigo underline underline-offset-4"

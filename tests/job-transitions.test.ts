@@ -13,7 +13,7 @@ import { JOB_STATUSES } from '@/lib/song-job-schema'
 /**
  * The lifecycle graph, on its own, away from any database.
  *
- * `app/queue/actions.ts` proves the action consults this table. This proves the table says what
+ * `app/admin/actions.ts` proves the action consults this table. This proves the table says what
  * the business decided, which is a different question and the one that will be argued about
  * later.
  */

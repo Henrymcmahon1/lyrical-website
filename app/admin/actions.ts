@@ -26,7 +26,7 @@ import type { JobStatus } from '@/lib/song-job-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 /**
- * Everything `/queue` can do, for both tabs.
+ * Everything `/admin` can do, for both tabs.
  *
  * Moved wholesale from `app/leads/actions.ts` rather than rewritten. That code was tested and
  * in use; the only change to the enquiry half is the cookie path and where it redirects.
@@ -36,7 +36,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
  */
 
 /**
- * Scoped to `/queue`, so the session cookie is never sent with a request for the marketing
+ * Scoped to `/admin`, so the session cookie is never sent with a request for the marketing
  * site. Nothing else on the domain has any use for it.
  *
  * ⚠️ This path CHANGED from `/leads` when the console moved. A cookie issued under the old
@@ -47,7 +47,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 const COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: 'lax' as const,
-  path: '/queue',
+  path: '/admin',
   secure: process.env.NODE_ENV === 'production',
 }
 
@@ -69,12 +69,12 @@ export async function login(formData: FormData) {
    * rather than in a process Vercel may replace between two requests.
    */
   const limit = consume(
-    clientKey(await headers(), 'queue-login'),
+    clientKey(await headers(), 'admin-login'),
     LOGIN_ATTEMPTS,
     LOGIN_WINDOW_MS,
     Date.now(),
   )
-  if (!limit.allowed) redirect('/queue?error=rate')
+  if (!limit.allowed) redirect('/admin?error=rate')
 
   const supplied = String(formData.get('password') ?? '')
 
@@ -84,7 +84,7 @@ export async function login(formData: FormData) {
     // Deliberate delay, and only on failure. Unlike the counter above this works regardless of
     // which instance serves the request, because it costs wall-clock time every attempt.
     await new Promise((resolve) => setTimeout(resolve, 500))
-    redirect('/queue?error=1')
+    redirect('/admin?error=1')
   }
 
   const jar = await cookies()
@@ -92,13 +92,13 @@ export async function login(formData: FormData) {
     ...COOKIE_OPTIONS,
     maxAge: Math.floor(ADMIN_MAX_AGE_MS / 1000),
   })
-  redirect('/queue')
+  redirect('/admin')
 }
 
 export async function logout() {
   const jar = await cookies()
   jar.set(ADMIN_COOKIE, '', { ...COOKIE_OPTIONS, maxAge: 0 })
-  redirect('/queue')
+  redirect('/admin')
 }
 
 // ── Enquiries ─────────────────────────────────────────────────────────────────
@@ -116,23 +116,23 @@ export async function logout() {
  *
  * Note that no equivalent exists for a song job. A submission is a record of what somebody
  * asserted about their rights and when, and its files are somebody else's master. See
- * `app/queue/SongsTab.tsx`.
+ * `app/admin/SongsTab.tsx`.
  */
 export async function deleteLead(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/queue')
+  if (!(await hasAdminSession())) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   if (!id) return
 
   await supabaseAdmin().from('enquiries').delete().eq('id', id)
 
-  revalidatePath('/queue')
+  revalidatePath('/admin')
   const all = formData.get('show') === 'all' ? '&show=all' : ''
-  redirect(`/queue?tab=enquiries${all}&deleted=1`)
+  redirect(`/admin?tab=relationships${all}&deleted=1`)
 }
 
 export async function setHandled(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/queue')
+  if (!(await hasAdminSession())) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   if (!id) return
@@ -143,7 +143,7 @@ export async function setHandled(formData: FormData) {
     .update({ handled, handled_at: handled ? new Date().toISOString() : null })
     .eq('id', id)
 
-  revalidatePath('/queue')
+  revalidatePath('/admin')
 }
 
 // ── Songs ─────────────────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ async function submitterEmail(userId: string): Promise<string> {
  * customer has been contacted.
  */
 export async function moveJob(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/queue')
+  if (!(await hasAdminSession())) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   const to = String(formData.get('to') ?? '') as JobStatus
@@ -180,7 +180,7 @@ export async function moveJob(formData: FormData) {
 
   // Checked against the same table the buttons are drawn from, because a form post does not
   // have to have come from a page we rendered.
-  if (!canMove(from, to)) redirect('/queue?error=move')
+  if (!canMove(from, to)) redirect('/admin?error=move')
 
   const db = supabaseAdmin()
   const nowIso = new Date().toISOString()
@@ -202,8 +202,8 @@ export async function moveJob(formData: FormData) {
 
   if (error || !data?.length) {
     // No row matched means somebody else moved it first. Not an error worth a scary page.
-    revalidatePath('/queue')
-    redirect('/queue?error=stale')
+    revalidatePath('/admin')
+    redirect('/admin?error=stale')
   }
 
   const job = data[0]
@@ -249,9 +249,9 @@ export async function moveJob(formData: FormData) {
     }
   }
 
-  revalidatePath('/queue')
+  revalidatePath('/admin')
   revalidatePath('/studio')
-  redirect(`/queue?moved=${to}`)
+  redirect(`/admin?tab=work&moved=${to}`)
 }
 
 /**
@@ -268,7 +268,7 @@ export async function moveJob(formData: FormData) {
  * Found while wiring this action, 2026-08-11.
  */
 export async function saveNote(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/queue')
+  if (!(await hasAdminSession())) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   if (!id) return
@@ -279,7 +279,40 @@ export async function saveNote(formData: FormData) {
     .update({ internal_notes: note || null })
     .eq('id', id)
 
-  revalidatePath('/queue')
+  revalidatePath('/admin')
+}
+
+/**
+ * Send a failed job back through the pipeline. Writes `pipeline_state='queued'` and nothing
+ * else: the poller does the rest, exactly as it does for a fresh submission
+ * (`app/studio/self-serve-actions.ts`).
+ *
+ * Only for a job already in a failed or rejected state (checked by the caller, which draws the
+ * button only there; this repeats the check because a form post does not have to have come from
+ * a page we rendered). `.eq('status', from)` is the same concurrency guard `moveJob` uses: two
+ * founders re-queuing the same job at once should write once, not twice.
+ */
+export async function requeueJob(formData: FormData) {
+  if (!(await hasAdminSession())) redirect('/admin')
+
+  const id = String(formData.get('id') ?? '')
+  const from = String(formData.get('from') ?? '')
+  if (!id || from !== 'rejected') redirect('/admin?tab=work&error=move')
+
+  const { data, error } = await supabaseAdmin()
+    .from('song_jobs')
+    .update({ pipeline_state: 'queued' })
+    .eq('id', id)
+    .eq('status', from)
+    .select('id')
+
+  if (error || !data?.length) {
+    revalidatePath('/admin')
+    redirect('/admin?tab=work&error=stale')
+  }
+
+  revalidatePath('/admin')
+  redirect('/admin?tab=work&moved=requeued')
 }
 
 // ── Voices ────────────────────────────────────────────────────────────────────
@@ -302,14 +335,14 @@ const VOICE_MOVES: Record<string, readonly string[]> = {
 }
 
 export async function moveVoice(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/queue')
+  if (!(await hasAdminSession())) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   const to = String(formData.get('to') ?? '')
   const from = String(formData.get('from') ?? '')
   if (!id) return
 
-  if (!VOICE_MOVES[from]?.includes(to)) redirect('/queue?tab=voices&error=move')
+  if (!VOICE_MOVES[from]?.includes(to)) redirect('/admin?tab=voice&error=move')
 
   /**
    * `.eq('status', from)` is the concurrency guard, exactly as on song jobs. Two founders in
@@ -327,8 +360,8 @@ export async function moveVoice(formData: FormData) {
     .select('id')
 
   if (error || !data?.length) {
-    revalidatePath('/queue')
-    redirect('/queue?tab=voices&error=stale')
+    revalidatePath('/admin')
+    redirect('/admin?tab=voice&error=stale')
   }
 
   /*
@@ -337,7 +370,7 @@ export async function moveVoice(formData: FormData) {
    * is on songs: Henry's decision. The studio page states the status in words, which is where
    * somebody who cares will look.
    */
-  revalidatePath('/queue')
+  revalidatePath('/admin')
   revalidatePath('/studio/voices')
-  redirect(`/queue?tab=voices&moved=${to}`)
+  redirect(`/admin?tab=voice&moved=${to}`)
 }

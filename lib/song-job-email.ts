@@ -113,7 +113,7 @@ function notificationDoc(d: SongJobEmailFields): EmailDoc {
   }
 
   blocks.push(
-    { type: 'cta', label: 'Open the queue', href: `${SITE_URL}/queue` },
+    { type: 'cta', label: 'Open the queue', href: `${SITE_URL}/admin?tab=work` },
     {
       type: 'note',
       text:
