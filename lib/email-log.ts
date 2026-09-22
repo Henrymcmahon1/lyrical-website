@@ -55,6 +55,22 @@ export async function alreadySent(
   return (count ?? 0) > 0
 }
 
+/**
+ * Has this slug already gone out for this specific JOB, regardless of user? Job-scoped rather
+ * than user-scoped: `alreadySent` would wrongly block a second, unrelated delivered job for the
+ * same person, where this is what `app/api/hooks/song-job/route.ts` actually needs to stay
+ * idempotent against Supabase re-delivering the same webhook.
+ */
+export async function alreadySentForJob(admin: Admin, jobId: string, slug: EmailSlug): Promise<boolean> {
+  const { count, error } = await admin
+    .from('email_log')
+    .select('id', { count: 'exact', head: true })
+    .eq('job_id', jobId)
+    .eq('slug', slug)
+  if (error) throw new Error(error.message)
+  return (count ?? 0) > 0
+}
+
 export type EmailLogRow = {
   userId: string | null
   toEmail: string

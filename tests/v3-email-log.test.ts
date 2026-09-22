@@ -1,5 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { alreadySent, logSend, productEmailAllowedToday, PRODUCT_EMAIL_SLUGS } from '@/lib/email-log'
+import {
+  alreadySent,
+  alreadySentForJob,
+  logSend,
+  productEmailAllowedToday,
+  PRODUCT_EMAIL_SLUGS,
+} from '@/lib/email-log'
 
 /**
  * `email_log` is the idempotency and rate-limit ledger every send in this bot's scope checks
@@ -58,6 +64,26 @@ describe('alreadySent', () => {
   it('fails loud on a database error rather than silently allowing a duplicate send', async () => {
     const { admin } = fakeAdmin({ error: { message: 'boom' } })
     await expect(alreadySent(admin, 'user-1', 'welcome')).rejects.toThrow(/boom/)
+  })
+})
+
+describe('alreadySentForJob', () => {
+  it('is false when nothing matches', async () => {
+    const { admin } = fakeAdmin({ count: 0 })
+    expect(await alreadySentForJob(admin, 'job-1', 'track-delivered')).toBe(false)
+  })
+
+  it('is true when a row matches, and filters by job and slug (not user)', async () => {
+    const { admin, calls } = fakeAdmin({ count: 1 })
+    expect(await alreadySentForJob(admin, 'job-1', 'track-delivered')).toBe(true)
+    const eqCalls = calls.filter((c) => c.method === 'eq')
+    expect(eqCalls).toContainEqual({ method: 'eq', args: ['job_id', 'job-1'] })
+    expect(eqCalls).toContainEqual({ method: 'eq', args: ['slug', 'track-delivered'] })
+  })
+
+  it('fails loud on a database error', async () => {
+    const { admin } = fakeAdmin({ error: { message: 'boom' } })
+    await expect(alreadySentForJob(admin, 'job-1', 'track-delivered')).rejects.toThrow(/boom/)
   })
 })
 
