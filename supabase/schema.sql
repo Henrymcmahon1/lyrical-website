@@ -587,3 +587,8 @@ create table if not exists public.worker_heartbeat (
 alter table public.worker_heartbeat enable row level security;
 drop policy if exists worker_heartbeat_read on public.worker_heartbeat;
 create policy worker_heartbeat_read on public.worker_heartbeat for select using (true);
+
+-- 004b: the soft-delete marker for /studio/account (v3, Bot 2). See the migration file for why
+-- this is 004b and not 004: Bot 1 owns 004 (profiles.product_emails, rating_reminders,
+-- welcomed_at) in the same v3 session, on disjoint columns of the same table.
+alter table public.profiles add column if not exists retired_at timestamptz;

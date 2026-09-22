@@ -1,0 +1,12 @@
+-- 004b: the soft-delete marker for /studio/account (Bot 2, v3).
+--
+-- Numbered 004b rather than 004 because Bot 1 (auth + emails) owns 004 in the same session
+-- (profiles.product_emails, profiles.rating_reminders, profiles.welcomed_at) and this file was
+-- written without seeing whether that one had already landed. Henry: apply whichever of 004 and
+-- 004b exist, in either order, they touch disjoint columns on the same table.
+--
+-- Stamped by lib/account-data.ts `retireAccount` when a customer deletes their account from
+-- /studio/account. SOFT delete: this is a marker, not a deletion. No row is removed and no
+-- policy changes; retired_at is staff/system information the customer's own session never
+-- needs to read back, so it carries no customer select grant.
+alter table public.profiles add column if not exists retired_at timestamptz;
