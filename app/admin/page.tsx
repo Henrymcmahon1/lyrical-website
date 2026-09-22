@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { hasAdminSession } from '@/lib/admin-session'
 import { EnquiriesTab } from './EnquiriesTab'
 import { FeedbackTab } from './FeedbackTab'
+import { IssuesTab } from './IssuesTab'
 import { MoneyTab } from './MoneyTab'
 import { PeopleTab } from './PeopleTab'
 import { SongsTab } from './SongsTab'
@@ -97,11 +98,6 @@ function Login({ error }: { error?: string }) {
   )
 }
 
-/** Placeholder for a tab whose real content lands in a later task. Never shown once that task ships. */
-function ComingSoon({ label }: { label: string }) {
-  return <p className="mt-12 text-graphite/60">{label} is being built.</p>
-}
-
 export default async function AdminPage({
   searchParams,
 }: {
@@ -117,6 +113,8 @@ export default async function AdminPage({
     /** Voice tab feedback filters. */
     tag?: string
     rating?: string
+    /** Issues tab status filter. */
+    status?: string
   }>
 }) {
   const [signedIn, params] = await Promise.all([hasAdminSession(), searchParams])
@@ -267,7 +265,13 @@ export default async function AdminPage({
       ) : tab === 'money' ? (
         <MoneyTab />
       ) : (
-        <ComingSoon label="Issues" />
+        <IssuesTab
+          status={
+            params.status === 'open' || params.status === 'ack' || params.status === 'resolved'
+              ? params.status
+              : undefined
+          }
+        />
       )}
     </section>
   )

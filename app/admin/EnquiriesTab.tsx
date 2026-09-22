@@ -1,12 +1,15 @@
+import { listNotes, listTasks, RELATIONSHIP_STATUSES, type CrmNote, type CrmTask, type RelationshipStatus } from '@/lib/crm'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { deleteLead, setHandled } from './actions'
+import { addRelationshipNote, addRelationshipTask, updateRelationship } from './relationship-actions'
 
 /**
- * The enquiry inbox, moved here from `/leads` when the console gained a second tab.
+ * The Relationships tab: the enquiry inbox (moved here from `/leads` when the console gained a
+ * second tab), plus artist EOIs (`source = 'artist_eoi'`, same table), now with a relationship
+ * status and owner, and staff notes/next actions the same shape as the People tab has.
  *
- * Moved rather than rewritten, deliberately. This code worked, it was tested, and its CSV
- * export defuses spreadsheet formula injection. The changes are structural only: it is a
- * component rather than a page, and its links carry `tab=enquiries`.
+ * The enquiry-reading half was moved rather than rewritten. That code worked, it was tested, and
+ * its CSV export defuses spreadsheet formula injection.
  */
 
 type Lead = {
@@ -22,6 +25,16 @@ type Lead = {
   source: string | null
   unlocked_audio: boolean
   handled: boolean
+  rel_status: RelationshipStatus | null
+  rel_owner: string | null
+}
+
+const RELATIONSHIP_LABEL: Record<RelationshipStatus, string> = {
+  new: 'New',
+  contacted: 'Contacted',
+  in_talks: 'In talks',
+  signed: 'Signed',
+  closed: 'Closed',
 }
 
 /**
@@ -90,6 +103,19 @@ export async function EnquiriesTab({
   const truncated = total > leads.length
 
   const base = `/admin?tab=relationships${showAll ? '&show=all' : ''}`
+
+  /** Notes and open next actions per enquiry, fetched once each rather than per row. */
+  const admin = supabaseAdmin()
+  const notesAndTasks = await Promise.all(
+    leads.map(async (l) => {
+      const [notes, tasks] = await Promise.all([
+        listNotes({ enquiryId: l.id }, admin).catch(() => [] as CrmNote[]),
+        listTasks({ enquiryId: l.id, openOnly: true }, admin).catch(() => [] as CrmTask[]),
+      ])
+      return [l.id, { notes, tasks }] as const
+    }),
+  )
+  const extrasById = new Map(notesAndTasks)
 
   return (
     <>
@@ -177,6 +203,102 @@ export async function EnquiriesTab({
                   {l.message}
                 </p>
               )}
+
+              {/* Relationship status and owner. A select and a text field, one form, one save. */}
+              <form action={updateRelationship} className="mt-5 flex flex-wrap items-center gap-3">
+                <input type="hidden" name="enquiryId" value={l.id} />
+                <select
+                  name="relStatus"
+                  defaultValue={l.rel_status ?? 'new'}
+                  className="min-h-11 rounded-card border border-graphite/20 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus-visible:border-indigo"
+                >
+                  {RELATIONSHIP_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {RELATIONSHIP_LABEL[s]}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  name="relOwner"
+                  type="text"
+                  defaultValue={l.rel_owner ?? ''}
+                  placeholder="Owner"
+                  className="min-h-11 w-40 rounded-card border border-graphite/20 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus-visible:border-indigo"
+                />
+                <button
+                  type="submit"
+                  className="min-h-11 rounded-card border border-graphite/25 px-3 font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/60 transition-colors hover:border-indigo hover:text-indigo"
+                >
+                  Save
+                </button>
+              </form>
+
+              {(() => {
+                const extras = extrasById.get(l.id)
+                if (!extras) return null
+                return (
+                  <>
+                    {extras.tasks.length > 0 && (
+                      <ul className="mt-4 flex flex-col gap-1.5">
+                        {extras.tasks.map((t) => (
+                          <li key={t.id} className="text-sm text-ember">
+                            Next: {t.title}
+                            {t.due_on ? ` (due ${t.due_on})` : ''}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {extras.notes.length > 0 && (
+                      <ul className="mt-4 flex flex-col gap-2">
+                        {extras.notes.map((n) => (
+                          <li key={n.id} className="text-sm text-graphite/80">
+                            {n.body}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )
+              })()}
+
+              <div className="mt-5 flex flex-wrap gap-6">
+                <form action={addRelationshipNote} className="flex flex-wrap items-start gap-3">
+                  <input type="hidden" name="enquiryId" value={l.id} />
+                  <textarea
+                    name="body"
+                    rows={2}
+                    placeholder="Add a note"
+                    className="min-h-11 w-full max-w-xs rounded-card border border-graphite/20 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus-visible:border-indigo"
+                  />
+                  <button
+                    type="submit"
+                    className="min-h-11 rounded-card border border-graphite/25 px-3 font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/60 transition-colors hover:border-indigo hover:text-indigo"
+                  >
+                    Save note
+                  </button>
+                </form>
+
+                <form action={addRelationshipTask} className="flex flex-wrap items-start gap-3">
+                  <input type="hidden" name="enquiryId" value={l.id} />
+                  <input
+                    name="title"
+                    type="text"
+                    placeholder="Next action"
+                    className="min-h-11 w-full max-w-xs rounded-card border border-graphite/20 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus-visible:border-indigo"
+                  />
+                  <input
+                    name="dueOn"
+                    type="date"
+                    className="min-h-11 rounded-card border border-graphite/20 bg-transparent px-3 py-2 text-sm outline-none transition-colors focus-visible:border-indigo"
+                  />
+                  <button
+                    type="submit"
+                    className="min-h-11 rounded-card border border-graphite/25 px-3 font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/60 transition-colors hover:border-indigo hover:text-indigo"
+                  >
+                    Add task
+                  </button>
+                </form>
+              </div>
 
               {/*
                 Confirm as a page state, not a browser dialog.

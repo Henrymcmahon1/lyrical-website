@@ -118,3 +118,80 @@ export async function completeTask(taskId: string, admin: Admin = supabaseAdmin(
     .eq('id', taskId)
   if (error) throw new Error(error.message)
 }
+
+// ── Issues ────────────────────────────────────────────────────────────────────
+
+export type CrmIssueKind = 'failed_job' | 'refund' | 'complaint' | 'other'
+export type CrmIssueStatus = 'open' | 'ack' | 'resolved'
+
+export type CrmIssue = {
+  id: string
+  created_at: string
+  job_id: string | null
+  user_id: string | null
+  kind: CrmIssueKind
+  status: CrmIssueStatus
+  detail: string | null
+  resolved_at: string | null
+}
+
+const IssueInput = z.object({
+  jobId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  kind: z.enum(['failed_job', 'refund', 'complaint', 'other']),
+  detail: z.string().trim().max(4000).optional(),
+})
+
+export async function logIssue(
+  input: { jobId?: string; userId?: string; kind: CrmIssueKind; detail?: string },
+  admin: Admin = supabaseAdmin(),
+): Promise<void> {
+  const parsed = IssueInput.parse(input)
+  const { error } = await admin.from('crm_issues').insert({
+    job_id: parsed.jobId ?? null,
+    user_id: parsed.userId ?? null,
+    kind: parsed.kind,
+    detail: parsed.detail ?? null,
+  })
+  if (error) throw new Error(error.message)
+}
+
+export async function listIssues(
+  args: { status?: CrmIssueStatus } = {},
+  admin: Admin = supabaseAdmin(),
+): Promise<CrmIssue[]> {
+  let query = admin.from('crm_issues').select('*').order('created_at', { ascending: false })
+  if (args.status) query = query.eq('status', args.status)
+  const { data, error } = await query
+  if (error) throw new Error(error.message)
+  return (data ?? []) as CrmIssue[]
+}
+
+export async function setIssueStatus(
+  issueId: string,
+  status: CrmIssueStatus,
+  admin: Admin = supabaseAdmin(),
+): Promise<void> {
+  const { error } = await admin
+    .from('crm_issues')
+    .update({ status, resolved_at: status === 'resolved' ? new Date().toISOString() : null })
+    .eq('id', issueId)
+  if (error) throw new Error(error.message)
+}
+
+// ── Relationships (enquiries.rel_status / rel_owner) ───────────────────────────
+
+export const RELATIONSHIP_STATUSES = ['new', 'contacted', 'in_talks', 'signed', 'closed'] as const
+export type RelationshipStatus = (typeof RELATIONSHIP_STATUSES)[number]
+
+export async function setRelationshipStatus(
+  enquiryId: string,
+  relStatus: RelationshipStatus,
+  relOwner?: string,
+  admin: Admin = supabaseAdmin(),
+): Promise<void> {
+  const patch: { rel_status: RelationshipStatus; rel_owner?: string } = { rel_status: relStatus }
+  if (relOwner !== undefined) patch.rel_owner = relOwner
+  const { error } = await admin.from('enquiries').update(patch).eq('id', enquiryId)
+  if (error) throw new Error(error.message)
+}

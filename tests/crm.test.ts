@@ -1,5 +1,15 @@
 import { describe, expect, it, vi } from 'vitest'
-import { addNote, addTask, completeTask, listNotes, listTasks } from '@/lib/crm'
+import {
+  addNote,
+  addTask,
+  completeTask,
+  listNotes,
+  listTasks,
+  logIssue,
+  listIssues,
+  setIssueStatus,
+  setRelationshipStatus,
+} from '@/lib/crm'
 
 /**
  * `lib/crm.ts`: the one place `crm_*` writes happen. Every write here is service-role and
@@ -107,5 +117,79 @@ describe('completeTask', () => {
     expect(from).toHaveBeenCalledWith('crm_tasks')
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ done_at: expect.any(String) }))
     expect(eq).toHaveBeenCalledWith('id', 'task-1')
+  })
+})
+
+const JOB_ID = '33333333-3333-4333-8333-333333333333'
+
+describe('logIssue', () => {
+  it('inserts into crm_issues with status defaulted by the database (not sent here)', async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    const from = vi.fn().mockReturnValue({ insert })
+    await logIssue({ jobId: JOB_ID, kind: 'failed_job', detail: 'stems expired' }, { from } as never)
+    expect(from).toHaveBeenCalledWith('crm_issues')
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ job_id: JOB_ID, user_id: null, kind: 'failed_job', detail: 'stems expired' }),
+    )
+  })
+
+  it('rejects an unknown kind', async () => {
+    const from = vi.fn()
+    await expect(
+      logIssue({ jobId: JOB_ID, kind: 'not_a_real_kind' as never }, { from } as never),
+    ).rejects.toThrow()
+    expect(from).not.toHaveBeenCalled()
+  })
+})
+
+describe('listIssues', () => {
+  it('filters by status when given one', async () => {
+    const eq = vi.fn().mockResolvedValue({ data: [], error: null })
+    const order = vi.fn().mockReturnValue({ eq })
+    const select = vi.fn().mockReturnValue({ order })
+    const from = vi.fn().mockReturnValue({ select })
+    await listIssues({ status: 'open' }, { from } as never)
+    expect(eq).toHaveBeenCalledWith('status', 'open')
+  })
+})
+
+describe('setIssueStatus', () => {
+  it('stamps resolved_at when moving to resolved', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    const from = vi.fn().mockReturnValue({ update })
+    await setIssueStatus('issue-1', 'resolved', { from } as never)
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'resolved', resolved_at: expect.any(String) }),
+    )
+    expect(eq).toHaveBeenCalledWith('id', 'issue-1')
+  })
+
+  it('clears resolved_at when moving back to open', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    const from = vi.fn().mockReturnValue({ update })
+    await setIssueStatus('issue-1', 'open', { from } as never)
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ status: 'open', resolved_at: null }))
+  })
+})
+
+describe('setRelationshipStatus', () => {
+  it('writes rel_status on exactly the given enquiry', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    const from = vi.fn().mockReturnValue({ update })
+    await setRelationshipStatus(ENQUIRY_ID, 'contacted', undefined, { from } as never)
+    expect(from).toHaveBeenCalledWith('enquiries')
+    expect(update).toHaveBeenCalledWith({ rel_status: 'contacted' })
+    expect(eq).toHaveBeenCalledWith('id', ENQUIRY_ID)
+  })
+
+  it('also writes rel_owner when given', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null })
+    const update = vi.fn().mockReturnValue({ eq })
+    const from = vi.fn().mockReturnValue({ update })
+    await setRelationshipStatus(ENQUIRY_ID, 'in_talks', 'Henry', { from } as never)
+    expect(update).toHaveBeenCalledWith({ rel_status: 'in_talks', rel_owner: 'Henry' })
   })
 })
