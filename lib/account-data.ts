@@ -18,6 +18,14 @@ import type { supabaseAdmin } from '@/lib/supabase-admin'
  */
 type Admin = ReturnType<typeof supabaseAdmin>
 
+/**
+ * What the customer must type on /studio/account before the delete button does anything.
+ * Lives here, not in `app/studio/account/actions.ts`, because a `'use server'` module may only
+ * export async functions: a plain string export there breaks the build (Next.js: "the module
+ * has no exports at all" once a non-function value is exported alongside the actions).
+ */
+export const DELETE_CONFIRM_TEXT = 'DELETE'
+
 function isMissingColumn(error: { code?: string; message?: string } | null | undefined): boolean {
   if (!error) return false
   if (error.code === '42703' || error.code === 'PGRST204') return true

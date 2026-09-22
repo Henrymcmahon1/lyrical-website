@@ -16,11 +16,13 @@ vi.mock('@/lib/supabase-admin', () => ({ supabaseAdmin: () => ({ marker: 'admin'
 vi.mock('@/lib/account-data', () => ({
   setEmailPreference: (...a: unknown[]) => setEmailPreference(...a),
   retireAccount: (...a: unknown[]) => retireAccount(...a),
+  DELETE_CONFIRM_TEXT: 'DELETE',
 }))
 vi.mock('@/app/studio/actions', () => ({ signOut: (...a: unknown[]) => signOut(...a) }))
 vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }))
 
-const { saveEmailPreferencesForm, deleteAccountForm, DELETE_CONFIRM_TEXT } = await import('@/app/studio/account/actions')
+const { saveEmailPreferencesForm, deleteAccountForm } = await import('@/app/studio/account/actions')
+const { DELETE_CONFIRM_TEXT } = await import('@/lib/account-data')
 
 beforeEach(() => {
   vi.clearAllMocks()

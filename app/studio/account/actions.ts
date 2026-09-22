@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { currentUser } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { retireAccount, setEmailPreference } from '@/lib/account-data'
+import { DELETE_CONFIRM_TEXT, retireAccount, setEmailPreference } from '@/lib/account-data'
 import { signOut } from '@/app/studio/actions'
 
 /**
@@ -33,9 +33,6 @@ export async function saveEmailPreferencesForm(
 }
 
 export type DeleteAccountResult = { ok: true } | { ok: false; error: string }
-
-/** What the customer must type before the delete button does anything. */
-export const DELETE_CONFIRM_TEXT = 'DELETE'
 
 export async function deleteAccountForm(
   _prev: DeleteAccountResult | null,
