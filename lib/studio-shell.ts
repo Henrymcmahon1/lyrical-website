@@ -5,7 +5,7 @@
  * Mirrors `features/registry.ts` in the staff dashboard (lyrical-studio): sidebar order, labels
  * and routes come from this list and nothing in the shell components changes when a tab does.
  */
-export type StudioTabId = 'create' | 'songs' | 'voices' | 'billing'
+export type StudioTabId = 'create' | 'songs' | 'voices' | 'billing' | 'account'
 
 export type StudioTab = {
   id: StudioTabId
@@ -18,6 +18,7 @@ export const STUDIO_TABS: readonly StudioTab[] = [
   { id: 'songs', label: 'Songs', href: '/studio' },
   { id: 'voices', label: 'Voices', href: '/studio/voices' },
   { id: 'billing', label: 'Billing', href: '/studio/billing' },
+  { id: 'account', label: 'Account', href: '/studio/account' },
 ]
 
 const SIGN_IN = '/studio/sign-in'

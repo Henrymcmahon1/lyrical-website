@@ -50,7 +50,7 @@ beforeEach(() => {
 
 describe('which routes wear the shell', () => {
   it('wraps /studio and everything under it except sign-in', () => {
-    for (const p of ['/studio', '/studio/new', '/studio/voices', '/studio/voices/new', '/studio/billing']) {
+    for (const p of ['/studio', '/studio/new', '/studio/voices', '/studio/voices/new', '/studio/billing', '/studio/account']) {
       expect(isStudioShellPath(p), p).toBe(true)
     }
     for (const p of ['/studio/sign-in', '/studio/sign-in/', '/', '/pricing', '/studios', '/studiox/new']) {
@@ -71,16 +71,17 @@ describe('which routes wear the shell', () => {
     expect(activeStudioTab('/studio/voices')).toBe('voices')
     expect(activeStudioTab('/studio/voices/new')).toBe('voices')
     expect(activeStudioTab('/studio/billing')).toBe('billing')
+    expect(activeStudioTab('/studio/account')).toBe('account')
     expect(activeStudioTab('/studio/sign-in')).toBeNull()
   })
 })
 
 describe('the shell markup', () => {
-  it('draws the four tabs with the right hrefs, in order', async () => {
+  it('draws the five tabs with the right hrefs, in order', async () => {
     const html = await renderShell()
     const nav = /<nav aria-label="Studio"[^>]*>([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? ''
     const hrefs = [...nav.matchAll(/<a [^>]*href="([^"]+)"/g)].map((m) => m[1])
-    expect(hrefs).toEqual(['/studio/new', '/studio', '/studio/voices', '/studio/billing'])
+    expect(hrefs).toEqual(['/studio/new', '/studio', '/studio/voices', '/studio/billing', '/studio/account'])
     for (const tab of STUDIO_TABS) expect(nav).toContain(`>${tab.label}<`)
   })
 
