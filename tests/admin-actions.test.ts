@@ -62,7 +62,7 @@ vi.mock('next/headers', () => ({
   headers: async () => new Headers(),
 }))
 
-const { deleteLead, moveJob } = await import('@/app/admin/actions')
+const { deleteLead, moveJob, requeueJob } = await import('@/app/admin/actions')
 
 const form = (entries: Record<string, string>) => {
   const fd = new FormData()
@@ -270,5 +270,39 @@ describe('moveJob: delivering', () => {
     const to = await run(moveJob, form({ id: 'job-1', from: 'in_progress', to: 'delivered' }))
     expect(to).toBe('/admin?tab=work&moved=delivered')
     expect(mailCustomer).not.toHaveBeenCalled()
+  })
+})
+
+describe('requeueJob', () => {
+  it('writes pipeline_state=queued on exactly the given job and nothing else', async () => {
+    await run(requeueJob, form({ id: 'job-1', from: 'rejected' }))
+    expect(from).toHaveBeenCalledWith('song_jobs')
+    expect(update).toHaveBeenCalledWith({ pipeline_state: 'queued' })
+    expect(eqChain).toHaveBeenCalledWith('id', 'job-1')
+    expect(eqChain).toHaveBeenCalledWith('status', 'rejected')
+  })
+
+  it('REFUSES without an admin session, and writes nothing', async () => {
+    hasAdminSession.mockResolvedValue(false)
+    const to = await run(requeueJob, form({ id: 'job-1', from: 'rejected' }))
+    expect(to).toBe('/admin')
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('refuses a job that is not rejected, even when posted directly', async () => {
+    const to = await run(requeueJob, form({ id: 'job-1', from: 'delivered' }))
+    expect(to).toBe('/admin?tab=work&error=move')
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('says nothing changed when the row had already moved', async () => {
+    selectAfterUpdate.mockResolvedValue({ data: [], error: null })
+    const to = await run(requeueJob, form({ id: 'job-1', from: 'rejected' }))
+    expect(to).toBe('/admin?tab=work&error=stale')
+  })
+
+  it('redirects to the work tab once queued', async () => {
+    const to = await run(requeueJob, form({ id: 'job-1', from: 'rejected' }))
+    expect(to).toBe('/admin?tab=work&moved=requeued')
   })
 })

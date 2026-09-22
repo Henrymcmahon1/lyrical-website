@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { hasAdminSession } from '@/lib/admin-session'
 import { EnquiriesTab } from './EnquiriesTab'
 import { FeedbackTab } from './FeedbackTab'
+import { MoneyTab } from './MoneyTab'
 import { PeopleTab } from './PeopleTab'
 import { SongsTab } from './SongsTab'
 import { VoicesTab } from './VoicesTab'
@@ -207,6 +208,11 @@ export default async function AdminPage({
           Rejected. No email was sent, so tell them yourself.
         </p>
       )}
+      {params.moved === 'requeued' && (
+        <p role="status" className="mt-6 text-sm text-graphite/70">
+          Sent back through the pipeline. The poller will pick it up.
+        </p>
+      )}
       {params.moved === 'training' && (
         <p role="status" className="mt-6 text-sm text-graphite/70">
           Marked as training.
@@ -253,7 +259,7 @@ export default async function AdminPage({
       ) : tab === 'people' ? (
         <PeopleTab />
       ) : tab === 'money' ? (
-        <ComingSoon label="Money" />
+        <MoneyTab />
       ) : (
         <ComingSoon label="Issues" />
       )}

@@ -282,6 +282,39 @@ export async function saveNote(formData: FormData) {
   revalidatePath('/admin')
 }
 
+/**
+ * Send a failed job back through the pipeline. Writes `pipeline_state='queued'` and nothing
+ * else: the poller does the rest, exactly as it does for a fresh submission
+ * (`app/studio/self-serve-actions.ts`).
+ *
+ * Only for a job already in a failed or rejected state (checked by the caller, which draws the
+ * button only there; this repeats the check because a form post does not have to have come from
+ * a page we rendered). `.eq('status', from)` is the same concurrency guard `moveJob` uses: two
+ * founders re-queuing the same job at once should write once, not twice.
+ */
+export async function requeueJob(formData: FormData) {
+  if (!(await hasAdminSession())) redirect('/admin')
+
+  const id = String(formData.get('id') ?? '')
+  const from = String(formData.get('from') ?? '')
+  if (!id || from !== 'rejected') redirect('/admin?tab=work&error=move')
+
+  const { data, error } = await supabaseAdmin()
+    .from('song_jobs')
+    .update({ pipeline_state: 'queued' })
+    .eq('id', id)
+    .eq('status', from)
+    .select('id')
+
+  if (error || !data?.length) {
+    revalidatePath('/admin')
+    redirect('/admin?tab=work&error=stale')
+  }
+
+  revalidatePath('/admin')
+  redirect('/admin?tab=work&moved=requeued')
+}
+
 // ── Voices ────────────────────────────────────────────────────────────────────
 
 /**
