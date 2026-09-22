@@ -1,79 +1,167 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { requestSignInLink } from '@/app/(public)/studio/sign-in/actions'
+import { requestSignInCode, verifySignInCode } from '@/app/(public)/studio/sign-in/actions'
 import { Turnstile } from '@/components/Turnstile'
+import { SITE_URL } from '@/lib/site'
+import { supabaseBrowser } from '@/lib/supabase-client'
 import { turnstileSiteKey } from '@/lib/turnstile'
 
 /**
- * Magic link sign in.
+ * Sign in with a 6-digit email code, or Google. No password anywhere, deliberately: see
+ * `app/(public)/studio/sign-in/actions.ts` for why a code replaced the old magic link.
  *
- * No password anywhere, deliberately. There is nothing to leak, nothing to reset, nothing for
- * a customer to reuse from another site, and no password field for a browser to autofill with
- * something that matters. On a product whose whole job is holding other people's unreleased
- * masters, the cheapest security win available is not storing a credential at all.
+ * One page, two steps kept in this component's own state: email, then the code. "Send a fresh
+ * code" does not drop back to the first step or lose the typed email, since the person has
+ * already proven they can reach that inbox once.
  *
- * The success state does NOT say whether the address is already registered. Signing in and
- * signing up look identical from here, which is what stops this page being used to find out
- * which labels have accounts.
- *
- * ⚠️ The link is minted and sent by `app/(public)/studio/sign-in/actions.ts`, on the server, and NOT by
- * `supabaseBrowser().auth.signInWithOtp` any more. The old version built the link's host from
- * `window.location.origin`, which is right on production and silently wrong everywhere else: on
- * 2026-08-11 a link requested from a dev server left running on localhost went out pointing at
- * localhost. Deciding the host on the server makes that impossible rather than unlikely.
+ * The success state does NOT say whether the address is already registered, same as the old
+ * link form: signing in and signing up look identical from here.
  */
 const field =
   'w-full rounded-card border border-graphite/20 bg-cream px-4 py-3 text-graphite outline-none transition-colors focus:border-indigo'
 
+/** Same-origin, absolute path, never `//host`, which a browser reads as a URL. */
+function safeNext(next: string | undefined): string {
+  if (!next || !next.startsWith('/') || next.startsWith('//')) return '/studio'
+  return next
+}
+
 export function SignInForm({ next }: { next?: string }) {
+  const router = useRouter()
   const siteKey = turnstileSiteKey()
+
   const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
   const [token, setToken] = useState('')
-  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [step, setStep] = useState<'email' | 'code'>('email')
+  const [state, setState] = useState<'idle' | 'sending' | 'verifying' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-
+  async function sendCode(): Promise<boolean> {
     // Widget shown but not solved yet: wait rather than send a request the server will reject.
     if (siteKey && !token) {
       setState('error')
       setMessage('Give the check a moment to finish, then try again.')
-      return
+      return false
     }
-
     setState('sending')
-
     try {
-      const result = await requestSignInLink(email, next, token || undefined)
-
+      const result = await requestSignInCode(email, token || undefined)
       if (!result.ok) {
         setState('error')
-        setMessage(result.error ?? 'We could not send the link. Try again in a moment.')
-        return
+        setMessage(result.error ?? 'We could not send the code. Try again in a moment.')
+        return false
       }
-      setState('sent')
+      return true
     } catch {
       setState('error')
-      setMessage('We could not send the link. Try again in a moment.')
+      setMessage('We could not send the code. Try again in a moment.')
+      return false
     }
   }
 
-  if (state === 'sent') {
+  async function submitEmail(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (await sendCode()) {
+      setState('idle')
+      setMessage('')
+      setStep('code')
+    }
+  }
+
+  async function resendCode() {
+    if (await sendCode()) {
+      setState('idle')
+      setMessage('A fresh code is on its way.')
+    }
+  }
+
+  async function submitCode(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setState('verifying')
+    try {
+      const result = await verifySignInCode(email, code)
+      if (!result.ok) {
+        setState('error')
+        setMessage(result.error ?? 'That code did not work. Try again.')
+        return
+      }
+      router.push(safeNext(next))
+      router.refresh()
+    } catch {
+      setState('error')
+      setMessage('That code did not work. Try again.')
+    }
+  }
+
+  async function continueWithGoogle() {
+    // SITE_URL, not window.location.origin: the same fix the old link's host got, for the same
+    // reason. A dev server or preview deployment must not silently mint a production callback.
+    const redirectTo = `${SITE_URL}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`
+    await supabaseBrowser().auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
+  }
+
+  if (step === 'code') {
     return (
-      <div aria-live="polite">
+      <div>
         <h2 className="font-brand text-2xl leading-snug tracking-tight">Check your email.</h2>
         <p className="mt-3 leading-relaxed text-graphite/75">
-          If we can reach that address, a sign in link is on its way. It works once and
-          expires within the hour.
+          We sent a 6-digit code to {email}. It works once and expires in 10 minutes.
         </p>
+
+        <form onSubmit={submitCode} className="mt-6 flex flex-col gap-4" noValidate>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm">6-digit code</span>
+            <input
+              name="code"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="one-time-code"
+              maxLength={6}
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className={`${field} text-center text-2xl tracking-[0.5em]`}
+            />
+          </label>
+
+          {state === 'error' && (
+            <p role="alert" className="text-sm text-graphite/75">
+              {message}
+            </p>
+          )}
+          {state !== 'error' && message && (
+            <p role="status" className="text-sm text-graphite/55">
+              {message}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={state === 'verifying' || code.length !== 6}
+            className="nudge rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
+          >
+            {state === 'verifying' ? 'Checking…' : 'Sign in'}
+          </button>
+
+          <button
+            type="button"
+            onClick={resendCode}
+            disabled={state === 'sending'}
+            className="text-sm text-graphite/55 underline underline-offset-2"
+          >
+            Send a fresh code
+          </button>
+        </form>
       </div>
     )
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={submitEmail} className="flex flex-col gap-4" noValidate>
       <label className="flex flex-col gap-2">
         <span className="text-sm">Email</span>
         <input
@@ -106,12 +194,26 @@ export function SignInForm({ next }: { next?: string }) {
         disabled={state === 'sending'}
         className="nudge rounded-card bg-ember px-7 py-4 text-cream disabled:opacity-60"
       >
-        {state === 'sending' ? 'Sending…' : 'Email me a sign in link'}
+        {state === 'sending' ? 'Sending…' : 'Email me a code'}
       </button>
 
       <p className="text-sm leading-relaxed text-graphite/55">
-        No password. We send a link that signs you in and then stops working.
+        No password. We send a 6-digit code that works once and then stops working.
       </p>
+
+      <div className="my-1 flex items-center gap-3 text-xs text-graphite/40">
+        <span className="h-px flex-1 bg-graphite/15" />
+        or
+        <span className="h-px flex-1 bg-graphite/15" />
+      </div>
+
+      <button
+        type="button"
+        onClick={continueWithGoogle}
+        className="rounded-card border border-graphite/20 bg-cream px-7 py-4 text-graphite transition-colors hover:border-graphite/40"
+      >
+        Continue with Google
+      </button>
     </form>
   )
 }
