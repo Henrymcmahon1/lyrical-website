@@ -114,6 +114,9 @@ export default async function AdminPage({
     confirm?: string
     deleted?: string
     moved?: string
+    /** Voice tab feedback filters. */
+    tag?: string
+    rating?: string
   }>
 }) {
   const [signedIn, params] = await Promise.all([hasAdminSession(), searchParams])
@@ -248,7 +251,10 @@ export default async function AdminPage({
               Download CSV
             </a>
           </div>
-          <FeedbackTab />
+          <FeedbackTab
+            tag={params.tag}
+            rating={params.rating === 'up' || params.rating === 'down' ? params.rating : undefined}
+          />
         </>
       ) : tab === 'relationships' ? (
         <EnquiriesTab
