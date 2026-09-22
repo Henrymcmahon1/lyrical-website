@@ -109,7 +109,7 @@ export async function submitVoiceModel(raw: unknown): Promise<VoiceResult | void
         ],
       },
       ...(voice.notes ? [{ type: 'paragraph' as const, text: voice.notes }] : []),
-      { type: 'cta', label: 'Open the queue', href: `${SITE_URL}/queue?tab=voices` },
+      { type: 'cta', label: 'Open the queue', href: `${SITE_URL}/admin?tab=voice` },
       {
         type: 'note',
         text:

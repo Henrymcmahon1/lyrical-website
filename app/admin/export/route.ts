@@ -1,4 +1,4 @@
-import { FEEDBACK_COLUMNS, FEEDBACK_SELECT, flattenFeedback, type FeedbackRow } from '@/app/queue/FeedbackTab'
+import { FEEDBACK_COLUMNS, FEEDBACK_SELECT, flattenFeedback, type FeedbackRow } from '@/app/admin/FeedbackTab'
 import { hasAdminSession } from '@/lib/admin-session'
 import { toCsv } from '@/lib/csv'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -88,7 +88,12 @@ export async function GET(request: Request) {
   }
 
   const tab = new URL(request.url).searchParams.get('tab')
-  if (tab === 'feedback') {
+  // Six-tab names (current) accepted alongside the four-tab names the console used before the
+  // 2026-09-22 move to /admin, so an old link or bookmark still resolves. `voice` (the new tab
+  // name) is treated the same as `feedback`: per the admin-CRM brief, the Voice tab's one CSV
+  // link is the ratings export ("Voice: job_feedback rows..., CSV (reuse the export route)").
+  // Voice MODEL rows keep their own export, reachable at the legacy `?tab=voices` (plural).
+  if (tab === 'feedback' || tab === 'voice') {
     const { data, error } = await supabaseAdmin().from('job_feedback').select(FEEDBACK_SELECT).order('created_at', { ascending: false })
     if (error) return new Response(`Could not read job_feedback: ${error.message}`, { status: 500 })
     return new Response(toCsv(FEEDBACK_COLUMNS, flattenFeedback((data ?? []) as unknown as FeedbackRow[])), {
@@ -100,7 +105,12 @@ export async function GET(request: Request) {
     })
   }
 
-  const table = tab === 'enquiries' ? 'enquiries' : tab === 'voices' ? 'voice_models' : 'song_jobs'
+  const table =
+    tab === 'enquiries' || tab === 'relationships'
+      ? 'enquiries'
+      : tab === 'voices' // legacy plural only: 'voice' (the tab) is handled above, as feedback
+        ? 'voice_models'
+        : 'song_jobs'
   const columns =
     table === 'enquiries' ? ENQUIRY_COLUMNS : table === 'voice_models' ? VOICE_COLUMNS : SONG_COLUMNS
 

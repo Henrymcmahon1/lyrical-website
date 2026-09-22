@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 /**
- * The `/queue` server actions, and specifically the things that are easy to get wrong.
+ * The `/admin` server actions, and specifically the things that are easy to get wrong.
  *
  * A server action is a POST endpoint like any other. Reaching it does not require having
  * rendered the page, so the page's own sign-in check protects nothing here. If the guard inside
@@ -62,7 +62,7 @@ vi.mock('next/headers', () => ({
   headers: async () => new Headers(),
 }))
 
-const { deleteLead, moveJob } = await import('@/app/queue/actions')
+const { deleteLead, moveJob } = await import('@/app/admin/actions')
 
 const form = (entries: Record<string, string>) => {
   const fd = new FormData()
@@ -131,7 +131,7 @@ describe('deleteLead', () => {
   it('REFUSES without an admin session, and touches nothing', async () => {
     hasAdminSession.mockResolvedValue(false)
     const to = await run(deleteLead, form({ id: 'abc-123' }))
-    expect(to).toBe('/queue')
+    expect(to).toBe('/admin')
     // The important half: not merely redirected, but no delete was issued.
     expect(from).not.toHaveBeenCalled()
     expect(eqDelete).not.toHaveBeenCalled()
@@ -144,13 +144,13 @@ describe('deleteLead', () => {
 
   it('redirects away afterwards, so a refresh cannot repeat it', async () => {
     expect(await run(deleteLead, form({ id: 'abc-123' }))).toBe(
-      '/queue?tab=enquiries&deleted=1',
+      '/admin?tab=relationships&deleted=1',
     )
   })
 
   it('keeps the caller on the view they were looking at', async () => {
     expect(await run(deleteLead, form({ id: 'abc-123', show: 'all' }))).toBe(
-      '/queue?tab=enquiries&show=all&deleted=1',
+      '/admin?tab=relationships&show=all&deleted=1',
     )
   })
 })
@@ -161,7 +161,7 @@ describe('moveJob: the guard', () => {
   it('REFUSES without an admin session, and writes nothing', async () => {
     hasAdminSession.mockResolvedValue(false)
     const to = await run(moveJob, form({ id: 'job-1', from: 'submitted', to: 'approved' }))
-    expect(to).toBe('/queue')
+    expect(to).toBe('/admin')
     expect(from).not.toHaveBeenCalled()
     expect(mailCustomer).not.toHaveBeenCalled()
   })
@@ -170,20 +170,20 @@ describe('moveJob: the guard', () => {
     // Straight from submitted to delivered skips acceptance, which is where the clock and the
     // promise come from. The buttons never offer it; this proves the server does not either.
     const to = await run(moveJob, form({ id: 'job-1', from: 'submitted', to: 'delivered' }))
-    expect(to).toBe('/queue?error=move')
+    expect(to).toBe('/admin?error=move')
     expect(update).not.toHaveBeenCalled()
     expect(mailCustomer).not.toHaveBeenCalled()
   })
 
   it('refuses to reopen a finished job', async () => {
     const to = await run(moveJob, form({ id: 'job-1', from: 'delivered', to: 'in_progress' }))
-    expect(to).toBe('/queue?error=move')
+    expect(to).toBe('/admin?error=move')
     expect(update).not.toHaveBeenCalled()
   })
 
   it('refuses a status that is not a status at all', async () => {
     const to = await run(moveJob, form({ id: 'job-1', from: 'submitted', to: 'anything' }))
-    expect(to).toBe('/queue?error=move')
+    expect(to).toBe('/admin?error=move')
     expect(update).not.toHaveBeenCalled()
   })
 })
@@ -220,7 +220,7 @@ describe('moveJob: accepting', () => {
   it('says nothing at all when the row had already moved', async () => {
     selectAfterUpdate.mockResolvedValue({ data: [], error: null })
     const to = await run(moveJob, form({ id: 'job-1', from: 'submitted', to: 'approved' }))
-    expect(to).toBe('/queue?error=stale')
+    expect(to).toBe('/admin?error=stale')
     // The point of the whole guard: no second acceptance email.
     expect(mailCustomer).not.toHaveBeenCalled()
   })
@@ -234,7 +234,7 @@ describe('moveJob: rejecting is silent, on purpose', () => {
      * test, which is where the decision is written down.
      */
     const to = await run(moveJob, form({ id: 'job-1', from: 'submitted', to: 'rejected' }))
-    expect(to).toBe('/queue?moved=rejected')
+    expect(to).toBe('/admin?tab=work&moved=rejected')
     expect((update.mock.calls[0][0] as Record<string, string>).status).toBe('rejected')
     expect(mailCustomer).not.toHaveBeenCalled()
   })
@@ -268,7 +268,7 @@ describe('moveJob: delivering', () => {
   it('still records the move when the customer has no readable address', async () => {
     getUserById.mockResolvedValue({ data: { user: null }, error: null })
     const to = await run(moveJob, form({ id: 'job-1', from: 'in_progress', to: 'delivered' }))
-    expect(to).toBe('/queue?moved=delivered')
+    expect(to).toBe('/admin?tab=work&moved=delivered')
     expect(mailCustomer).not.toHaveBeenCalled()
   })
 })

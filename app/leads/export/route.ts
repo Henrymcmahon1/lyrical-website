@@ -1,7 +1,7 @@
 import { permanentRedirect } from 'next/navigation'
 
 /**
- * The old CSV endpoint, now served by `/queue/export`.
+ * The old CSV endpoint, now served by `/admin/export`.
  *
  * A redirect rather than a copy, so there is exactly one implementation of the export and one
  * place where the formula-injection defusing lives.
@@ -9,5 +9,5 @@ import { permanentRedirect } from 'next/navigation'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  permanentRedirect('/queue/export?tab=enquiries')
+  permanentRedirect('/admin/export?tab=relationships')
 }

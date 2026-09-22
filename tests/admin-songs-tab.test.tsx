@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
  *   The console must offer exactly the moves the lifecycle allows, per row, per status. A
  *   button that should not be there is a move somebody will make.
  *
- *   NO STORAGE PATH MAY REACH THE MARKUP. The whole argument for `/queue/audio` is that the
+ *   NO STORAGE PATH MAY REACH THE MARKUP. The whole argument for `/admin/audio` is that the
  *   page holds asset ids and never signed URLs, so that a cached page, a screenshot or a
  *   back-button does not hand over somebody's unreleased master. That claim is only worth
  *   anything if something checks it, and this is the something.
@@ -30,12 +30,12 @@ vi.mock('@/lib/supabase-admin', () => ({
   }),
 }))
 
-vi.mock('@/app/queue/actions', () => ({
+vi.mock('@/app/admin/actions', () => ({
   moveJob: vi.fn(),
   saveNote: vi.fn(),
 }))
 
-const { SongsTab } = await import('@/app/queue/SongsTab')
+const { SongsTab } = await import('@/app/admin/SongsTab')
 
 const JOB = {
   id: 'job-1',
@@ -122,7 +122,7 @@ describe('what the console shows', () => {
 describe('the files are reachable but never handed over', () => {
   it('links through the signing route by asset id', async () => {
     withData([JOB])
-    expect(await render()).toContain('/queue/audio?asset=asset-1')
+    expect(await render()).toContain('/admin/audio?asset=asset-1')
   })
 
   it('NEVER puts a storage path, bucket or signed URL in the markup', async () => {

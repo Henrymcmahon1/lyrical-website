@@ -89,7 +89,7 @@ export async function EnquiriesTab({
   const total = count ?? leads.length
   const truncated = total > leads.length
 
-  const base = `/queue?tab=enquiries${showAll ? '&show=all' : ''}`
+  const base = `/admin?tab=relationships${showAll ? '&show=all' : ''}`
 
   return (
     <>

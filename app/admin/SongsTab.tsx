@@ -302,7 +302,7 @@ export async function SongsTab({
               {/*
                 The files, as links that sign on click.
 
-                Each one points at /queue/audio with an ASSET ID. No signed URL is rendered
+                Each one points at /admin/audio with an ASSET ID. No signed URL is rendered
                 into this page, so nothing here keeps working once the tab is closed, and a
                 screenshot of this screen hands over nothing. See that route for the argument.
               */}
@@ -313,7 +313,7 @@ export async function SongsTab({
                       {KIND_LABEL[a.kind] ?? a.kind}
                     </span>
                     <a
-                      href={`/queue/audio?asset=${a.id}`}
+                      href={`/admin/audio?asset=${a.id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-indigo underline underline-offset-4"
@@ -373,7 +373,7 @@ export async function SongsTab({
                       </button>
                     </form>
                     <a
-                      href={`/queue?tab=songs${showAll ? '&show=all' : ''}`}
+                      href={`/admin?tab=work${showAll ? '&show=all' : ''}`}
                       className="min-h-11 font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/55 underline underline-offset-4 hover:text-indigo"
                     >
                       Cancel
@@ -387,7 +387,7 @@ export async function SongsTab({
                       to === 'rejected' ? (
                         <a
                           key={to}
-                          href={`/queue?tab=songs${showAll ? '&show=all' : ''}&confirm=${job.id}`}
+                          href={`/admin?tab=work${showAll ? '&show=all' : ''}&confirm=${job.id}`}
                           className="inline-flex min-h-11 items-center font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/40 underline underline-offset-4 hover:text-ember"
                         >
                           {MOVE_LABELS[to].label}

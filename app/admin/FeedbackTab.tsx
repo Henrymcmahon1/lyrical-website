@@ -55,7 +55,7 @@ export async function FeedbackTab() {
           </div>
           {r.tags.length > 0 && <p className={`mt-2 ${mono} text-graphite/50`}>{r.tags.join(' · ')}</p>}
           {r.note && <p className="mt-4 max-w-2xl whitespace-pre-line leading-relaxed text-graphite/80">{r.note}</p>}
-          <a href={`/queue?tab=songs&show=all#${r.job_id}`} className="mt-3 inline-block text-sm text-indigo underline underline-offset-4">Open the job</a>
+          <a href={`/admin?tab=work&show=all#${r.job_id}`} className="mt-3 inline-block text-sm text-indigo underline underline-offset-4">Open the job</a>
         </li>
       ))}
     </ol>
