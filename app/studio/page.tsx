@@ -10,6 +10,7 @@ import { rerollsLeft } from '@/lib/entitlement'
 import { getEntitlementFor } from '@/lib/entitlement-db'
 import { planById } from '@/lib/plans'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
+import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
 
 /**
  * The Door-2 studio: plan card, then the songs, re-rolls nested under their original.
@@ -44,6 +45,8 @@ const NOT_MADE = 'We could not make this one. It has not counted against your tr
 const OUT_OF_TRACKS = 'You are out of tracks for this period. Upgrade, buy a Single, or wait for it to renew.'
 const EMPTY = 'Nothing here yet. Pick a plan and make your first track.'
 const HEARTBEAT_STALE_MS = 10 * 60 * 1000
+/** Statuses that are still moving, the ones JobStatus pulses. Everything else has an ending. */
+const LIVE_STATUSES = new Set(['submitted', 'approved', 'in_progress'])
 
 export default async function Studio({ searchParams }: { searchParams: Promise<{ submitted?: string; paid?: string }> }) {
   const [user, params] = await Promise.all([currentUser(), searchParams])
@@ -80,6 +83,11 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     <div key={j.id} className={n ? 'mt-4 rounded-card border border-dark-ink/10 bg-dark-ink/3 p-4' : ''}>
       {n ? <span className={eyebrow}>Take {n}</span> : null}
       <div className={n ? 'mt-3' : ''}><JobStatus status={j.status} rejectedAs={notMade(j) ? 'not-made' : 'declined'} /></div>
+      {LIVE_STATUSES.has(j.status) && (
+        <p className="mt-2 font-product text-xs text-dark-ink/55">
+          {TURNAROUND_PROMISE}, {TURNAROUND_BUSY}.
+        </p>
+      )}
       {j.status === 'delivered' && (
         <>
           <CoverPlayer jobId={j.id} />
@@ -121,7 +129,9 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
 
       {(params.submitted || params.paid) && (
         <Notice>
-          {params.paid ? 'Paid. Your plan is live.' : 'That is with us and we are making it now. It will appear below the moment it is ready.'}
+          {params.paid
+            ? 'Paid. Your plan is live.'
+            : `That is with us and we are making it now, ${TURNAROUND_PROMISE}, ${TURNAROUND_BUSY}. It will appear below the moment it is ready.`}
         </Notice>
       )}
 

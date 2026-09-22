@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PLANS, PLAN_IDS, REROLLS_PER_TRACK, priceFor, type PlanId } from '@/lib/plans'
 import { GOOD_FOR, MOST_POPULAR, PLAN_FEATURES } from '@/content/two-doors'
+import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
 
 /** Sign in first, then land on billing with the plan carried through; Bot A's /studio/billing starts checkout from ?plan=. */
 export function checkoutHref(id: PlanId): string {
@@ -33,6 +34,9 @@ export function PlanCards({ compact = false }: { compact?: boolean }) {
               <li>{REROLLS_PER_TRACK} free re-rolls per track</li>
               {PLAN_FEATURES.map((f) => <li key={f}>{f}</li>)}
             </ul>
+            <p className="mt-4 text-sm text-graphite/60">
+              {TURNAROUND_PROMISE}, {TURNAROUND_BUSY}.
+            </p>
             <Link href={checkoutHref(id)} className={`nudge mt-6 inline-flex min-h-11 items-center justify-center rounded-card px-5 ${featured ? 'bg-ember text-cream' : 'border border-graphite/30 hover:border-indigo hover:text-indigo'}`}>
               {compact ? 'Choose' : `Choose ${plan.name}`}
             </Link>

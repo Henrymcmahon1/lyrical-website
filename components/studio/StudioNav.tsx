@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { STUDIO_TABS, activeStudioTab, type StudioTabId } from '@/lib/studio-shell'
-import { BillingIcon, CreateIcon, SongsIcon, VoicesIcon, type NavIconProps } from './NavIcons'
+import { AccountIcon, BillingIcon, CreateIcon, SongsIcon, VoicesIcon, type NavIconProps } from './NavIcons'
 
 const ICONS: Record<StudioTabId, (p: NavIconProps) => React.JSX.Element> = {
   create: CreateIcon,
   songs: SongsIcon,
   voices: VoicesIcon,
   billing: BillingIcon,
+  account: AccountIcon,
 }
 
 /**
@@ -18,7 +19,7 @@ const ICONS: Record<StudioTabId, (p: NavIconProps) => React.JSX.Element> = {
  * Client only for `usePathname`; the list itself lives in `lib/studio-shell.ts`.
  *
  * Below `sm` the rail is a bar across the top and the tabs sit in a row, glyph above label, so
- * four of them fit in 375px with no sideways scroll. The layout for that is in `studio.css`.
+ * five of them fit in 375px with no sideways scroll. The layout for that is in `studio.css`.
  */
 export function StudioNav() {
   const active = activeStudioTab(usePathname())

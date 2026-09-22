@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LANGUAGES, type LanguageCode } from '@/lib/languages'
 import { turnaroundNote } from '@/lib/language-pairs'
+import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
 import { detectLyrics, lyricsLanguageWarning } from '@/lib/lyrics-language'
 import { LYRICS_REQUIRED_MESSAGE } from '@/lib/song-job-schema'
 import { Turnstile } from '@/components/Turnstile'
@@ -96,9 +97,11 @@ export function SongSubmitForm({
   const [error, setError] = useState('')
   const [progress, setProgress] = useState('')
 
+  // Self-serve: the fixed studio promise, the same for every language pair. The manual funnel
+  // keeps its own language-pair note (48 hours, from acceptance), a different door's promise.
   const timing = useMemo(
-    () => turnaroundNote(sourceLanguage, targetLanguage),
-    [sourceLanguage, targetLanguage],
+    () => (selfServe ? `${TURNAROUND_PROMISE}, ${TURNAROUND_BUSY}.` : turnaroundNote(sourceLanguage, targetLanguage)),
+    [selfServe, sourceLanguage, targetLanguage],
   )
 
   const busy = stage === 'uploading' || stage === 'saving'

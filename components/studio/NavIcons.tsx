@@ -54,6 +54,16 @@ export function BillingIcon({ className }: NavIconProps) {
   )
 }
 
+/** A person in a frame: who is signed in, and the account's own settings. */
+export function AccountIcon({ className }: NavIconProps) {
+  return (
+    <svg {...stroke} className={className}>
+      <circle cx="10" cy="7.5" r="3" />
+      <path d="M4.5 16c.7-2.9 3-4.5 5.5-4.5s4.8 1.6 5.5 4.5" />
+    </svg>
+  )
+}
+
 /** The way out: an arrow leaving the frame. */
 export function SignOutIcon({ className }: NavIconProps) {
   return (

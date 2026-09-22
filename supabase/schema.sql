@@ -615,3 +615,8 @@ alter table public.song_jobs add column if not exists copyright_check jsonb;
 -- until it is explicitly added to that grant. Deliberately not added here. No revoke/re-grant
 -- dance is needed because there is nothing to revoke: the column did not exist under the old
 -- grant, so it was never selectable in the first place.
+
+-- 004b: the soft-delete marker for /studio/account (v3, Bot 2). See the migration file for why
+-- this is 004b and not 004: Bot 1 owns 004 (profiles.product_emails, rating_reminders,
+-- welcomed_at) in the same v3 session, on disjoint columns of the same table.
+alter table public.profiles add column if not exists retired_at timestamptz;
