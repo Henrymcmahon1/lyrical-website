@@ -1,4 +1,5 @@
 import { alreadySentForJob, logSend } from '@/lib/email-log'
+import { requireSharedSecret } from '@/lib/hook-auth'
 import { mailCustomer } from '@/lib/mailer'
 import { handleSongJobWebhook, type SongJobWebhookPayload } from '@/lib/song-job-hook'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -28,25 +29,8 @@ export const runtime = 'nodejs'
  * `classifySlug` in `lib/song-job-hook.ts`) but is worth having anyway.
  */
 
-function secretGate(headerValue: string | null): { ok: true } | { ok: false; status: number; body: string } {
-  const expected = process.env.SONG_JOB_HOOK_SECRET
-  if (!expected) {
-    // A missing secret is a real misconfiguration in production, and fails loud rather than
-    // quietly accepting unauthenticated requests. Outside production there is often no secret
-    // set at all yet, and refusing every local test would be its own kind of broken.
-    if (process.env.NODE_ENV === 'production') {
-      return { ok: false, status: 503, body: 'SONG_JOB_HOOK_SECRET must be set' }
-    }
-    return { ok: true }
-  }
-  if (headerValue !== expected) {
-    return { ok: false, status: 401, body: 'bad secret' }
-  }
-  return { ok: true }
-}
-
 export async function POST(request: Request) {
-  const gate = secretGate(request.headers.get('x-hook-secret'))
+  const gate = requireSharedSecret(request.headers.get('x-hook-secret'), 'SONG_JOB_HOOK_SECRET')
   if (!gate.ok) return new Response(gate.body, { status: gate.status })
 
   let payload: SongJobWebhookPayload
