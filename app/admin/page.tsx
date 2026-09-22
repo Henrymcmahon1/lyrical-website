@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { hasAdminSession } from '@/lib/admin-session'
 import { EnquiriesTab } from './EnquiriesTab'
 import { FeedbackTab } from './FeedbackTab'
+import { PeopleTab } from './PeopleTab'
 import { SongsTab } from './SongsTab'
 import { VoicesTab } from './VoicesTab'
 import { login, logout } from './actions'
@@ -250,7 +251,7 @@ export default async function AdminPage({
           deleted={params.deleted === '1'}
         />
       ) : tab === 'people' ? (
-        <ComingSoon label="People" />
+        <PeopleTab />
       ) : tab === 'money' ? (
         <ComingSoon label="Money" />
       ) : (

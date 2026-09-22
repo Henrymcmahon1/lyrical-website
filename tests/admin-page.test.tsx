@@ -18,6 +18,7 @@ vi.mock('@/app/admin/SongsTab', () => ({ SongsTab: () => null }))
 vi.mock('@/app/admin/VoicesTab', () => ({ VoicesTab: () => null }))
 vi.mock('@/app/admin/EnquiriesTab', () => ({ EnquiriesTab: () => null }))
 vi.mock('@/app/admin/FeedbackTab', () => ({ FeedbackTab: () => null }))
+vi.mock('@/app/admin/PeopleTab', () => ({ PeopleTab: () => null }))
 vi.mock('@/app/admin/actions', () => ({ login: vi.fn(), logout: vi.fn() }))
 
 const { default: AdminPage } = await import('@/app/admin/page')
