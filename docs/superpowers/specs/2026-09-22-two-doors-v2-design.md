@@ -280,6 +280,11 @@ Order: Bot 0 alone → A, B, C, D, F in parallel → merge in the order A, C, B,
 
 - **2026-09-22 (second review, Henry):** nav becomes Home / Get started (/#doors) / Studio, "Pricing" and "For artists" links removed (pages stay, reached from the doors section); the home closing section S10Start goes and the two-doors section becomes the dark closer; Door 2 audience is "musicians", Door 1 is "artists", each door says who it is for; the enquiry CTA ("Tell us about it") lives in the Door 1 half; the 30% figure is removed from every public page (the gated investor page keeps it); "human in the loop" is removed, Door 1 benefits are streaming quality, proprietary voice models, and being involved in the process.
 
+- **2026-09-22 (v3 session start, Henry):** turnaround promise CONFIRMED as one line for every plan,
+  "usually within 1 hour" with "up to 3 hours at busy times" (busy cap tightened from the proposed
+  24 h); the 24-hour rating-reminder email IS in scope for v3 (product email, opt-out, one product
+  email per person per day). v3 build is five parallel bots (Auth+emails, Studio account, Website
+  design, Admin CRM, Copyright); briefs under `docs/bots/v3/`.
 - **2026-09-22 (fixes after the second review):** failed self-serve jobs are visible and refunded (pipeline #5, website #12); ID3 wording; pricing FAQ no longer says nobody listens; the poller service task is installed on the render PC. Coffey Anderson "Mr Red White and Blue" EN to ES rendered through the dashboard's service layer with the new `vocal_denoise=false` knob (pipeline #4), scorecard overall 0.81.
 
 ## 14. Open items Henry owns

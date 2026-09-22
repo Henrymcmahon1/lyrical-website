@@ -22,10 +22,14 @@ rendered with `lib/email-shell.ts`), and wires each trigger.
 | `track-not-made` | `song_jobs` becomes `rejected` at our end | the owner | plain apology, it did not count, make it again | Make it again |
 | `eoi-received` | artist EOI submitted | the artist | we have it, what happens next, who they will hear from | none |
 | `enquiry-received` | contact form submitted | the sender | same shape as above | none |
+| `rating-reminder` | 24 h after delivery if unrated (product email, opt-out) | the owner | a gentle nudge to rate the track, why ratings help | Rate your track |
 
-## Schedule and reminders (proposed, Henry to confirm)
-- No drip sequence in v3. One later candidate: a rating reminder 24 hours after delivery if the
-  track is unrated (product email, opt-out).
+## Schedule and reminders (CONFIRMED 22 Sep, evening)
+- No drip sequence in v3.
+- **`rating-reminder` IS in scope for v3** (Henry: "build it now"): sent 24 hours after a delivery
+  if the track is still unrated. Product email, opt-out, respects the `/studio/account` preference.
+  Fired by a scheduled check (Vercel Cron on `/api/hooks/rating-reminder`, or the poller), not a
+  drip. See the row added to the set below.
 - Never more than one product email per person per day.
 
 ## Triggers (how each one fires)
