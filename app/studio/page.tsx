@@ -44,7 +44,6 @@ const REROLL_CLOSED = 'The re-roll window for this song has closed. Make it agai
 const NOT_MADE = 'We could not make this one. It has not counted against your tracks. Make it again to start fresh.'
 const OUT_OF_TRACKS = 'You are out of tracks for this period. Upgrade, buy a Single, or wait for it to renew.'
 const EMPTY = 'Nothing here yet. Pick a plan and make your first track.'
-const HEARTBEAT_STALE_MS = 10 * 60 * 1000
 /** Statuses that are still moving, the ones JobStatus pulses. Everything else has an ending. */
 const LIVE_STATUSES = new Set(['submitted', 'approved', 'in_progress'])
 
@@ -53,20 +52,21 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   if (!user) redirect('/studio/sign-in?next=/studio')
 
   const supabase = await supabaseServer()
-  const [{ data: jobRows }, { data: feedbackRows }, { data: beat }, entitlement] = await Promise.all([
+  const [{ data: jobRows }, { data: feedbackRows }, entitlement] = await Promise.all([
     supabase.from('song_jobs')
       .select('id, title, primary_artist, source_language, target_language, status, created_at, lyrics, parent_job_id, reroll_index, licence_terms_version')
       .order('created_at', { ascending: false }),
     supabase.from('job_feedback').select('job_id, rating, note, tags'),
-    supabase.from('worker_heartbeat').select('worker, seen_at').order('seen_at', { ascending: false }).limit(1),
     getEntitlementFor(user.id),
   ])
   const jobs = (jobRows ?? []) as Job[]
   const feedback = new Map(((feedbackRows ?? []) as Feedback[]).map((f) => [f.job_id, f]))
   const originals = jobs.filter((j) => j.reroll_index === 0)
   const childrenOf = (id: string) => jobs.filter((j) => j.parent_job_id === id).sort((a, b) => a.reroll_index - b.reroll_index)
-  const seen = beat?.[0]?.seen_at ? Date.parse(beat[0].seen_at as string) : 0
-  const rendering = seen > 0 && Date.now() - seen < HEARTBEAT_STALE_MS
+  // "Your song is being made now": ONLY the signed-in user's own rows can say so, because this
+  // is read with the user's client under RLS, never the worker_heartbeat table (that told you
+  // the WORKER was alive, not whether YOUR song was the thing it was working on).
+  const inProgress = jobs.some((j) => j.status === 'in_progress')
   const existing = (id: string): ExistingFeedback => {
     const f = feedback.get(id)
     return f ? { rating: f.rating, note: f.note, tags: f.tags ?? [] } : null
@@ -121,11 +121,14 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
             <a href="/pricing" className={`mt-4 ${button.primary}`}>See plans<span className="shift-arrow">&rarr;</span></a>
           </>
         )}
-        <p className="mt-4 flex items-center gap-2 font-product text-xs text-dark-ink/50">
-          <span aria-hidden="true" className={`status-dot ${rendering ? 'bg-dark-accent' : 'bg-dark-ink/35'}`} data-live={rendering ? 'true' : 'false'} />
-          {rendering ? 'Renders are running.' : 'Renders are paused, your song will start when they resume.'}
-        </p>
       </Panel>
+
+      {inProgress && (
+        <p className="flex items-center gap-2 font-product text-xs text-dark-ink/50">
+          <span aria-hidden="true" className="status-dot bg-dark-accent" data-live="true" />
+          Your song is being made now.
+        </p>
+      )}
 
       {(params.submitted || params.paid) && (
         <Notice>

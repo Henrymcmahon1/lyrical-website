@@ -60,13 +60,21 @@ describe('studio home', () => {
     expect(h).toContain('data-bar="j1"'); expect(h).toContain('bar 1')
     expect(h).toContain('Personal use only. Not for release or sale.')
   })
-  it('shows the closed-window copy on a rejected child and reads the heartbeat', async () => {
+  it('shows the closed-window copy on a rejected child', async () => {
     tables.song_jobs = [job({}), job({ id: 'j2', parent_job_id: 'j1', reroll_index: 1, status: 'rejected' })]
-    tables.worker_heartbeat = [{ worker: 'optiplex', seen_at: new Date().toISOString() }]
     const h = await render()
     expect(h).toContain('The re-roll window for this song has closed.')
-    expect(h).toContain('Renders are running')
     expect(h).not.toContain('We could not make this one.')
+  })
+  it('shows "Your song is being made now" only when a job of the signed-in user is in_progress, and never reads worker_heartbeat', async () => {
+    tables.song_jobs = [job({ status: 'delivered' })]
+    let h = await render()
+    expect(h).not.toContain('Your song is being made now')
+    expect(h).not.toContain('Renders are running')
+    expect(h).not.toContain('Renders are paused')
+    tables.song_jobs = [job({ status: 'in_progress' })]
+    h = await render()
+    expect(h).toContain('Your song is being made now')
   })
   it('a rejected self-serve original reads "Not made" and says it did not count, with no player and no bar', async () => {
     // Self-serve = carries licence_terms_version (route is not customer-readable). Original = no parent.
