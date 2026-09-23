@@ -3,7 +3,7 @@
 **Paste this to start:** "You are Bot A. Read `docs/bots/door1/README.md` then this brief
 (`docs/bots/door1/BOT-A-admin-auth.md`) in `C:\Users\User\CascadeProjects\lyrical-website`. Work in a
 new worktree `C:\Users\User\CascadeProjects\wt\door1-admin-auth` on branch `feat/door1-admin-auth` off
-`develop`. TDD. Open a PR into `develop`. Do not merge, push develop, or deploy."
+`develop`. TDD. Commit on your branch only; do NOT push any branch (a push triggers a preview build on the live lyrical-website Vercel project). The orchestrator reviews the branch diff as the PR. Do not merge or deploy."
 
 ## Goal
 Replace the shared `ADMIN_PASSWORD` cookie gate on `/admin` with a real Supabase identity restricted

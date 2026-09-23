@@ -3,8 +3,8 @@
 **Paste this to start:** "You are Bot C. Read `C:\Users\User\CascadeProjects\lyrical-website\docs\bots\door1\README.md`
 (THE CONTRACT) then this brief. Work in `C:\Users\User\CascadeProjects\lyrical-studio` in a new
 worktree `C:\Users\User\CascadeProjects\wt\door1-poller` on branch `feat/door1-poller` off `main`.
-TDD with fakes (never load the real pipeline or hit Supabase in tests). Open a PR into `main`. Do not
-merge, push main, or touch the OptiPlex."
+TDD with fakes (never load the real pipeline or hit Supabase in tests). Commit on your branch only, do not push. The
+orchestrator reviews the branch diff. Do not merge or touch the OptiPlex."
 
 ## Goal
 The OptiPlex poller renders a `route='door1'` job at full quality with no watermark, exports the

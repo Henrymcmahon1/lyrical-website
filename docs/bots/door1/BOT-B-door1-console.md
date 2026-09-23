@@ -3,8 +3,9 @@
 **Paste this to start:** "You are Bot B. Read `docs/bots/door1/README.md` (THE CONTRACT) then this
 brief (`docs/bots/door1/BOT-B-door1-console.md`) in `C:\Users\User\CascadeProjects\lyrical-website`.
 Work in a new worktree `C:\Users\User\CascadeProjects\wt\door1-console` on branch
-`feat/door1-console` off the CURRENT `develop` (Bot A's admin auth is merged). TDD. Open a PR into
-`develop`. Do not merge, push develop, deploy, or apply the migration."
+`feat/door1-console` off the CURRENT `develop` (Bot A's admin auth is merged). TDD. Commit on your branch only; do NOT push any branch (a push triggers a preview build on the
+live lyrical-website Vercel project). The orchestrator reviews the branch diff. Do not merge, deploy,
+or apply the migration."
 
 ## Goal
 A Door 1 tab at `/admin/door1` inside the existing admin area: create a Door 1 job, see its status,

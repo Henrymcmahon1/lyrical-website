@@ -4,9 +4,9 @@ Handover: `docs/HANDOVER-door1-admin-2026-09-24.md`. Plan: `docs/DOOR1-ADMIN-PLA
 decision log: `docs/superpowers/specs/2026-09-22-two-doors-v2-design.md` (24 Sep entry).
 
 Each brief stands alone. Every bot works in its OWN git worktree under
-`C:\Users\User\CascadeProjects\wt\`, on its OWN branch, and opens a PR (website into `develop`,
-pipeline into `main`). The orchestrator reviews every PR before merging. No bot deploys, pushes to
-`develop`/`main` directly, applies a migration, or touches the OptiPlex.
+`C:\Users\User\CascadeProjects\wt\`, on its OWN branch, and commits there WITHOUT pushing (a lyrical-website branch push builds a preview on
+the live `lyrical-website` Vercel project). The orchestrator reviews each branch diff as the PR and
+merges locally. No bot deploys, pushes anything, applies a migration, or touches the OptiPlex.
 
 | Order | Bot | File | Repo / base | Branch |
 |---|---|---|---|---|
@@ -103,4 +103,4 @@ his say-so, then verified over PostgREST. Bots only write the file.
 - TDD. Website: `npm test && npm run build` green before the PR (build needs a gitignored
   `.env.local` with placeholder `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`; copy
   it from the main checkout, never commit it). Pipeline: `.venv\Scripts\python -m pytest tests` green.
-- PR body: what changed, tests run with counts, anything Henry must do. End with the attribution line.
+- Final report (the PR description): what changed, tests run with counts, anything Henry must do. End with the attribution line.
