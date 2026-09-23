@@ -1,3 +1,4 @@
+import type { Tables } from './db/database.types'
 import { planById, REROLLS_PER_TRACK, type PlanId } from './plans'
 
 /**
@@ -10,12 +11,10 @@ import { planById, REROLLS_PER_TRACK, type PlanId } from './plans'
  *
  * Re-rolls never pass through here. They consume nothing and are counted separately.
  */
-export type SubRow = {
-  tier: string
-  status: string
-  current_period_start: string | null
-  current_period_end: string | null
-} | null
+export type SubRow = Pick<
+  Tables<'subscriptions'>,
+  'tier' | 'status' | 'current_period_start' | 'current_period_end'
+> | null
 
 export type Entitlement =
   | {

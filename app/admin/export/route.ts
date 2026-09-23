@@ -1,4 +1,4 @@
-import { FEEDBACK_COLUMNS, FEEDBACK_SELECT, flattenFeedback, type FeedbackRow } from '@/app/admin/FeedbackTab'
+import { FEEDBACK_COLUMNS, FEEDBACK_SELECT, flattenFeedback } from '@/app/admin/FeedbackTab'
 import { requireAdmin } from '@/lib/admin-session'
 import { toCsv } from '@/lib/csv'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
   if (tab === 'feedback' || tab === 'voice') {
     const { data, error } = await supabaseAdmin().from('job_feedback').select(FEEDBACK_SELECT).order('created_at', { ascending: false })
     if (error) return new Response(`Could not read job_feedback: ${error.message}`, { status: 500 })
-    return new Response(toCsv(FEEDBACK_COLUMNS, flattenFeedback((data ?? []) as unknown as FeedbackRow[])), {
+    return new Response(toCsv(FEEDBACK_COLUMNS, flattenFeedback(data ?? [])), {
       headers: {
         'content-type': 'text/csv; charset=utf-8',
         'content-disposition': `attachment; filename="lyrical-feedback-${new Date().toISOString().slice(0, 10)}.csv"`,

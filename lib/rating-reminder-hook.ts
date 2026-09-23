@@ -1,3 +1,4 @@
+import type { Tables } from './db/database.types'
 import { ratingReminderHtml, ratingReminderSubject, ratingReminderText } from './rating-reminder-email'
 
 /**
@@ -8,13 +9,9 @@ import { ratingReminderHtml, ratingReminderSubject, ratingReminderText } from '.
  * respect the opt-out and the once-a-day product-email cap.
  */
 
-export type DueJob = {
-  id: string
-  user_id: string
-  title: string
-  /** Door 1 rows are excluded by the route's query; also skipped here, belt and braces. */
-  delivery_profile?: string | null
-}
+/** Door 1 rows are excluded by the route's query; also skipped here, belt and braces. */
+export type DueJob = Pick<Tables<'song_jobs'>, 'id' | 'user_id' | 'title'> &
+  Partial<Pick<Tables<'song_jobs'>, 'delivery_profile'>>
 
 export type EmailPrefs = { email: string | null; productEmails: boolean; ratingReminders: boolean }
 

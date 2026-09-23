@@ -12,23 +12,6 @@ import { addRelationshipNote, addRelationshipTask, updateRelationship } from './
  * its CSV export defuses spreadsheet formula injection.
  */
 
-type Lead = {
-  id: string
-  created_at: string
-  name: string
-  email: string
-  role: string
-  company: string | null
-  catalogue_size: string | null
-  target_languages: string[] | null
-  message: string | null
-  source: string | null
-  unlocked_audio: boolean
-  handled: boolean
-  rel_status: RelationshipStatus | null
-  rel_owner: string | null
-}
-
 const RELATIONSHIP_LABEL: Record<RelationshipStatus, string> = {
   new: 'New',
   contacted: 'Contacted',
@@ -98,7 +81,7 @@ export async function EnquiriesTab({
     )
   }
 
-  const leads = (data ?? []) as Lead[]
+  const leads = data ?? []
   const total = count ?? leads.length
   const truncated = total > leads.length
 
@@ -109,8 +92,8 @@ export async function EnquiriesTab({
   const notesAndTasks = await Promise.all(
     leads.map(async (l) => {
       const [notes, tasks] = await Promise.all([
-        listNotes({ enquiryId: l.id }, admin).catch(() => [] as CrmNote[]),
-        listTasks({ enquiryId: l.id, openOnly: true }, admin).catch(() => [] as CrmTask[]),
+        listNotes({ enquiryId: l.id }, admin).catch((): CrmNote[] => []),
+        listTasks({ enquiryId: l.id, openOnly: true }, admin).catch((): CrmTask[] => []),
       ])
       return [l.id, { notes, tasks }] as const
     }),

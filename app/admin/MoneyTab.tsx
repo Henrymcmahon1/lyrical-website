@@ -7,31 +7,6 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
  * seeing what happened, not for changing it.
  */
 
-type Subscription = {
-  id: string
-  user_id: string
-  tier: string
-  status: string
-  current_period_start: string | null
-  current_period_end: string | null
-}
-
-type CreditRow = {
-  id: string
-  created_at: string
-  user_id: string
-  delta: number
-  reason: string
-  job_id: string | null
-}
-
-type StripeEvent = {
-  id: string
-  type: string
-  received_at: string
-  processed_at: string | null
-}
-
 function when(iso: string | null | undefined): string {
   if (!iso) return '-'
   return new Date(iso).toLocaleString('en-GB', {
@@ -76,9 +51,9 @@ export async function MoneyTab() {
   const emailById = new Map<string, string>()
   for (const u of usersResult.data?.users ?? []) if (u.email) emailById.set(u.id, u.email)
 
-  const subs = (subsResult.data ?? []) as Subscription[]
-  const credits = (creditsResult.data ?? []) as CreditRow[]
-  const events = (eventsResult.data ?? []) as StripeEvent[]
+  const subs = subsResult.data ?? []
+  const credits = creditsResult.data ?? []
+  const events = eventsResult.data ?? []
 
   // The running total is the whole point of a ledger: it is the number a founder actually wants,
   // and every row on its own is just an entry toward it.

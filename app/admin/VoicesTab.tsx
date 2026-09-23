@@ -5,6 +5,7 @@ import {
   storageSummary,
 } from '@/lib/voice-training'
 import type { VoiceStatus } from '@/lib/voice-schema'
+import type { Tables } from '@/lib/db/database.types'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { moveVoice } from './actions'
 
@@ -20,24 +21,10 @@ import { moveVoice } from './actions'
  * compute is to have the total in front of you when you press Approve.
  */
 
-type Voice = {
-  id: string
-  created_at: string
-  user_id: string
-  artist_name: string
-  status: string
-  notes: string | null
-  consent_warranted_at: string
-  approved_at: string | null
-}
+type Sample = Pick<Tables<'voice_samples'>, 'id' | 'voice_id' | 'filename' | 'bytes' | 'seconds'>
 
-type Sample = {
-  id: string
-  voice_id: string
-  filename: string
-  bytes: number
-  seconds: number | null
-}
+/** The empty result for a sample lookup skipped because no voice is listed. */
+const NO_SAMPLES: Sample[] = []
 
 const STATE: Record<string, { label: string; className: string }> = {
   collecting: { label: 'Waiting on you', className: 'text-ember' },
@@ -91,14 +78,14 @@ export async function VoicesTab({ showAll }: { showAll: boolean }) {
     )
   }
 
-  const voices = (data ?? []) as Voice[]
+  const voices = data ?? []
   const total = count ?? voices.length
 
   const ids = voices.map((v) => v.id)
   const [sampleResult, userResult, voiceBytesResult, assetBytesResult] = await Promise.all([
     ids.length
       ? db.from('voice_samples').select('id, voice_id, filename, bytes, seconds').in('voice_id', ids)
-      : Promise.resolve({ data: [] as Sample[] }),
+      : Promise.resolve({ data: NO_SAMPLES }),
     db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
     // GLOBAL, not scoped to the visible voices: the 1GB is a single shared quota, so the meter has
     // to count every training take and every song asset in the project, retired voices aside.
@@ -113,7 +100,7 @@ export async function VoicesTab({ showAll }: { showAll: boolean }) {
   )
 
   const byVoice = new Map<string, Sample[]>()
-  for (const s of (sampleResult.data ?? []) as Sample[]) {
+  for (const s of sampleResult.data ?? []) {
     const list = byVoice.get(s.voice_id) ?? []
     list.push(s)
     byVoice.set(s.voice_id, list)

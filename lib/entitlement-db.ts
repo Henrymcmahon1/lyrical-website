@@ -23,7 +23,7 @@ export async function getBillingSummary(userId: string, admin: Admin = supabaseA
     .eq('user_id', userId)
     .maybeSingle()
   if (subError) throw new Error(subError.message)
-  const sub = (subData as SubRow) ?? null
+  const sub: SubRow = subData
 
   let usedThisPeriod = 0
   if (sub && ACTIVE_STATUSES.has(sub.status)) {
