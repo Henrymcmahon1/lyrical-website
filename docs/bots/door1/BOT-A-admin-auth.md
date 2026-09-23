@@ -19,7 +19,7 @@ to an email allowlist. This gates the existing CRM and the Door 1 console Bot B 
 ## Build
 1. `lib/admin-identity.ts` (pure, unit-tested):
    - `adminAllowlist()`: reads `ADMIN_EMAILS` (comma list, trimmed, lower-cased). FAILS CLOSED: unset
-     or empty means nobody. Document `info@lyricalglobal.com` as the value Henry sets.
+     or empty means nobody. Document `henry@lyricalglobal.com` as the value Henry sets.
    - `isAllowlisted(email)`: exact, case-insensitive match; requires a confirmed email.
    - `requiredAal()`: `'aal2'` when `ADMIN_REQUIRE_MFA=on`, else `'aal1'`. The TOTP hook for later.
 2. `lib/admin-session.ts`: replace `hasAdminSession()` with `requireAdmin()` returning
@@ -53,4 +53,4 @@ to an email allowlist. This gates the existing CRM and the Door 1 console Bot B 
 - Tests: allowlist parsing (unset, empty, mixed case, spaces), aal gate on/off, break-glass off by
   default, every admin surface refuses non-admins.
 - `npm test && npm run build` green. PR into `develop` lists the env Henry sets on omega:
-  `ADMIN_EMAILS=info@lyricalglobal.com`, optional `ADMIN_BREAK_GLASS=on`, later `ADMIN_REQUIRE_MFA=on`.
+  `ADMIN_EMAILS=henry@lyricalglobal.com`, optional `ADMIN_BREAK_GLASS=on`, later `ADMIN_REQUIRE_MFA=on`.

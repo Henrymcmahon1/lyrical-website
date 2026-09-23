@@ -20,7 +20,7 @@ merged into `develop`. B and C both code against the contract below; neither cha
 ## Henry's calls (24 Sep, locked)
 | Topic | Decision |
 |---|---|
-| Admin sign-in | Supabase identity, existing 6-digit email code, allowlist `info@lyricalglobal.com` |
+| Admin sign-in | Supabase identity, existing 6-digit email code, allowlist `henry@lyricalglobal.com` |
 | 2FA | NOT this round. Build so TOTP (Supabase MFA, AAL2) switches on later by env flag, no rework |
 | `ADMIN_PASSWORD` | Kept as a BREAK-GLASS only, OFF unless `ADMIN_BREAK_GLASS=on` |
 | Route | `/admin/door1` inside `/admin` (one admin area, one sign-in), never under `/studio` |

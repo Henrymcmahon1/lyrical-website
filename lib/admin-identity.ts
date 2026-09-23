@@ -12,7 +12,7 @@ import type { AdminCheck } from './admin-session'
  *
  * | Variable            | Value                        | Effect                                  |
  * |---------------------|------------------------------|-----------------------------------------|
- * | `ADMIN_EMAILS`      | `info@lyricalglobal.com`     | Comma list of admin emails. Unset = nobody. |
+ * | `ADMIN_EMAILS`      | `henry@lyricalglobal.com`     | Comma list of admin emails. Unset = nobody. |
  * | `ADMIN_REQUIRE_MFA` | `on` (later)                 | Demands a TOTP-verified session (AAL2). |
  * | `ADMIN_BREAK_GLASS` | `on` (emergencies only)      | Re-enables the old password form.       |
  * | `ADMIN_PASSWORD`    | a long random string         | The break-glass password. Needs the flag. |
