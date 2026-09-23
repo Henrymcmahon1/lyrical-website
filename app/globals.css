@@ -449,22 +449,31 @@ body {
   .drift-up, .drift-down { animation: none; transform: translateY(-25%); }
 }
 
-/* ── Earnings graph bars ──────────────────────────────────────
-   Bars are drawn at their real, final SVG geometry (height/position never animated); the
-   "grow from zero" motion is a keyframe on `transform: scaleY()` only, gated by `.js-motion`
-   exactly like the rest of the page. `EarningsGraph.tsx` keys each bar by the calculator's
-   current values, so a remount (not a JS effect) replays this animation when the inputs
-   change.
+/* ── Earnings graph line ──────────────────────────────────────
+   The area and the line are drawn at their real, final SVG geometry (the `d` path is never
+   animated); the "grow from the axis" motion is CSS only, on `transform: scaleY()` for the
+   area and `opacity` for the line and its points, gated by `.js-motion` exactly like the rest
+   of the page. `EarningsGraph.tsx` keys the points by the calculator's current values, so a
+   remount (not a JS effect) replays this animation when the inputs change.
    ───────────────────────────────────────────────────────────── */
-.bar-grow { transform-box: fill-box; transform-origin: bottom; }
+.area-grow { transform-box: fill-box; transform-origin: bottom; }
 
-.js-motion .bar-grow {
-  animation: bar-grow-in 650ms cubic-bezier(.16, .84, .34, 1) both;
+.js-motion .area-grow {
+  animation: area-grow-in 650ms cubic-bezier(.16, .84, .34, 1) both;
 }
 
-@keyframes bar-grow-in {
+.js-motion .line-fade {
+  animation: line-fade-in 500ms ease-out 200ms both;
+}
+
+@keyframes area-grow-in {
   from { transform: scaleY(0); }
   to   { transform: scaleY(1); }
+}
+
+@keyframes line-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ─────────────────────────────────────────────────────────────
