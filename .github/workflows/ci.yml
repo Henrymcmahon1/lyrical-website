@@ -1,0 +1,30 @@
+# Runs on every push and pull request: lint, tests, production build.
+# Nothing here deploys. Vercel deploys on its own; this only tells you whether the code is sound.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx eslint app lib components tests
+      - run: npm test
+      - run: npm run build
+        env:
+          # Placeholders only: the build prerenders pages that construct a Supabase client.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
