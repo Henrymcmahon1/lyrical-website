@@ -17,7 +17,12 @@ import {
 
 const field =
   'w-full rounded-card border border-graphite/25 bg-transparent px-4 py-3 outline-none transition-colors focus-visible:border-indigo'
-const tile = 'rounded-card border border-graphite/15 p-5'
+/**
+ * Softened 2026-09-23 to match the site's other cards (e.g. `S09cDoors`' `p-8 sm:p-10`), up
+ * from a tight `p-5` that read as a utilitarian data-entry panel next to the home page's warmer
+ * ones. Same border and radius, just more room to breathe.
+ */
+const tile = 'rounded-card border border-graphite/15 p-6 sm:p-8'
 const label = 'font-mono text-[11px] uppercase tracking-[0.18em] text-graphite/50'
 
 const LANGUAGE_OPTIONS = Array.from(
@@ -44,8 +49,8 @@ export function EarningsCalculator({ initial }: { initial: EarningsInput }) {
   const pct = Math.round(e.audienceShare * 100)
 
   return (
-    <div className="flex flex-col gap-10">
-      <div className={`${tile} sm:p-8`}>
+    <div className="flex flex-col gap-12">
+      <div className={tile}>
         <EarningsGraph input={input} />
       </div>
 

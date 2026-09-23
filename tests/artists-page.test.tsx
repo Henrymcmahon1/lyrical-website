@@ -106,4 +106,14 @@ describe('/artists', () => {
     // Fewer sections: pitch, what you receive, the calculator, the EOI form.
     expect((html.match(/<section/g) ?? []).length).toBeLessThanOrEqual(4)
   })
+
+  /**
+   * Warmed up against the home page's card treatment (2026-09-23): the three "What you
+   * receive" cards used to be a tight `p-5`, tighter than the home page's cards. This does not
+   * touch the copy or the number of cards, only the breathing room.
+   */
+  it('gives the "what you receive" cards the same breathing room as the site\'s other cards', async () => {
+    const html = await render()
+    expect(html.match(/rounded-card border border-graphite\/15 p-6"/g)?.length).toBe(3)
+  })
 })
