@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
-import { cookies } from 'next/headers'
 import { Mark } from '@/components/Mark'
 import { Trademark } from '@/components/Trademark'
 import { CapTable } from '@/components/sections/CapTable'
 import InvestorMedia from '@/components/sections/InvestorMedia'
 import { COMPS, INVESTORS, SECTIONS } from '@/content/investors'
-import { INVESTOR_COOKIE, verifyInvestorSession } from '@/lib/investor-auth'
+import { hasInvestorSession } from '@/lib/investor-session'
 import { lock, unlock } from './actions'
 
 /** Gated, noindex, disallowed in robots.ts, absent from the sitemap, linked from nowhere. */
@@ -31,8 +30,8 @@ function Gate({ error }: { error?: string }) {
 }
 
 export default async function Investors({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const [jar, params] = await Promise.all([cookies(), searchParams])
-  if (!verifyInvestorSession(jar.get(INVESTOR_COOKIE)?.value, Date.now())) return <Gate error={params.error} />
+  const [unlocked, params] = await Promise.all([hasInvestorSession(), searchParams])
+  if (!unlocked) return <Gate error={params.error} />
   return (
     <article className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
       <div className="flex items-start justify-between gap-6">
