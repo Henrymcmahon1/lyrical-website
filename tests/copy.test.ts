@@ -230,8 +230,8 @@ describe('nav and footer point at the two doors', () => {
   })
   it('footer carries Get started and keeps the rest, without Pricing or For artists', () => {
     const html = renderToStaticMarkup(createElement(Footer))
-    for (const h of ['/#doors', '/studio', '/hear', '/about', '/contact']) expect(html).toContain(`href="${h}"`)
-    for (const s of ['href="/pricing"', 'href="/artists"', '>Pricing<', 'For artists']) expect(html).not.toContain(s)
+    for (const h of ['/#doors', '/studio', '/#languages', '/about', '/contact']) expect(html).toContain(`href="${h}"`)
+    for (const s of ['href="/pricing"', 'href="/artists"', 'href="/hear"', '>Pricing<', 'For artists']) expect(html).not.toContain(s)
   })
 })
 
@@ -262,7 +262,6 @@ describe('the two doors pages', () => {
 import Home from '@/app/page'
 import About from '@/app/about/page'
 import Pricing from '@/app/pricing/page'
-import Hear from '@/app/hear/page'
 import Contact from '@/app/contact/page'
 
 describe('no "beta" on a marketing page', () => {
@@ -272,6 +271,9 @@ describe('no "beta" on a marketing page', () => {
    * legal document, and the one founding-price sentence on /pricing, which says "founding"
    * and not "beta". So the rendered marketing pages contain the word nowhere at all, and the
    * pricing page carries the founding sentence exactly once.
+   *
+   * `/hear` came off this list 2026-09-23 when it was removed and became a redirect
+   * (next.config.ts): there is no more page component to render.
    */
   // `Home` is an async server component since 2026-09-22 (it awaits the Coffey slot), so
   // every page here is rendered through the same `async () => ...` shape, whether or not
@@ -280,7 +282,6 @@ describe('no "beta" on a marketing page', () => {
     ['/', async () => Home()],
     ['/about', async () => createElement(About)],
     ['/pricing', async () => createElement(Pricing)],
-    ['/hear', async () => createElement(Hear)],
     ['/contact', async () => createElement(Contact)],
   ]
 

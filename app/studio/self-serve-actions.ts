@@ -1,8 +1,6 @@
 'use server'
 
-import { headers } from 'next/headers'
 import { SelfServeJobSchema } from '@/lib/song-job-schema'
-import { verifyTurnstile } from '@/lib/turnstile'
 import { LICENCE_TERMS_VERSION, RIGHTS_TERMS_VERSION } from '@/lib/terms'
 import { pathBelongsTo } from '@/lib/song-upload'
 import { currentUser } from '@/lib/supabase-server'
@@ -66,18 +64,10 @@ export async function submitSelfServeJob(raw: unknown): Promise<SelfServeResult>
   const user = await currentUser()
   if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
 
-  const input = raw as { jobId?: unknown; turnstileToken?: unknown }
+  const input = raw as { jobId?: unknown }
   const jobId = typeof input?.jobId === 'string' ? input.jobId : ''
   if (!/^[0-9a-f-]{36}$/i.test(jobId)) {
     return { ok: false, error: 'That submission looks malformed. Reload and try again.' }
-  }
-
-  const token = typeof input?.turnstileToken === 'string' ? input.turnstileToken : ''
-  const challenge = await verifyTurnstile(token, {
-    remoteip: (await headers()).get('x-forwarded-for')?.split(',')[0]?.trim(),
-  })
-  if (!challenge.ok) {
-    return { ok: false, error: 'That did not look human. Reload the page and try again.' }
   }
 
   const parsed = SelfServeJobSchema.safeParse(raw)

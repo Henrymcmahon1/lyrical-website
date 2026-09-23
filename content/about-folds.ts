@@ -65,20 +65,20 @@ export const ABOUT_FOLDS: AboutFold[] = [
   },
   {
     label: 'Ways in',
-    summary: 'One flagship release, or catalog infrastructure. They are different jobs.',
+    summary: 'Two doors: a signed release, or the self-serve studio. They are different jobs.',
     paragraphs: [
-      'Most conversations start one of two ways, and it is worth knowing which one you are having before we talk.',
+      'There are two ways to work with us, and it is worth knowing which one you are having before we talk.',
     ],
     points: [
       {
-        h: 'One flagship release',
-        p: 'For artists and managers. Open a song to a new market without re-recording it. Artist approved, delivered ready for release, and yours to mix.',
+        h: 'Sign with us',
+        p: 'For artists, managers and labels releasing a catalog. Selected songs, an authorized release in a new language, delivered ready to put out. Coffey Anderson went through this door first.',
       },
       {
-        h: 'A catalog program',
-        p: 'For labels and catalog owners. Selected high performing songs, priority territories, authorized asset creation, and reporting that feeds the next round of decisions.',
+        h: 'The self-serve studio',
+        p: 'For musicians working on their own songs, or songs they hold the rights to. Live now, self-served from upload to delivery, and built on proprietary voice models trained in the artist’s own voice.',
       },
     ],
-    actions: [{ label: 'Start the conversation', href: '#enquire' }],
+    actions: [{ label: 'Tell us about it', href: '/contact' }],
   },
 ]

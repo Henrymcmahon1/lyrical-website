@@ -20,12 +20,6 @@ export function Footer() {
           aria-label="Footer"
           className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm"
         >
-          {/*
-            "Hear it" became "Languages" on 2026-08-11. The label promised playback that the
-            page cannot deliver, which is the same fault the nav link was removed for a session
-            earlier. The page is kept and linked, because an orphan page in the sitemap is worse
-            than a page with an honest name, and it is the only internal link /hear now has.
-          */}
           {/* The short form of the site's one ask. A footer link has no room for the full
               sentence, and "it" is unambiguous next to the other three labels. */}
           <Link href="/studio" className="inline-flex min-h-11 items-center hover:text-indigo">
@@ -34,7 +28,14 @@ export function Footer() {
           {/* One link to the two doors, matching the nav since 2026-09-22. /pricing and /artists
               are reached from the doors section only. */}
           <Link href="/#doors" className="inline-flex min-h-11 items-center hover:text-indigo">Get started</Link>
-          <Link href="/hear" className="inline-flex min-h-11 items-center hover:text-indigo">
+          {/*
+            "Languages" pointed at the standalone `/hear` page until 2026-09-23, when Henry had
+            it removed: it mostly duplicated the home page, which already shows the languages
+            bloom (`S02bAudience`) and the wheels (`S03Wheels`). This now scrolls to that part of
+            the home page directly, via the `id="languages"` anchor in `app/page.tsx`. `/hear`
+            itself still resolves, as a redirect to the same anchor (`next.config.ts`).
+          */}
+          <Link href="/#languages" className="inline-flex min-h-11 items-center hover:text-indigo">
             Languages
           </Link>
           <Link href="/about" className="inline-flex min-h-11 items-center hover:text-indigo">

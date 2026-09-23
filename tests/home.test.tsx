@@ -38,6 +38,7 @@ describe('/ (home)', () => {
       'id="how"', // S05How
       'Your catalog is already working.', // S09bNow
       'id="doors"', // S09cDoors
+      'Want more?', // S10WantMore
     ]
     const idx = anchors.map((s) => html.indexOf(s))
     for (const [i, a] of anchors.entries()) expect(idx[i], `missing: ${a}`).toBeGreaterThanOrEqual(0)
