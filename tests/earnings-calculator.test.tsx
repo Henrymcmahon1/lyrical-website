@@ -15,5 +15,7 @@ describe('EarningsCalculator with the graph', () => {
     expect(html).toContain('role="img"')
     expect(html).toContain('$3,840') // per language, matches the existing tile
     expect(html).toContain('$7,680') // gross annual, matches the existing tile
+    expect(html).toContain('$38,400') // 5-year cumulative total from the graph
+    expect(html).toMatch(/5-year total/i)
   })
 })

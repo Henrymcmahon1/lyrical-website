@@ -72,6 +72,30 @@ export function estimateEarnings(input: EarningsInput): EarningsEstimate {
   }
 }
 
+/**
+ * The running total of GROSS annual new-language receipts, accrued year over year.
+ *
+ * The model is deliberately flat: cumulative(N) = annualGross * N. No growth curve, no decay,
+ * no discounting, so there is nothing here that reads as an NPV or a perpetuity. It is a plain
+ * multiple of the same `estimateEarnings` figure the rest of the page already shows.
+ */
+export function cumulativeByYear(
+  input: EarningsInput,
+  years = 5,
+): { year: number; cumulative: number }[] {
+  const annualGross = estimateEarnings(input).grossAnnualReceipts
+  const horizon = Number.isFinite(years) ? Math.max(1, Math.round(years)) : 5
+  return Array.from({ length: horizon }, (_, i) => {
+    const year = i + 1
+    return { year, cumulative: cents(annualGross * year) }
+  })
+}
+
+/** The cumulative total at year 5, the headline figure next to the graph. */
+export function fiveYearTotal(input: EarningsInput): number {
+  return cumulativeByYear(input, 5).at(-1)!.cumulative
+}
+
 /** Whole US dollars, en-US grouping, identical on the server and in the browser. */
 export function usd(n: number): string {
   return new Intl.NumberFormat('en-US', {

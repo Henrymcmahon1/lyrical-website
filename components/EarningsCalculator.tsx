@@ -33,8 +33,9 @@ const LANGUAGE_OPTIONS = Array.from(
  * The output is the GROSS estimate only. The terms are prose elsewhere on the page, never a
  * split computed here.
  *
- * The graph sits above the inputs and tiles as the centrepiece: it is driven by the same `e`
- * the tiles read, so the two can never disagree for the same inputs.
+ * The graph sits above the inputs and tiles as the centrepiece: it is driven by the same
+ * `input` state the tiles' `estimateEarnings(input)` reads (via `cumulativeByYear` inside
+ * `EarningsGraph`), so the two can never disagree for the same inputs.
  */
 export function EarningsCalculator({ initial }: { initial: EarningsInput }) {
   const [input, setInput] = useState<EarningsInput>(initial)
@@ -45,7 +46,7 @@ export function EarningsCalculator({ initial }: { initial: EarningsInput }) {
   return (
     <div className="flex flex-col gap-10">
       <div className={`${tile} sm:p-8`}>
-        <EarningsGraph estimate={e} />
+        <EarningsGraph input={input} />
       </div>
 
       <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
