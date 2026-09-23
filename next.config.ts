@@ -138,6 +138,19 @@ const nextConfig: NextConfig = {
         destination: 'https://lyricalglobal.com/:path*',
         permanent: true,
       },
+      /**
+       * `/hear` removed 2026-09-23 on Henry's instruction: it mostly duplicated the home page
+       * (`S02bAudience` and `S03Wheels` already show the nine languages there), and the
+       * footer's "Languages" link was the only internal link it had left. Rather than leave an
+       * indexed URL to 404, it redirects to the home page's own languages anchor. Temporary
+       * (not `permanent`), since the URL may be reused later if audio ever publishes, per the
+       * old page's own note.
+       */
+      {
+        source: '/hear',
+        destination: '/#languages',
+        permanent: false,
+      },
     ]
   },
 }

@@ -4,8 +4,8 @@ const getEntitlementFor = vi.fn()
 vi.mock('@/lib/entitlement-db', () => ({ getEntitlementFor: (...a: unknown[]) => getEntitlementFor(...a) }))
 const consumeCredit = vi.fn()
 vi.mock('@/lib/credits', () => ({ consumeCredit: (...a: unknown[]) => consumeCredit(...a) }))
-vi.mock('@/lib/turnstile', () => ({ verifyTurnstile: async () => ({ ok: true }) }))
-vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
+// Turnstile came off this action 2026-09-23 (tests/submit-turnstile-removed.test.ts): no mock
+// needed here any more, since the action never imports it.
 vi.mock('@/lib/supabase-server', () => ({
   currentUser: async () => ({ id: 'u1', email: 'fan@example.com' }),
 }))

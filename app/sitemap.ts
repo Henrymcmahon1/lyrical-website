@@ -8,7 +8,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   //
   // /pricing and /artists joined 2026-09-22 with the two doors. /artists is Bot D's page and
   // this file is Bot B's, so the entry lands a few days before the page does on omega.
-  return ['', '/pricing', '/artists', '/ai-music-translation', '/hear', '/about', '/contact'].map((path) => ({
+  //
+  // /hear left 2026-09-23: it is now a redirect into the home page (next.config.ts), not a
+  // page of its own, so it has no place in a sitemap of pages.
+  return ['', '/pricing', '/artists', '/ai-music-translation', '/about', '/contact'].map((path) => ({
     url: `${base}${path}`,
     changeFrequency: 'monthly',
     priority: path === '' ? 1 : path === '/pricing' ? 0.9 : 0.7,

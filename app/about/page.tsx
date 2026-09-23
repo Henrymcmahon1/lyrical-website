@@ -28,6 +28,15 @@ export const metadata = {
  * The folds render from `content/about-folds.ts` through one body component. They previously
  * wrapped four standalone section components, which each brought their own width, alignment
  * and heading scale into a container narrower than any of them.
+ *
+ * ## Refreshed 2026-09-23 to lead with the mission, then the current business
+ *
+ * Henry's instruction: open with the mission and the founders' story (a full version of the
+ * story is still one fold down, in "Origin"), then say plainly what that belief has become,
+ * the two doors as they stand today. Door one is signed artists and labels, with Coffey
+ * Anderson as the proof it works; door two is the self-serve studio, live now for musicians
+ * working on their own songs or songs they hold the rights to, built on proprietary voice
+ * models trained in the artist's own voice. Both write to the same studio and the same inbox.
  */
 export default function About() {
   return (
@@ -38,10 +47,13 @@ export default function About() {
         </h1>
 
         <p className="mt-10 text-lg leading-relaxed text-graphite/75">
-          lyrical exists because the catalog that already works in one language is the
-          safest place to start in another. We don&rsquo;t manufacture demand for unknown
-          songs. We take records that have already proven they connect, and make an
-          authorized version for an audience that couldn&rsquo;t hear them properly before.
+          lyrical exists because a song&rsquo;s audience should be decided by whether it
+          moves them, not by which language they speak. That belief did not start as a
+          music company. Jordan and Henry were building technology together when a
+          reinterpretation of a song Jordan loved showed how differently the same song can
+          land in a different voice, and Henry watched a stadium sing along to an artist
+          performing in a language most of the crowd did not speak. The audience was
+          already there. Only the words were missing.
         </p>
 
         <p className="mt-6 text-lg leading-relaxed text-graphite/75">
@@ -49,6 +61,15 @@ export default function About() {
           of truth. We transfer a performance. We don&rsquo;t invent one. The melody comes
           from the artist&rsquo;s own take, the vocal carries their own timbre, and the
           instrumental they recorded is the instrumental you get back.
+        </p>
+
+        <p className="mt-6 text-lg leading-relaxed text-graphite/75">
+          That belief now runs two doors. The first is signed artists and labels: an
+          authorized release in a new language, delivered ready to put out, the way it
+          worked for Coffey Anderson. The second is the self-serve studio, live now for
+          musicians working on their own songs or songs they hold the rights to, built on
+          proprietary voice models trained in the artist&rsquo;s own voice. Both doors write
+          to the same studio and the same inbox.
         </p>
 
         <p className="mt-6 text-lg leading-relaxed text-graphite/75">

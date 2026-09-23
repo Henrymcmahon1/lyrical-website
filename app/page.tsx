@@ -6,6 +6,7 @@ import S04Fidelity from '@/components/sections/S04Fidelity'
 import S05How from '@/components/sections/S05How'
 import S09bNow from '@/components/sections/S09bNow'
 import S09cDoors from '@/components/sections/S09cDoors'
+import S10WantMore from '@/components/sections/S10WantMore'
 
 /**
  * The funnel, deliberately short: hero, the audience turn, the proof, what we do to the
@@ -39,8 +40,17 @@ export default async function Home() {
   return (
     <>
       <S01Hero />
-      <S02bAudience coffey={coffey} />
-      <S03Wheels />
+      {/*
+        `id="languages"` added 2026-09-23 when the standalone `/hear` page was removed and
+        folded into the home page (Henry's instruction). This is the same content `/hear` used
+        to show, the audience turn and the wheels, so the footer's "Languages" link and the old
+        `/hear` URL (now a redirect in next.config.ts) both land here instead of a page that
+        mostly duplicated this one.
+      */}
+      <div id="languages">
+        <S02bAudience coffey={coffey} />
+        <S03Wheels />
+      </div>
       <S04Fidelity />
       <S05How />
       <S09bNow />
@@ -52,6 +62,13 @@ export default async function Home() {
         say: that there are two ways in, and which one is yours.
       */}
       <S09cDoors />
+      {/*
+        "Want more?", added 2026-09-23 on Henry's instruction: a quiet, secondary way to reach
+        the story, the investor page and contact from the home page itself, not the nav. It sits
+        below the two doors on purpose, on cream, so it never competes with the primary asks
+        above it. See `S10WantMore` for the colour-band reasoning.
+      */}
+      <S10WantMore />
     </>
   )
 }

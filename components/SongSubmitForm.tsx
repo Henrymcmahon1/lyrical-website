@@ -6,8 +6,6 @@ import { turnaroundNote } from '@/lib/language-pairs'
 import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
 import { detectLyrics, lyricsLanguageWarning } from '@/lib/lyrics-language'
 import { LYRICS_REQUIRED_MESSAGE } from '@/lib/song-job-schema'
-import { Turnstile } from '@/components/Turnstile'
-import { turnstileSiteKey } from '@/lib/turnstile'
 import { RightsWarranty } from '@/components/RightsWarranty'
 import {
   LICENCE_TERMS_INTRO,
@@ -89,9 +87,6 @@ export function SongSubmitForm({
   const [warranty, setWarranty] = useState(false)
   // Door 2 only: the personal-use licence. Unticked by default, like the warranty.
   const [licence, setLicence] = useState(false)
-  const [turnstileToken, setTurnstileToken] = useState('')
-
-  const siteKey = turnstileSiteKey()
 
   const [stage, setStage] = useState<Stage>('idle')
   const [error, setError] = useState('')
@@ -195,11 +190,6 @@ export function SongSubmitForm({
       setError('Choose who sings this. Pick “Let us decide” if you are not sure.')
       return
     }
-    // Widget shown but not solved yet: wait rather than upload and then be rejected at save.
-    if (siteKey && !turnstileToken) {
-      setError('Give the check at the bottom a moment to finish, then try again.')
-      return
-    }
 
     const supabase = supabaseBrowser()
     const { data: auth } = await supabase.auth.getUser()
@@ -262,7 +252,6 @@ export function SongSubmitForm({
         : (voiceChoice as 'male' | 'female' | 'let_us_decide'),
       rightsWarranty: true,
       licenceAccepted: selfServe ? (true as const) : undefined,
-      turnstileToken: turnstileToken || undefined,
     }
 
     if (selfServe) {
@@ -679,14 +668,6 @@ Second line`}
       {selfServe && (
         <RightsWarranty intro={LICENCE_TERMS_INTRO} points={LICENCE_TERMS_POINTS} checked={licence} onChange={setLicence} />
       )}
-
-      {/* Renders nothing when Turnstile is not configured, so this is inert until the keys land. */}
-      <Turnstile
-        siteKey={siteKey}
-        action="submit"
-        onVerify={setTurnstileToken}
-        onExpire={() => setTurnstileToken('')}
-      />
 
       {error && (
         <p role="alert" className="font-product text-sm leading-relaxed text-dark-accent">
