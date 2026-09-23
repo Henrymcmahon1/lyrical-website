@@ -52,4 +52,46 @@ describe('/pricing', () => {
     const ld = pricingLd('https://example.test') as { offers: { price: number }[] }
     expect(ld.offers.map((o) => o.price)).toEqual(PLAN_IDS.map((id) => priceFor(id)))
   })
+
+  /**
+   * The comparison treatment: the anchor line pulled up into a real visual, not the old
+   * footnote below the cards. It must sit BEFORE the cards (the anchor a visitor reads before
+   * the prices) and it is still the same struck $2,000 and the same ANCHOR_WEDGE sentence,
+   * never a <table> (ruled out) and never the /investors-only capped/unlocked figures.
+   */
+  it('shows the human-singer comparison as a visual, before the cards, not a footnote', () => {
+    expect(html).toContain('The old way')
+    expect(html).toContain('With lyrical')
+    expect(html).toContain('<s>$2,000</s>')
+    expect(html).toContain('We never charge that for automated output')
+    const comparisonAt = html.indexOf('The old way')
+    const firstCardAt = html.indexOf('Choose Single')
+    expect(comparisonAt).toBeGreaterThan(-1)
+    expect(firstCardAt).toBeGreaterThan(-1)
+    expect(comparisonAt).toBeLessThan(firstCardAt)
+    expect(html).not.toContain('<table')
+  })
+
+  /**
+   * The reassurance strip fills the dead zone between the cards and the FAQ: what every plan
+   * includes, stated once as a strip rather than only inside each card. It must not push the
+   * exact PLAN_FEATURES strings to a 4th occurrence (that test above stays exact-3), so it is
+   * worded differently from the per-card list while covering the same four facts.
+   */
+  it('adds a reassurance strip after the cards and before the FAQ, without duplicating PLAN_FEATURES text', () => {
+    expect(html).toContain('Every plan includes')
+    expect(html).toMatch(/re-roll/i)
+    expect(html).toMatch(/personal use/i)
+    expect(html).toMatch(/own voice/i)
+    expect(html).toContain('usually within 1 hour')
+    for (const f of PLAN_FEATURES) {
+      expect(html.match(new RegExp(f, 'g'))?.length).toBe(PLAN_IDS.length)
+    }
+    const lastCardAt = html.lastIndexOf('Choose Pro')
+    const stripAt = html.indexOf('Every plan includes')
+    const faqAt = html.indexOf('Questions')
+    expect(lastCardAt).toBeGreaterThan(-1)
+    expect(stripAt).toBeGreaterThan(lastCardAt)
+    expect(faqAt).toBeGreaterThan(stripAt)
+  })
 })

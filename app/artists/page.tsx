@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArtistEoiForm } from '@/components/ArtistEoiForm'
 import { EarningsCalculator } from '@/components/EarningsCalculator'
+import { Reveal } from '@/components/Reveal'
+import S02Coffey from '@/components/sections/S02Coffey'
 import { WORKED_EXAMPLE } from '@/lib/earnings'
 import { SITE_URL } from '@/lib/site'
 import { ldJson } from '@/lib/structured-data'
@@ -14,6 +16,18 @@ import { turnstileSiteKey } from '@/lib/turnstile'
  * worked example renders on the server, so a visitor with JavaScript disabled still sees a
  * real, labelled estimate, and the EOI form posts natively to /artists/eoi, which sends the
  * visitor back here with `?eoi=sent` or `?eoi=error` for the form to render.
+ *
+ * `S02Coffey` slot, added here 2026-09-23: proof beats a form. It renders directly under the
+ * hero, before "What you receive", so a visitor hears Coffey Anderson's before/after near the
+ * top of the page rather than only reading claims. Same graceful contract as everywhere else it
+ * is used: it needs both `COFFEY_ORIGINAL_PATH` and `COFFEY_COVER_PATH` set and resolves to
+ * `null` otherwise, so with no env this section renders nothing (never fake audio) and the page
+ * is exactly what it was before. Because it can be `null`, this page must stay async, same as
+ * the home page.
+ *
+ * It is deliberately placed AFTER the hero's own "Register your interest" call to action, never
+ * before it: the hero keeps its position and its CTA stays the first thing on the page, so nothing
+ * this adds pushes it down.
  */
 
 const TITLE = 'For artists: your songs in every language, in your voice'
@@ -74,6 +88,7 @@ export default async function ArtistsPage({
 }) {
   const { eoi } = await searchParams
   const initialState = eoi === 'sent' ? 'sent' : eoi === 'error' ? 'error' : undefined
+  const coffey = await S02Coffey()
 
   return (
     <>
@@ -107,6 +122,18 @@ export default async function ArtistsPage({
         </Link>
       </section>
 
+      {/*
+        The hero-style proof moment: only renders once Henry supplies both Coffey paths. It sits
+        in its own section, aria-labelled since `S02Coffey` itself carries none (it is written as
+        a slot for embedding, not a standalone section), between the hero and "What you receive"
+        so proof lands before the pitch is elaborated on.
+      */}
+      {coffey && (
+        <section aria-label="Coffey Anderson, before and after" className="mx-auto max-w-4xl px-6 pt-4 sm:pt-6">
+          {coffey}
+        </section>
+      )}
+
       <section className="mx-auto max-w-3xl px-6 py-20">
         <span className={eyebrow}>Door 1</span>
         <h2 className={h2}>What you receive.</h2>
@@ -115,14 +142,16 @@ export default async function ArtistsPage({
           own voice in a new language, over your untouched instrumental, and delivered as a new
           master you can release.
         </p>
-        <ul className="mt-8 grid gap-6 sm:grid-cols-3">
-          {RECEIVES.map((r) => (
-            <li key={r.h} className="rounded-card border border-graphite/15 p-5">
-              <h3 className="font-brand text-xl">{r.h}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-graphite/75">{r.p}</p>
-            </li>
-          ))}
-        </ul>
+        <Reveal delay={80}>
+          <ul className="mt-8 grid gap-6 sm:grid-cols-3">
+            {RECEIVES.map((r) => (
+              <li key={r.h} className="rounded-card border border-graphite/15 p-6">
+                <h3 className="font-brand text-xl">{r.h}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-graphite/75">{r.p}</p>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
         <p className="mt-8 leading-relaxed text-graphite/75">
           The precedent is Coffey Anderson, our first signed artist, on these same terms. Send
           your stems, hear it before anyone else does, and release it when you are ready.
@@ -139,9 +168,11 @@ export default async function ArtistsPage({
           an 80% new-language audience. Change the inputs to your own. Every result is an
           estimate.
         </p>
-        <div className="mt-10">
-          <EarningsCalculator initial={WORKED_EXAMPLE} />
-        </div>
+        <Reveal delay={80}>
+          <div className="mt-10">
+            <EarningsCalculator initial={WORKED_EXAMPLE} />
+          </div>
+        </Reveal>
       </section>
 
       <section id="eoi" className="mx-auto max-w-xl px-6 py-20 sm:py-28">
