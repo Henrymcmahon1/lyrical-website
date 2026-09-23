@@ -285,6 +285,13 @@ Order: Bot 0 alone → A, B, C, D, F in parallel → merge in the order A, C, B,
   24 h); the 24-hour rating-reminder email IS in scope for v3 (product email, opt-out, one product
   email per person per day). v3 build is five parallel bots (Auth+emails, Studio account, Website
   design, Admin CRM, Copyright); briefs under `docs/bots/v3/`.
+- **2026-09-24 (Henry):** revisiting decision 2 (Door-1 dashboard stays on the render PC): the CRAFT
+  tools stay local, but the Door-1 MANAGEMENT surface moves to the web as a SEPARATE, admin-only
+  dashboard on omega (create/track/deliver Door-1 jobs + CRM), distinct from the Door-2 customer
+  studio. Renderer stays the OptiPlex (SynthV GPU) via the poller and the Supabase contract
+  (`delivery_profile='door1'`). Access restricted to the admin account (info@lyricalglobal.com) with
+  PROPER auth (Supabase identity allowlist + 2FA), replacing the shared ADMIN_PASSWORD. Planned for
+  the next session; full brief in `docs/DOOR1-ADMIN-PLAN.md`. Not built yet.
 - **2026-09-22 (fixes after the second review):** failed self-serve jobs are visible and refunded (pipeline #5, website #12); ID3 wording; pricing FAQ no longer says nobody listens; the poller service task is installed on the render PC. Coffey Anderson "Mr Red White and Blue" EN to ES rendered through the dashboard's service layer with the new `vocal_denoise=false` knob (pipeline #4), scorecard overall 0.81.
 
 ## 14. Open items Henry owns
