@@ -1,5 +1,33 @@
-import { TURNAROUND_HOURS } from './language-pairs'
-import type { JobStatus } from './song-job-schema'
+import { Constants, type Enums } from '../db/database.types'
+import { TURNAROUND_HOURS } from '../language-pairs'
+
+/**
+ * The ONE place for job-state logic on the website.
+ *
+ * Every vocabulary here comes from the generated contract (`lib/db/database.types.ts`, see
+ * `docs/CONTRACT.md`), never a hand-kept list: a state added to the database is a type error
+ * here until somebody decides what it means. Two things live in this file and stay apart:
+ *
+ * - the status move graph (`ALLOWED_MOVES`, `canMove`, `stampsFor`): the control;
+ * - the words staff and customers read (`MOVE_LABELS`, `PIPELINE_STATE_LABELS`, `stateLabel`).
+ *
+ * The pipeline_state transition rules are NOT here: the database enforces them for every role
+ * (trigger `song_jobs_pipeline_state_transition`). The website only ever writes `queued`.
+ */
+
+/** `song_jobs.status`: the customer-facing lifecycle. Text + CHECK in the database. */
+export const JOB_STATUSES = Constants.public.Enums.song_job_status
+export type JobStatus = Enums<'song_job_status'>
+
+/** `song_jobs.pipeline_state`: the render worker's state. Null means never handed to it. */
+export const PIPELINE_STATES = Constants.public.Enums.song_job_pipeline_state
+export type PipelineState = Enums<'song_job_pipeline_state'>
+
+/** `song_jobs.route`: who owns the job. */
+export type JobRoute = Enums<'song_job_route'>
+
+/** `song_jobs.delivery_profile`: how the job is delivered. */
+export type DeliveryProfile = Enums<'song_job_delivery_profile'>
 
 /**
  * Which moves a song job is allowed to make, and what each one stamps.
@@ -32,10 +60,17 @@ export const ALLOWED_MOVES: Record<JobStatus, readonly JobStatus[]> = {
   rejected: [],
 }
 
+/**
+ * `song_jobs.status` is text in the database (a CHECK, not an enum), so the generated row types
+ * carry it as `string`. This narrows it to the contract's vocabulary without a cast.
+ */
+export function isJobStatus(value: string): value is JobStatus {
+  return JOB_STATUSES.some((s) => s === value)
+}
+
 export function canMove(from: string, to: string): boolean {
-  const moves = ALLOWED_MOVES[from as JobStatus]
-  if (!moves) return false
-  return moves.includes(to as JobStatus)
+  if (!isJobStatus(from) || !isJobStatus(to)) return false
+  return ALLOWED_MOVES[from].includes(to)
 }
 
 /**
@@ -110,4 +145,34 @@ export function timeLeft(
  */
 export function clockNow(): number {
   return Date.now()
+}
+
+/**
+ * Staff wording for each pipeline state, on its own. Words only: the graph above and the
+ * database trigger decide what may happen, this decides what it is called.
+ */
+export const PIPELINE_STATE_LABELS: Record<PipelineState, string> = {
+  queued: 'Queued',
+  claimed: 'Rendering',
+  rendered_local: 'Uploading',
+  delivered: 'Delivered',
+  failed: 'Failed',
+  blocked: 'Blocked',
+}
+
+/**
+ * Staff wording for where a Door 1 job is. `pipeline_state` wins once the poller has it.
+ * Moved here from `app/admin/door1/shared.tsx`; the output is unchanged, including that a
+ * `blocked` job (and any status with no pipeline state) reads its raw value.
+ */
+export function stateLabel(
+  status: string,
+  pipelineState: PipelineState | null,
+): { label: string; className: string } {
+  if (pipelineState === 'failed' || status === 'rejected') return { label: PIPELINE_STATE_LABELS.failed, className: 'text-ember' }
+  if (status === 'delivered' || pipelineState === 'delivered') return { label: PIPELINE_STATE_LABELS.delivered, className: 'text-indigo' }
+  if (pipelineState === 'queued') return { label: PIPELINE_STATE_LABELS.queued, className: 'text-graphite/60' }
+  if (pipelineState === 'claimed' || status === 'in_progress') return { label: PIPELINE_STATE_LABELS.claimed, className: 'text-indigo' }
+  if (pipelineState === 'rendered_local') return { label: PIPELINE_STATE_LABELS.rendered_local, className: 'text-indigo' }
+  return { label: pipelineState ?? status, className: 'text-graphite/60' }
 }

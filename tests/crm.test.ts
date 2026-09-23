@@ -77,6 +77,12 @@ describe('listNotes', () => {
     await listNotes({ enquiryId: 'e1' }, { from } as never)
     expect(eq).toHaveBeenCalledWith('enquiry_id', 'e1')
   })
+
+  it('refuses to run with neither a userId nor an enquiryId, before any query', async () => {
+    const from = vi.fn()
+    await expect(listNotes({}, { from } as never)).rejects.toThrow(/userId or an enquiryId/)
+    expect(from).not.toHaveBeenCalled()
+  })
 })
 
 describe('addTask', () => {
@@ -105,6 +111,21 @@ describe('listTasks', () => {
     const from = vi.fn().mockReturnValue({ select })
     await listTasks({ userId: 'u1', openOnly: true }, { from } as never)
     expect(is).toHaveBeenCalledWith('done_at', null)
+  })
+
+  it('filters by enquiry_id when given an enquiryId', async () => {
+    const eq = vi.fn().mockResolvedValue({ data: [], error: null })
+    const order = vi.fn().mockReturnValue({ eq })
+    const select = vi.fn().mockReturnValue({ order })
+    const from = vi.fn().mockReturnValue({ select })
+    await listTasks({ enquiryId: 'e1' }, { from } as never)
+    expect(eq).toHaveBeenCalledWith('enquiry_id', 'e1')
+  })
+
+  it('refuses to run with neither a userId nor an enquiryId, before any query', async () => {
+    const from = vi.fn()
+    await expect(listTasks({}, { from } as never)).rejects.toThrow(/userId or an enquiryId/)
+    expect(from).not.toHaveBeenCalled()
   })
 })
 

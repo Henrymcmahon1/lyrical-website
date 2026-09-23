@@ -135,12 +135,8 @@ export const SelfServeJobSchema = z.intersection(
 )
 export type SelfServeJobInput = z.infer<typeof SelfServeJobSchema>
 
-/** The lifecycle. Nothing processes until a human moves it off `submitted`. */
-export const JOB_STATUSES = [
-  'submitted',
-  'approved',
-  'in_progress',
-  'delivered',
-  'rejected',
-] as const
-export type JobStatus = (typeof JOB_STATUSES)[number]
+/**
+ * The lifecycle. Nothing processes until a human moves it off `submitted`. Defined once, from the
+ * generated contract, in `lib/jobs/states.ts`; re-exported here for the callers that had it here.
+ */
+export { JOB_STATUSES, type JobStatus } from './jobs/states'

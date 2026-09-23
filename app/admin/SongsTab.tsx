@@ -1,14 +1,15 @@
+import type { Tables } from '@/lib/db/database.types'
 import {
   ALLOWED_MOVES,
   MOVE_LABELS,
   OPEN_STATUSES,
   clockNow,
+  isJobStatus,
   timeLeft,
-} from '@/lib/job-transitions'
+} from '@/lib/jobs/states'
 import { isGuaranteed, TURNAROUND_HOURS } from '@/lib/language-pairs'
 import { lyricStats } from '@/lib/lyrics'
 import { languageByCode, type LanguageCode } from '@/lib/languages'
-import type { JobStatus } from '@/lib/song-job-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { moveJob, requeueJob, saveNote } from './actions'
 
@@ -32,52 +33,34 @@ import { moveJob, requeueJob, saveNote } from './actions'
  * showing up in this staff view (or not) by accident rather than by a decision made here.
  */
 
-const JOB_COLUMNS = [
-  'id',
-  'created_at',
-  'user_id',
-  'title',
-  'primary_artist',
-  'source_language',
-  'target_language',
-  'notes',
-  'status',
-  'approved_at',
-  'delivered_at',
-  'internal_notes',
-  'lyrics',
-  'voice_id',
-  'voice_preference',
-  'pipeline_state',
-  'pipeline_error',
-  'parent_job_id',
-  'reroll_index',
-  'delivery_profile',
-].join(', ')
+/** One string literal, so the typed client infers `Job` from exactly these columns. */
+const JOB_COLUMNS =
+  'id, created_at, user_id, title, primary_artist, source_language, target_language, notes, status, approved_at, delivered_at, internal_notes, lyrics, voice_id, voice_preference, pipeline_state, pipeline_error, parent_job_id, reroll_index, delivery_profile'
 
-type Job = {
-  id: string
-  created_at: string
-  user_id: string
-  title: string
-  primary_artist: string
-  source_language: string
-  target_language: string
-  notes: string | null
-  status: string
-  approved_at: string | null
-  delivered_at: string | null
-  internal_notes: string | null
-  lyrics: string | null
-  voice_id: string | null
-  voice_preference: string | null
-  pipeline_state: string | null
-  pipeline_error: string | null
-  parent_job_id: string | null
-  reroll_index: number
-  /** `door1` for a staff-made Door 1 job (managed at /admin/door1); `door2` otherwise. */
-  delivery_profile?: string | null
-}
+/** `delivery_profile` is `door1` for a staff-made Door 1 job (managed at /admin/door1). */
+type Job = Pick<
+  Tables<'song_jobs'>,
+  | 'id'
+  | 'created_at'
+  | 'user_id'
+  | 'title'
+  | 'primary_artist'
+  | 'source_language'
+  | 'target_language'
+  | 'notes'
+  | 'status'
+  | 'approved_at'
+  | 'delivered_at'
+  | 'internal_notes'
+  | 'lyrics'
+  | 'voice_id'
+  | 'voice_preference'
+  | 'pipeline_state'
+  | 'pipeline_error'
+  | 'parent_job_id'
+  | 'reroll_index'
+  | 'delivery_profile'
+>
 
 const VOICE_PREFERENCE_LABEL: Record<string, string> = {
   male: 'a male voice',
@@ -85,25 +68,14 @@ const VOICE_PREFERENCE_LABEL: Record<string, string> = {
   let_us_decide: 'let us decide',
 }
 
-type Asset = {
-  id: string
-  job_id: string
-  kind: string
-  artist_name: string | null
-  part: string | null
-  filename: string
-  bytes: number
-  purged_at: string | null
-}
+type Asset = Pick<
+  Tables<'song_job_assets'>,
+  'id' | 'job_id' | 'kind' | 'artist_name' | 'part' | 'filename' | 'bytes' | 'purged_at'
+>
 
-type Delivery = {
-  id: string
-  job_id: string
-  kind: string
-  watermark_id: number | null
-  filename: string
-  bytes: number
-}
+type Delivery = Pick<Tables<'song_job_deliveries'>, 'id' | 'job_id' | 'kind' | 'watermark_id' | 'filename' | 'bytes'>
+
+type Voice = Pick<Tables<'voice_models'>, 'id' | 'artist_name' | 'status'>
 
 const KIND_LABEL: Record<string, string> = {
   instrumental: 'Instrumental',
@@ -161,7 +133,7 @@ function JobRow({
 }) {
   const { job, assets, deliveries, email, voice } = data
   const state = STATE[job.status] ?? { label: job.status, className: 'text-graphite/45' }
-  const moves = ALLOWED_MOVES[job.status as JobStatus] ?? []
+  const moves = isJobStatus(job.status) ? ALLOWED_MOVES[job.status] : []
   const clock =
     job.approved_at && job.status !== 'delivered' ? timeLeft(job.approved_at, nowMs) : null
   const guaranteed = isGuaranteed(
@@ -496,6 +468,11 @@ function JobRow({
   )
 }
 
+/** The empty result for a lookup skipped because there is nothing to look up. */
+const NO_ASSETS: Asset[] = []
+const NO_DELIVERIES: Delivery[] = []
+const NO_VOICES: Voice[] = []
+
 export async function SongsTab({
   showAll,
   confirming,
@@ -510,7 +487,7 @@ export async function SongsTab({
     .select(JOB_COLUMNS, { count: 'exact' })
     .order('created_at', { ascending: false })
     .limit(200)
-  if (!showAll) query = query.in('status', OPEN_STATUSES as unknown as string[])
+  if (!showAll) query = query.in('status', OPEN_STATUSES)
 
   const { data, error, count } = await query
   if (error) {
@@ -524,7 +501,7 @@ export async function SongsTab({
     )
   }
 
-  const jobs = (data ?? []) as unknown as Job[]
+  const jobs: Job[] = data ?? []
   const total = count ?? jobs.length
 
   /**
@@ -544,33 +521,33 @@ export async function SongsTab({
           .from('song_job_assets')
           .select('id, job_id, kind, artist_name, part, filename, bytes, purged_at')
           .in('job_id', jobIds)
-      : Promise.resolve({ data: [] as Asset[] }),
+      : Promise.resolve({ data: NO_ASSETS }),
     jobIds.length
       ? db
           .from('song_job_deliveries')
           .select('id, job_id, kind, watermark_id, filename, bytes')
           .in('job_id', jobIds)
-      : Promise.resolve({ data: [] as Delivery[] }),
+      : Promise.resolve({ data: NO_DELIVERIES }),
     db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
     voiceIds.length
       ? db.from('voice_models').select('id, artist_name, status').in('id', voiceIds)
-      : Promise.resolve({ data: [] as { id: string; artist_name: string; status: string }[] }),
+      : Promise.resolve({ data: NO_VOICES }),
   ])
 
   const voiceById = new Map<string, { artist_name: string; status: string }>()
-  for (const v of (voiceResult.data ?? []) as { id: string; artist_name: string; status: string }[]) {
+  for (const v of voiceResult.data ?? []) {
     voiceById.set(v.id, { artist_name: v.artist_name, status: v.status })
   }
 
   const assetsByJob = new Map<string, Asset[]>()
-  for (const a of (assetResult.data ?? []) as Asset[]) {
+  for (const a of assetResult.data ?? []) {
     const list = assetsByJob.get(a.job_id) ?? []
     list.push(a)
     assetsByJob.set(a.job_id, list)
   }
 
   const deliveriesByJob = new Map<string, Delivery[]>()
-  for (const d of (deliveryResult.data ?? []) as Delivery[]) {
+  for (const d of deliveryResult.data ?? []) {
     const list = deliveriesByJob.get(d.job_id) ?? []
     list.push(d)
     deliveriesByJob.set(d.job_id, list)

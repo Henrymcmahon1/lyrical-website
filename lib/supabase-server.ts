@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import type { Database } from './db/database.types'
 
 /**
  * The server client, also running as the signed in user, reading the session from cookies.
@@ -25,7 +26,7 @@ export async function supabaseServer() {
 
   const jar = await cookies()
 
-  return createServerClient(url, key, {
+  return createServerClient<Database>(url, key, {
     cookies: {
       getAll: () => jar.getAll(),
       setAll: (list) => {

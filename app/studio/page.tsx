@@ -5,6 +5,7 @@ import { StudioAutoRefresh } from '@/components/StudioAutoRefresh'
 import { SongCard, type SongJob } from '@/components/studio/SongCard'
 import { Notice, PageHead, button, link } from '@/components/studio/ui'
 import { rerollsLeft } from '@/lib/entitlement'
+import { isFeedbackRating } from '@/lib/feedback-schema'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
 
@@ -26,8 +27,6 @@ import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
  */
 export const metadata = { title: 'The studio', robots: { index: false, follow: false } }
 
-type Job = SongJob
-type Feedback = { job_id: string; rating: 'up' | 'down'; note: string | null; tags: string[] }
 
 export default async function Studio({ searchParams }: { searchParams: Promise<{ submitted?: string; paid?: string }> }) {
   const [user, params] = await Promise.all([currentUser(), searchParams])
@@ -42,8 +41,8 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
       .order('created_at', { ascending: false }),
     supabase.from('job_feedback').select('job_id, rating, note, tags'),
   ])
-  const jobs = (jobRows ?? []) as Job[]
-  const feedback = new Map(((feedbackRows ?? []) as Feedback[]).map((f) => [f.job_id, f]))
+  const jobs: SongJob[] = jobRows ?? []
+  const feedback = new Map((feedbackRows ?? []).map((f) => [f.job_id, f]))
   const originals = jobs.filter((j) => j.reroll_index === 0)
   const childrenOf = (id: string) => jobs.filter((j) => j.parent_job_id === id).sort((a, b) => a.reroll_index - b.reroll_index)
   // "Your song is being made now": ONLY the signed-in user's own rows can say so, because this
@@ -54,7 +53,10 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   // cross the server/client component boundary: doing so 500s the whole page ("Functions cannot be
   // passed directly to Client Components"). So the values are resolved here and handed over as data.
   const existingById: Record<string, ExistingFeedback> = {}
-  for (const [id, f] of feedback) existingById[id] = { rating: f.rating, note: f.note, tags: f.tags ?? [] }
+  for (const [id, f] of feedback) {
+    // The CHECK allows only up/down; a row that somehow is neither is not shown as either.
+    if (isFeedbackRating(f.rating)) existingById[id] = { rating: f.rating, note: f.note, tags: f.tags ?? [] }
+  }
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">

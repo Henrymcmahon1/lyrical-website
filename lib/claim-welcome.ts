@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from './db/database.types'
 import { mailCustomer } from './mailer'
 import { welcomeHtml, welcomeSubject, welcomeText } from './welcome-email'
 
@@ -22,27 +24,11 @@ import { welcomeHtml, welcomeSubject, welcomeText } from './welcome-email'
  * Never throws. A welcome email is worth strictly less than a working sign-in.
  */
 
-type SupabaseLike = {
-  from: (table: string) => {
-    upsert: (
-      row: Record<string, unknown>,
-      opts: { onConflict: string; ignoreDuplicates: boolean },
-    ) => PromiseLike<{ error: unknown }>
-    update: (row: Record<string, unknown>) => {
-      eq: (
-        column: string,
-        value: string,
-      ) => {
-        is: (
-          column: string,
-          value: null,
-        ) => {
-          select: (columns: string) => PromiseLike<{ data: unknown[] | null; error: unknown }>
-        }
-      }
-    }
-  }
-}
+/**
+ * Only `from` is used, so only `from` is asked for: the caller's typed client passes as is, and a
+ * test can hand in a fake that implements just the chain this function walks.
+ */
+type SupabaseLike = Pick<SupabaseClient<Database>, 'from'>
 
 export async function claimWelcomeOnce(
   supabase: SupabaseLike,

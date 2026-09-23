@@ -11,7 +11,7 @@ import {
 } from '@/lib/admin-auth'
 import { breakGlassEnabled } from '@/lib/admin-identity'
 import { requireAdmin } from '@/lib/admin-session'
-import { canMove, MOVES_THAT_EMAIL, stampsFor } from '@/lib/job-transitions'
+import { canMove, MOVES_THAT_EMAIL, stampsFor } from '@/lib/jobs/states'
 import { mailCustomer } from '@/lib/mailer'
 import { clientKey, consume } from '@/lib/rate-limit'
 import {

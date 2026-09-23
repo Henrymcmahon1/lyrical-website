@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FeedbackSchema, FEEDBACK_TAGS } from '@/lib/feedback-schema'
+import { FeedbackSchema, FEEDBACK_TAGS, isFeedbackRating } from '@/lib/feedback-schema'
 
 const JOB = '11111111-2222-3333-4444-555555555555'
 const parse = (v: unknown) => FeedbackSchema.safeParse(v)
@@ -23,5 +23,13 @@ describe('feedback schema', () => {
   it('refuses a rating that is not up or down, and a malformed id', () => {
     expect(parse({ jobId: JOB, rating: 'meh' }).success).toBe(false)
     expect(parse({ jobId: 'x', rating: 'up' }).success).toBe(false)
+  })
+})
+
+describe('isFeedbackRating: the text column read back as the two ratings', () => {
+  it('accepts up and down only', () => {
+    expect(isFeedbackRating('up')).toBe(true)
+    expect(isFeedbackRating('down')).toBe(true)
+    for (const v of ['', 'Up', 'sideways']) expect(isFeedbackRating(v)).toBe(false)
   })
 })

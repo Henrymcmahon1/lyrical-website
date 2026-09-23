@@ -1,4 +1,4 @@
-import { clockNow } from '@/lib/job-transitions'
+import { clockNow } from '@/lib/jobs/states'
 import { listIssues, type CrmIssue, type CrmIssueStatus } from '@/lib/crm'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { changeIssueStatus, createIssue } from './issue-actions'

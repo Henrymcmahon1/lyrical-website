@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Tables } from '@/lib/db/database.types'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 /**
@@ -13,24 +14,18 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
  */
 type Admin = ReturnType<typeof supabaseAdmin>
 
-export type CrmNote = {
-  id: string
-  created_at: string
-  author: string | null
-  user_id: string | null
-  enquiry_id: string | null
-  body: string
-}
+export type CrmNote = Tables<'crm_notes'>
 
-export type CrmTask = {
-  id: string
-  created_at: string
-  user_id: string | null
-  enquiry_id: string | null
-  title: string
-  due_on: string | null
-  owner: string | null
-  done_at: string | null
+export type CrmTask = Tables<'crm_tasks'>
+
+/**
+ * Which rows a list call is about: one user's, or one enquiry's. Refuses neither, loudly and
+ * before any query, rather than filtering on an undefined id.
+ */
+function ownerFilter(args: { userId?: string; enquiryId?: string }): ['user_id' | 'enquiry_id', string] {
+  if (args.userId) return ['user_id', args.userId]
+  if (args.enquiryId) return ['enquiry_id', args.enquiryId]
+  throw new Error('A CRM list needs a userId or an enquiryId')
 }
 
 const NoteInput = z
@@ -65,11 +60,14 @@ export async function listNotes(
   args: { userId?: string; enquiryId?: string },
   admin: Admin = supabaseAdmin(),
 ): Promise<CrmNote[]> {
-  let query = admin.from('crm_notes').select('*').order('created_at', { ascending: false })
-  query = args.userId ? query.eq('user_id', args.userId) : query.eq('enquiry_id', args.enquiryId)
-  const { data, error } = await query
+  const [column, id] = ownerFilter(args)
+  const { data, error } = await admin
+    .from('crm_notes')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .eq(column, id)
   if (error) throw new Error(error.message)
-  return (data ?? []) as CrmNote[]
+  return data ?? []
 }
 
 const TaskInput = z
@@ -103,12 +101,12 @@ export async function listTasks(
   args: { userId?: string; enquiryId?: string; openOnly?: boolean },
   admin: Admin = supabaseAdmin(),
 ): Promise<CrmTask[]> {
-  let query = admin.from('crm_tasks').select('*').order('due_on', { ascending: true })
-  query = args.userId ? query.eq('user_id', args.userId) : query.eq('enquiry_id', args.enquiryId)
+  const [column, id] = ownerFilter(args)
+  let query = admin.from('crm_tasks').select('*').order('due_on', { ascending: true }).eq(column, id)
   if (args.openOnly) query = query.is('done_at', null)
   const { data, error } = await query
   if (error) throw new Error(error.message)
-  return (data ?? []) as CrmTask[]
+  return data ?? []
 }
 
 export async function completeTask(taskId: string, admin: Admin = supabaseAdmin()): Promise<void> {
@@ -124,15 +122,13 @@ export async function completeTask(taskId: string, admin: Admin = supabaseAdmin(
 export type CrmIssueKind = 'failed_job' | 'refund' | 'complaint' | 'other'
 export type CrmIssueStatus = 'open' | 'ack' | 'resolved'
 
-export type CrmIssue = {
-  id: string
-  created_at: string
-  job_id: string | null
-  user_id: string | null
+/**
+ * A `crm_issues` row. `kind` and `status` are plain text in the database (no enum yet), so the
+ * narrower unions are this file's promise, kept by `IssueInput` and `setIssueStatus`.
+ */
+export type CrmIssue = Omit<Tables<'crm_issues'>, 'kind' | 'status'> & {
   kind: CrmIssueKind
   status: CrmIssueStatus
-  detail: string | null
-  resolved_at: string | null
 }
 
 const IssueInput = z.object({

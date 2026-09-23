@@ -1,3 +1,4 @@
+import type { TablesUpdate } from '@/lib/db/database.types'
 import type { supabaseAdmin } from '@/lib/supabase-admin'
 
 /**
@@ -50,10 +51,9 @@ export async function getEmailPreferences(admin: Admin, userId: string): Promise
     if (isMissingColumn(error)) return { productEmails: true, ratingReminders: true, available: false }
     throw new Error(error.message)
   }
-  const row = (data ?? {}) as { product_emails?: boolean | null; rating_reminders?: boolean | null }
   return {
-    productEmails: row.product_emails ?? true,
-    ratingReminders: row.rating_reminders ?? true,
+    productEmails: data?.product_emails ?? true,
+    ratingReminders: data?.rating_reminders ?? true,
     available: true,
   }
 }
@@ -66,7 +66,7 @@ export async function setEmailPreference(
   userId: string,
   patch: Partial<{ productEmails: boolean; ratingReminders: boolean }>,
 ): Promise<SetEmailPreferenceResult> {
-  const row: Record<string, boolean> = {}
+  const row: TablesUpdate<'profiles'> = {}
   if (patch.productEmails !== undefined) row.product_emails = patch.productEmails
   if (patch.ratingReminders !== undefined) row.rating_reminders = patch.ratingReminders
   if (Object.keys(row).length === 0) return { ok: true }
@@ -129,7 +129,7 @@ export async function exportAccountData(admin: Admin, userId: string): Promise<A
   for (const r of [jobs, feedback, credits, deliveries]) {
     if (r.error) throw new Error(r.error.message)
   }
-  const jobRows = (jobs.data ?? []) as Record<string, unknown>[]
+  const jobRows = jobs.data ?? []
   // Door 1 deliveries (staff-made stems under info@'s uid) belong to jobs excluded above, so
   // only deliveries of the jobs actually exported are kept. `song_job_deliveries` carries no
   // profile of its own.
@@ -137,9 +137,9 @@ export async function exportAccountData(admin: Admin, userId: string): Promise<A
   return {
     exportedAt: new Date().toISOString(),
     jobs: jobRows,
-    feedback: (feedback.data ?? []) as Record<string, unknown>[],
-    credits: (credits.data ?? []) as Record<string, unknown>[],
-    deliveries: ((deliveries.data ?? []) as Record<string, unknown>[]).filter((d) => exportedJobIds.has(d.job_id)),
+    feedback: feedback.data ?? [],
+    credits: credits.data ?? [],
+    deliveries: (deliveries.data ?? []).filter((d) => exportedJobIds.has(d.job_id)),
   }
 }
 

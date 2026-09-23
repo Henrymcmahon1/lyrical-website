@@ -13,7 +13,7 @@ import { exportAccountData } from '@/lib/account-data'
  * customer-path `song_jobs` read or update is added without the exclusion.
  */
 
-const DOOR2: SongJobRecord & { delivery_profile: string; route: string } = {
+const DOOR2: SongJobRecord = {
   id: 'job-2',
   user_id: 'user-info',
   title: 'A Song',
@@ -24,7 +24,7 @@ const DOOR2: SongJobRecord & { delivery_profile: string; route: string } = {
   delivery_profile: 'door2',
   route: 'auto',
 }
-const DOOR1 = { ...DOOR2, id: 'job-1', delivery_profile: 'door1', route: 'door1' }
+const DOOR1: SongJobRecord = { ...DOOR2, id: 'job-1', delivery_profile: 'door1', route: 'door1' }
 
 function hookDeps() {
   return {
