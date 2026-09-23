@@ -64,7 +64,7 @@ function Take({
   job: SongJob
   left: number
   n?: number
-  existing: (id: string) => ExistingFeedback
+  existing: Record<string, ExistingFeedback>
 }) {
   return (
     <div key={j.id} className={n ? 'mt-4 rounded-card border border-dark-ink/10 bg-dark-ink/3 p-4' : ''}>
@@ -79,7 +79,7 @@ function Take({
         <>
           <CoverPlayer jobId={j.id} />
           <p className="mt-3 font-product text-xs leading-relaxed text-dark-ink/55">{LICENCE_LINE}</p>
-          <FeedbackBar jobId={j.id} existing={existing(j.id)} rerollsLeft={left} canReroll />
+          <FeedbackBar jobId={j.id} existing={existing[j.id] ?? null} rerollsLeft={left} canReroll />
         </>
       )}
       {n && j.status === 'rejected' ? <p className="mt-3 font-product text-sm text-dark-ink/70">{REROLL_CLOSED}</p> : null}
@@ -99,7 +99,9 @@ export function SongCard({
   /** Re-rolls of `original`, sorted ascending by reroll_index (oldest take first). */
   kids: SongJob[]
   left: number
-  existing: (id: string) => ExistingFeedback
+  /** Serializable map of job id -> saved feedback. Must be plain data, not a function: this is a
+   *  Client Component and a function prop from the server 500s the page. */
+  existing: Record<string, ExistingFeedback>
   defaultOpen: boolean
 }) {
   const latest = kids.length ? kids[kids.length - 1] : original

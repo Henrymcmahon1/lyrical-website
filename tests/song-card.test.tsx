@@ -26,7 +26,7 @@ const html = (p: Partial<Parameters<typeof SongCard>[0]> = {}) =>
       original={job({})}
       kids={[]}
       left={2}
-      existing={() => null}
+      existing={{}}
       defaultOpen={false}
       {...p}
     />,

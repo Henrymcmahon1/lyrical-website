@@ -48,10 +48,11 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   // is read with the user's client under RLS, never the worker_heartbeat table (that told you
   // the WORKER was alive, not whether YOUR song was the thing it was working on).
   const inProgress = jobs.some((j) => j.status === 'in_progress')
-  const existing = (id: string): ExistingFeedback => {
-    const f = feedback.get(id)
-    return f ? { rating: f.rating, note: f.note, tags: f.tags ?? [] } : null
-  }
+  // A plain, serializable map (job id -> feedback) for the client SongCard. A FUNCTION prop cannot
+  // cross the server/client component boundary: doing so 500s the whole page ("Functions cannot be
+  // passed directly to Client Components"). So the values are resolved here and handed over as data.
+  const existingById: Record<string, ExistingFeedback> = {}
+  for (const [id, f] of feedback) existingById[id] = { rating: f.rating, note: f.note, tags: f.tags ?? [] }
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -93,7 +94,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
             const left = rerollsLeft(kids.length)
             return (
               <li key={j.id}>
-                <SongCard original={j} kids={kids} left={left} existing={existing} defaultOpen={i === 0} />
+                <SongCard original={j} kids={kids} left={left} existing={existingById} defaultOpen={i === 0} />
               </li>
             )
           })}
