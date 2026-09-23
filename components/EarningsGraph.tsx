@@ -43,6 +43,11 @@ function niceCeil(value: number): number {
  * Every figure here is an estimate, GROSS, before any share: the same locked rule as the rest
  * of the page. There is no NPV, no discounting, no perpetuity: cumulative(N) = annualGross * N,
  * a plain running total.
+ *
+ * The animated area path and the line group are keyed by `signature`, a string built from every
+ * input field. When a calculator value changes, React sees a new key and remounts those two
+ * nodes rather than patching their attributes in place, which restarts the CSS grow animation
+ * (`.area-grow` / `.line-fade` in globals.css) on every change, not just on first mount.
  */
 export function EarningsGraph({ input }: { input: EarningsInput }) {
   const rows = cumulativeByYear(input, 5)
@@ -112,9 +117,15 @@ export function EarningsGraph({ input }: { input: EarningsInput }) {
           strokeOpacity={0.25}
         />
 
-        <path d={areaD} fill="var(--color-indigo)" fillOpacity={0.14} className="area-grow" />
+        <path
+          key={signature}
+          d={areaD}
+          fill="var(--color-indigo)"
+          fillOpacity={0.14}
+          className="area-grow"
+        />
 
-        <g className="line-fade">
+        <g key={signature} className="line-fade">
           <path d={lineD} fill="none" stroke="var(--color-indigo)" strokeWidth={2.5} className="line-path" />
           {rows.map((r, i) => (
             <g key={`${signature}:${r.year}`}>
@@ -124,12 +135,12 @@ export function EarningsGraph({ input }: { input: EarningsInput }) {
           ))}
         </g>
 
-        {rows.map((r) => (
+        {rows.map((r, i) => (
           <text
             key={r.year}
             x={xFor(r.year)}
             y={AXIS_Y + 20}
-            textAnchor="middle"
+            textAnchor={i === 0 ? 'start' : i === rows.length - 1 ? 'end' : 'middle'}
             fontSize={11}
             fontFamily="var(--font-mono)"
             fill="var(--color-graphite)"

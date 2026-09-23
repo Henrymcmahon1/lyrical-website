@@ -56,23 +56,20 @@ export function EarningsCalculator({ initial }: { initial: EarningsInput }) {
           aria-label="Earnings calculator inputs"
         >
           <label className="flex flex-col gap-2">
-            <span className="text-sm">Monthly streams across all platforms</span>
+            <span className="text-sm">Average monthly streams per song, across all platforms</span>
             <input
               type="number"
               name="monthlyStreams"
               inputMode="numeric"
               min={0}
-              step={1000}
+              step={500}
               value={input.monthlyStreams}
               onChange={(ev) => set({ monthlyStreams: Number(ev.target.value) })}
               className={field}
             />
           </label>
           <label className="flex flex-col gap-2">
-            <span className="text-sm">
-              Songs in your catalog{' '}
-              <span className="text-graphite/55">(context only, not a multiplier)</span>
-            </span>
+            <span className="text-sm">Songs in your catalog</span>
             <input
               type="number"
               name="songs"

@@ -135,8 +135,9 @@ export default async function ArtistsPage({
           What could a new language earn you?
         </h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-graphite/75">
-          The worked example below is 100,000 monthly streams, 12 songs, two languages and an 80%
-          new-language audience. Change the inputs to your own. Every result is an estimate.
+          The worked example below is 8,000 monthly streams per song, 12 songs, two languages and
+          an 80% new-language audience. Change the inputs to your own. Every result is an
+          estimate.
         </p>
         <div className="mt-10">
           <EarningsCalculator initial={WORKED_EXAMPLE} />

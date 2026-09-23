@@ -7,8 +7,10 @@
  * The estimate is GROSS: the new-language streaming receipts before anyone's share. The terms
  * (lyrical's share, the artist's share) are prose on the page, never a computed figure here.
  *
- * `songs` is displayed context, not a multiplier. `monthlyStreams` is already the whole
- * catalog's monthly streams, so multiplying by the song count would double count.
+ * `songs` IS a multiplier: `monthlyStreams` is the AVERAGE MONTHLY STREAMS PER SONG (not the
+ * whole catalog's total), so `songs` scales it up to the catalog without double counting. A
+ * catalog's total monthly streams is `monthlyStreams * songs`, which is exactly what the
+ * formula below computes on its way to the annual figure.
  */
 export const PAYOUT_PER_STREAM_USD = 0.004
 export const PAYOUT_LABEL = 'industry blended average, 2026, estimate'
@@ -20,6 +22,7 @@ export const MAX_AUDIENCE_SHARE = 1
 export const DEFAULT_AUDIENCE_SHARE = 0.8
 
 export type EarningsInput = {
+  /** Average monthly streams for a SINGLE song, not the whole catalog. */
   monthlyStreams: number
   songs: number
   languages: number
@@ -36,7 +39,7 @@ export type EarningsEstimate = {
 }
 
 export const WORKED_EXAMPLE: EarningsInput = {
-  monthlyStreams: 100_000,
+  monthlyStreams: 8_000,
   songs: 12,
   languages: DEFAULT_LANGUAGES,
   audienceShare: DEFAULT_AUDIENCE_SHARE,
@@ -61,8 +64,10 @@ export function estimateEarnings(input: EarningsInput): EarningsEstimate {
   const songs = Number.isFinite(input.songs) ? Math.max(1, Math.round(input.songs)) : 1
   const languages = clampLanguages(input.languages)
   const audienceShare = clampAudienceShare(input.audienceShare)
-  // Each figure is rounded once, from the raw amount, so no rounding compounds.
-  const raw = monthlyStreams * 12 * audienceShare * languages * PAYOUT_PER_STREAM_USD
+  // Each figure is rounded once, from the raw amount, so no rounding compounds. `songs`
+  // multiplies here: `monthlyStreams` is per song, so `monthlyStreams * songs` is the
+  // catalog's total monthly streams, never double counted against `songs` a second time.
+  const raw = monthlyStreams * songs * 12 * audienceShare * languages * PAYOUT_PER_STREAM_USD
   return {
     grossAnnualReceipts: cents(raw),
     perLanguage: cents(raw / languages),

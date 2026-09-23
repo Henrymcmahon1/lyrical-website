@@ -13,9 +13,9 @@ describe('EarningsCalculator with the graph', () => {
     const html = renderToStaticMarkup(<EarningsCalculator initial={WORKED_EXAMPLE} />)
     expect(html).toContain('data-testid="gross-annual"')
     expect(html).toContain('role="img"')
-    expect(html).toContain('$3,840') // per language, matches the existing tile
-    expect(html).toContain('$7,680') // gross annual, matches the existing tile
-    expect(html).toContain('$38,400') // 5-year cumulative total from the graph
+    expect(html).toContain('$3,686') // per language, matches the existing tile
+    expect(html).toContain('$7,373') // gross annual, matches the existing tile
+    expect(html).toContain('$36,864') // 5-year cumulative total from the graph
     expect(html).toMatch(/5-year total/i)
   })
 })
