@@ -21,7 +21,12 @@ export async function submitFeedback(raw: unknown): Promise<FeedbackResult> {
   const { jobId, rating, note, tags } = parsed.data
 
   const supabase = await supabaseServer()
-  const { data: job } = await supabase.from('song_jobs').select('id').eq('id', jobId).maybeSingle()
+  const { data: job } = await supabase
+    .from('song_jobs')
+    .select('id')
+    .eq('id', jobId)
+    .neq('delivery_profile', 'door1')
+    .maybeSingle()
   if (!job) return { ok: false, error: 'That song could not be found.' }
 
   const { error } = await supabase

@@ -7,12 +7,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
  */
 const upsert = vi.fn()
 const maybeSingle = vi.fn()
+const neqCalls: unknown[][] = []
 const currentUser = vi.fn()
 vi.mock('@/lib/supabase-server', () => ({
   supabaseServer: async () => ({
     from: (table: string) =>
       table === 'song_jobs'
-        ? { select: () => ({ eq: () => ({ maybeSingle }) }) }
+        ? { select: () => ({ eq: () => ({ neq: (...a: unknown[]) => { neqCalls.push(a); return { maybeSingle } } }) }) }
         : { upsert: (...a: unknown[]) => upsert(...a) },
   }),
   currentUser: () => currentUser(),
@@ -45,6 +46,8 @@ describe('submitFeedback', () => {
       { job_id: JOB, user_id: 'user-1', rating: 'down', note: 'Chorus line 2 lands late', tags: ['timing'] },
       { onConflict: 'job_id,user_id' },
     )
+    // A Door 1 job (info@'s own row under RLS) is never rateable from the studio.
+    expect(neqCalls).toContainEqual(['delivery_profile', 'door1'])
   })
   it('reports a refused write instead of pretending', async () => {
     upsert.mockResolvedValue({ error: { message: 'rls' } })

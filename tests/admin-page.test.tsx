@@ -131,3 +131,10 @@ describe('signed in as an admin', () => {
     expect(html).toContain('TAB-DATA')
   })
 })
+
+describe('Door 1 link', () => {
+  it('the console nav links to /admin/door1 for an admin', async () => {
+    requireAdmin.mockResolvedValue(ADMIN_OK)
+    expect(await render()).toContain('href="/admin/door1"')
+  })
+})

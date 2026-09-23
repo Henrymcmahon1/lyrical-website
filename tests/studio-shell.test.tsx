@@ -27,6 +27,7 @@ vi.mock('@/lib/supabase-server', () => ({
     from: () => {
       const c = {
         select: () => c,
+        neq: () => c,
         not: () => c,
         limit: () => c,
         then: (r: (v: unknown) => void) => r({ data: inFlight, error: null }),

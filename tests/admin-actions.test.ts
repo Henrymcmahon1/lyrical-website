@@ -326,3 +326,18 @@ describe('requeueJob', () => {
     expect(to).toBe('/admin?tab=work&moved=requeued')
   })
 })
+
+describe('moveJob: Door 1 rows never email', () => {
+  it('reads delivery_profile and sends nothing for a Door 1 job moved to delivered or approved', async () => {
+    selectAfterUpdate.mockResolvedValue({ data: [{ ...JOB_ROW, delivery_profile: 'door1' }], error: null })
+    for (const [from_, to] of [
+      ['in_progress', 'delivered'],
+      ['submitted', 'approved'],
+    ]) {
+      await run(moveJob, form({ id: 'job-1', from: from_, to }))
+    }
+    expect(String(selectAfterUpdate.mock.calls[0][0])).toContain('delivery_profile')
+    expect(mailCustomer).not.toHaveBeenCalled()
+    expect(getUserById).not.toHaveBeenCalled()
+  })
+})

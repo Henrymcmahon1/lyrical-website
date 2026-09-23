@@ -20,8 +20,9 @@ vi.mock('@/lib/supabase-admin', () => ({
         return c
       }
       const c = {
-        select: (_cols: string, opts?: { head?: boolean }) => (opts?.head ? { eq: () => childCount() } : c),
+        select: (_cols: string, opts?: { head?: boolean }) => (opts?.head ? { eq: () => ({ neq: () => childCount() }) } : c),
         eq: () => c,
+        neq: () => c,
         maybeSingle: () => jobRow(),
         insert: (row: unknown) => ({ select: () => ({ single: () => insert(row) }) }),
       }

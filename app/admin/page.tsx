@@ -176,6 +176,10 @@ export default async function AdminPage({
             {TAB_LABEL[t]}
           </a>
         ))}
+        {/* Door 1 lives on its own pages, inside the same admin area and the same sign-in. */}
+        <a href="/admin/door1" className="font-brand text-xl tracking-tight text-graphite/45 hover:text-indigo">
+          Door 1
+        </a>
       </nav>
 
       {(tab === 'work' || tab === 'voice' || tab === 'relationships') && (

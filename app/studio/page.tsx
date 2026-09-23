@@ -37,6 +37,8 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   const [{ data: jobRows }, { data: feedbackRows }] = await Promise.all([
     supabase.from('song_jobs')
       .select('id, title, primary_artist, source_language, target_language, status, created_at, lyrics, parent_job_id, reroll_index, licence_terms_version')
+      // Door 1 jobs are owned by info@'s uid, so RLS alone would list them here. Never.
+      .neq('delivery_profile', 'door1')
       .order('created_at', { ascending: false }),
     supabase.from('job_feedback').select('job_id, rating, note, tags'),
   ])

@@ -116,7 +116,12 @@ const DELIVERY_COLUMNS = 'job_id, kind, filename, bytes, created_at'
  */
 export async function exportAccountData(admin: Admin, userId: string): Promise<AccountExport> {
   const [jobs, feedback, credits, deliveries] = await Promise.all([
-    admin.from('song_jobs').select(JOB_COLUMNS).eq('user_id', userId).order('created_at', { ascending: false }),
+    admin
+      .from('song_jobs')
+      .select(JOB_COLUMNS)
+      .eq('user_id', userId)
+      .neq('delivery_profile', 'door1')
+      .order('created_at', { ascending: false }),
     admin.from('job_feedback').select(FEEDBACK_COLUMNS).eq('user_id', userId).order('created_at', { ascending: false }),
     admin.from('song_credits').select(CREDIT_COLUMNS).eq('user_id', userId).order('created_at', { ascending: false }),
     admin.from('song_job_deliveries').select(DELIVERY_COLUMNS).eq('user_id', userId).order('created_at', { ascending: false }),
@@ -124,12 +129,17 @@ export async function exportAccountData(admin: Admin, userId: string): Promise<A
   for (const r of [jobs, feedback, credits, deliveries]) {
     if (r.error) throw new Error(r.error.message)
   }
+  const jobRows = (jobs.data ?? []) as Record<string, unknown>[]
+  // Door 1 deliveries (staff-made stems under info@'s uid) belong to jobs excluded above, so
+  // only deliveries of the jobs actually exported are kept. `song_job_deliveries` carries no
+  // profile of its own.
+  const exportedJobIds = new Set(jobRows.map((j) => j.id))
   return {
     exportedAt: new Date().toISOString(),
-    jobs: (jobs.data ?? []) as Record<string, unknown>[],
+    jobs: jobRows,
     feedback: (feedback.data ?? []) as Record<string, unknown>[],
     credits: (credits.data ?? []) as Record<string, unknown>[],
-    deliveries: (deliveries.data ?? []) as Record<string, unknown>[],
+    deliveries: ((deliveries.data ?? []) as Record<string, unknown>[]).filter((d) => exportedJobIds.has(d.job_id)),
   }
 }
 

@@ -59,6 +59,7 @@ export async function POST(request: Request) {
           .from('song_jobs')
           .select('id', { count: 'exact', head: true })
           .eq('parent_job_id', originalJobId)
+          .neq('delivery_profile', 'door1')
         if (error) throw new Error(error.message)
         return count ?? 0
       },

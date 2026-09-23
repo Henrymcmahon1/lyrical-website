@@ -27,6 +27,7 @@ const getUserById = vi.fn()
 
 // song_jobs: due jobs. job_feedback: which of them are already rated. profiles: prefs.
 const songJobsGte = vi.fn()
+const songJobsNeq = vi.fn()
 const songJobsLt = vi.fn()
 let dueRows: { id: string; user_id: string; title: string }[] = []
 let feedbackRows: { job_id: string }[] = []
@@ -37,7 +38,9 @@ const from = vi.fn((table: string) => {
     return {
       select: () => ({
         eq: () => ({
-          gte: (...a: unknown[]) => {
+          neq: (...n: unknown[]) => {
+            songJobsNeq(...n)
+            return { gte: (...a: unknown[]) => {
             songJobsGte(...a)
             return {
               lt: (...b: unknown[]) => {
@@ -45,6 +48,7 @@ const from = vi.fn((table: string) => {
                 return Promise.resolve({ data: dueRows, error: null })
               },
             }
+          } }
           },
         }),
       }),
@@ -113,6 +117,8 @@ describe('a due, unrated, opted-in delivery', () => {
     expect(mail.to).toBe('artist@label.example')
     expect(label).toBe('rating-reminder')
     expect(logSend).toHaveBeenCalledOnce()
+    // Door 1 is excluded in the query itself.
+    expect(songJobsNeq).toHaveBeenCalledWith('delivery_profile', 'door1')
   })
 })
 

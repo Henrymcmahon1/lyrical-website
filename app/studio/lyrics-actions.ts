@@ -59,6 +59,7 @@ export async function updateLyrics(formData: FormData): Promise<LyricsResult> {
     .update({ lyrics: lyrics || null })
     .eq('id', jobId)
     .eq('status', 'submitted')
+    .neq('delivery_profile', 'door1')
     .select('id')
 
   if (error) {

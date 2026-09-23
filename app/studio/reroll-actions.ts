@@ -27,12 +27,22 @@ export async function requestReroll(jobId: string): Promise<RerollResult> {
   if (!/^[0-9a-f-]{36}$/i.test(jobId)) return { ok: false, error: 'That song could not be found.' }
 
   const admin = supabaseAdmin()
-  const { data: job } = await admin.from('song_jobs').select(JOB_COLUMNS).eq('id', jobId).eq('user_id', user.id).maybeSingle()
+  const { data: job } = await admin
+    .from('song_jobs')
+    .select(JOB_COLUMNS)
+    .eq('id', jobId)
+    .eq('user_id', user.id)
+    .neq('delivery_profile', 'door1')
+    .maybeSingle()
   if (!job) return { ok: false, error: 'That song could not be found.' }
   if (job.status !== 'delivered') return { ok: false, error: 'A track can be re-rolled once it has been delivered.' }
 
   const original = job.parent_job_id ?? job.id
-  const { count } = await admin.from('song_jobs').select('id', { count: 'exact', head: true }).eq('parent_job_id', original)
+  const { count } = await admin
+    .from('song_jobs')
+    .select('id', { count: 'exact', head: true })
+    .eq('parent_job_id', original)
+    .neq('delivery_profile', 'door1')
   const children = count ?? 0
   if (children >= REROLLS_PER_TRACK) return { ok: false, error: REROLL_CLOSED }
 

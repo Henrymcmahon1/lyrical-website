@@ -32,6 +32,9 @@ export async function getBillingSummary(userId: string, admin: Admin = supabaseA
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('reroll_index', 0)
+      // Door 1 never stamps quota_consumed_at, so this is belt and braces: a Door 1 job must
+      // never count against info@'s own plan.
+      .neq('delivery_profile', 'door1')
     // No period start yet (a brand-new subscription before invoice.paid lands): count every
     // consumed original. Conservative on purpose.
     const { count, error } = sub.current_period_start

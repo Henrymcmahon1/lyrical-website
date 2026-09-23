@@ -220,7 +220,7 @@ export async function moveJob(formData: FormData) {
     .update({ status: to, ...stampsFor(to, nowIso) })
     .eq('id', id)
     .eq('status', from)
-    .select('id, title, primary_artist, source_language, target_language, user_id')
+    .select('id, title, primary_artist, source_language, target_language, user_id, delivery_profile')
 
   if (error || !data?.length) {
     // No row matched means somebody else moved it first. Not an error worth a scary page.
@@ -230,7 +230,8 @@ export async function moveJob(formData: FormData) {
 
   const job = data[0]
 
-  if (MOVES_THAT_EMAIL.includes(to)) {
+  // A Door 1 job belongs to info@'s uid and is for a signed artist: never a customer email.
+  if (MOVES_THAT_EMAIL.includes(to) && job.delivery_profile !== 'door1') {
     const email = await submitterEmail(job.user_id)
     if (email) {
       const fields: SongJobEmailFields = {
