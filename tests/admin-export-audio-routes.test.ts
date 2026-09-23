@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { ADMIN_OK, NO_SESSION } from './admin-gate-fixtures'
 
 /**
  * `/admin/export` and `/admin/audio` are the CSV download and signed-audio routes moved from
@@ -6,9 +7,9 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
  * session independently of the page, exactly as they did before the move.
  */
 
-const hasAdminSession = vi.fn()
+const requireAdmin = vi.fn()
 vi.mock('@/lib/admin-session', () => ({
-  hasAdminSession: () => hasAdminSession(),
+  requireAdmin: () => requireAdmin(),
 }))
 
 const from = vi.fn()
@@ -26,7 +27,7 @@ beforeEach(() => {
 
 describe('/admin/export', () => {
   it('refuses without a session, without reading any table', async () => {
-    hasAdminSession.mockResolvedValue(false)
+    requireAdmin.mockResolvedValue(NO_SESSION)
     const { GET } = await import('@/app/admin/export/route')
     const res = await GET(new Request('https://x.test/admin/export?tab=work'))
     expect(res.status).toBe(404)
@@ -34,7 +35,7 @@ describe('/admin/export', () => {
   })
 
   it('serves a CSV for the songs (work) table once signed in', async () => {
-    hasAdminSession.mockResolvedValue(true)
+    requireAdmin.mockResolvedValue(ADMIN_OK)
     from.mockReturnValue({
       select: () => ({
         order: () => Promise.resolve({ data: [], error: null }),
@@ -49,7 +50,7 @@ describe('/admin/export', () => {
 
 describe('/admin/audio', () => {
   it('refuses without a session, without looking anything up', async () => {
-    hasAdminSession.mockResolvedValue(false)
+    requireAdmin.mockResolvedValue(NO_SESSION)
     const { GET } = await import('@/app/admin/audio/route')
     const res = await GET(new Request('https://x.test/admin/audio?asset=11111111-1111-1111-1111-111111111111'))
     expect(res.status).toBe(404)
@@ -57,7 +58,7 @@ describe('/admin/audio', () => {
   })
 
   it('signs and redirects to the asset once signed in', async () => {
-    hasAdminSession.mockResolvedValue(true)
+    requireAdmin.mockResolvedValue(ADMIN_OK)
     from.mockReturnValue({
       select: () => ({
         eq: () => ({ maybeSingle: () => Promise.resolve({ data: { path: 'user-1/job-1/f.wav' }, error: null }) }),

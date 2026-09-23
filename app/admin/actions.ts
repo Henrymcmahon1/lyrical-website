@@ -9,7 +9,8 @@ import {
   checkAdminPassword,
   signAdminSession,
 } from '@/lib/admin-auth'
-import { hasAdminSession } from '@/lib/admin-session'
+import { breakGlassEnabled } from '@/lib/admin-identity'
+import { requireAdmin } from '@/lib/admin-session'
 import { canMove, MOVES_THAT_EMAIL, stampsFor } from '@/lib/job-transitions'
 import { mailCustomer } from '@/lib/mailer'
 import { clientKey, consume } from '@/lib/rate-limit'
@@ -24,6 +25,7 @@ import {
 } from '@/lib/song-job-email'
 import type { JobStatus } from '@/lib/song-job-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabaseServer } from '@/lib/supabase-server'
 
 /**
  * Everything `/admin` can do, for both tabs.
@@ -55,7 +57,15 @@ const COOKIE_OPTIONS = {
 const LOGIN_ATTEMPTS = 5
 const LOGIN_WINDOW_MS = 10 * 60 * 1000
 
+/**
+ * The BREAK-GLASS password sign-in. Since 24 Sep 2026 the normal way in is `/admin/sign-in`
+ * (a Supabase identity on the `ADMIN_EMAILS` allowlist). This path is live only when
+ * `ADMIN_BREAK_GLASS=on` and `ADMIN_PASSWORD` is set; otherwise it refuses before even looking
+ * at the password, and sets nothing.
+ */
 export async function login(formData: FormData) {
+  if (!breakGlassEnabled()) redirect('/admin/sign-in')
+
   /**
    * Throttle first. Best effort only, and measured as such.
    *
@@ -92,13 +102,22 @@ export async function login(formData: FormData) {
     ...COOKIE_OPTIONS,
     maxAge: Math.floor(ADMIN_MAX_AGE_MS / 1000),
   })
+  console.warn('[admin] BREAK-GLASS password sign-in succeeded')
   redirect('/admin')
 }
 
+/**
+ * Sign out of the console: clears the break-glass cookie AND ends this browser's Supabase
+ * session. `scope: 'local'` so only this browser is signed out, not every device info@ uses.
+ * Only drawn for a signed-in admin, so it never signs a customer out.
+ */
 export async function logout() {
   const jar = await cookies()
   jar.set(ADMIN_COOKIE, '', { ...COOKIE_OPTIONS, maxAge: 0 })
-  redirect('/admin')
+  const { error } = await (await supabaseServer()).auth.signOut({ scope: 'local' })
+  // Fail loud: a sign-out that silently did not happen leaves the console open.
+  if (error) throw new Error(`Admin sign-out failed: ${error.message}`)
+  redirect('/admin/sign-in')
 }
 
 // ── Enquiries ─────────────────────────────────────────────────────────────────
@@ -119,7 +138,8 @@ export async function logout() {
  * `app/admin/SongsTab.tsx`.
  */
 export async function deleteLead(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   if (!id) return
@@ -132,7 +152,8 @@ export async function deleteLead(formData: FormData) {
 }
 
 export async function setHandled(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   if (!id) return
@@ -171,7 +192,8 @@ async function submitterEmail(userId: string): Promise<string> {
  * customer has been contacted.
  */
 export async function moveJob(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   const to = String(formData.get('to') ?? '') as JobStatus
@@ -268,7 +290,8 @@ export async function moveJob(formData: FormData) {
  * Found while wiring this action, 2026-08-11.
  */
 export async function saveNote(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   if (!id) return
@@ -293,7 +316,8 @@ export async function saveNote(formData: FormData) {
  * founders re-queuing the same job at once should write once, not twice.
  */
 export async function requeueJob(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   const from = String(formData.get('from') ?? '')
@@ -335,7 +359,8 @@ const VOICE_MOVES: Record<string, readonly string[]> = {
 }
 
 export async function moveVoice(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   const to = String(formData.get('to') ?? '')

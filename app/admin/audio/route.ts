@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { hasAdminSession } from '@/lib/admin-session'
+import { requireAdmin } from '@/lib/admin-session'
 import { SUBMISSIONS_BUCKET } from '@/lib/song-upload'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { VOICE_BUCKET } from '@/lib/voice-training'
@@ -39,7 +39,7 @@ const SIGNED_URL_TTL_S = 600
 export async function GET(request: Request) {
   // 404 rather than 401 or 403: an unauthenticated caller learns nothing about what is here,
   // including whether the id they guessed exists.
-  if (!(await hasAdminSession())) return new Response('Not found', { status: 404 })
+  if (!(await requireAdmin()).ok) return new Response('Not found', { status: 404 })
 
   /**
    * Two kinds of object, one route.

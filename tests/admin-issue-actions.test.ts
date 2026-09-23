@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { ADMIN_OK, NO_SESSION } from './admin-gate-fixtures'
 
 /** The Issues tab's write actions: log an issue, change its status. */
 
@@ -13,9 +14,9 @@ vi.mock('@/lib/crm', async () => {
   }
 })
 
-const hasAdminSession = vi.fn()
+const requireAdmin = vi.fn()
 vi.mock('@/lib/admin-session', () => ({
-  hasAdminSession: () => hasAdminSession(),
+  requireAdmin: () => requireAdmin(),
 }))
 
 class RedirectError extends Error {
@@ -42,7 +43,7 @@ const form = (entries: Record<string, string>) => {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  hasAdminSession.mockResolvedValue(true)
+  requireAdmin.mockResolvedValue(ADMIN_OK)
 })
 
 describe('createIssue', () => {
@@ -62,7 +63,7 @@ describe('createIssue', () => {
   })
 
   it('REFUSES without an admin session', async () => {
-    hasAdminSession.mockResolvedValue(false)
+    requireAdmin.mockResolvedValue(NO_SESSION)
     await expect(createIssue(form({ kind: 'other' }))).rejects.toThrow('REDIRECT:/admin')
     expect(logIssue).not.toHaveBeenCalled()
   })

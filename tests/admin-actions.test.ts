@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { ADMIN_OK, NO_SESSION } from './admin-gate-fixtures'
 
 /**
  * The `/admin` server actions, and specifically the things that are easy to get wrong.
@@ -37,9 +38,9 @@ vi.mock('@/lib/mailer', () => ({
   mailFounders: vi.fn(),
 }))
 
-const hasAdminSession = vi.fn()
+const requireAdmin = vi.fn()
 vi.mock('@/lib/admin-session', () => ({
-  hasAdminSession: () => hasAdminSession(),
+  requireAdmin: () => requireAdmin(),
 }))
 
 /** Next's redirect throws to unwind the request. Mirrored so the tests can assert on it. */
@@ -105,7 +106,7 @@ beforeEach(() => {
 
   getUserById.mockResolvedValue({ data: { user: { email: 'artist@label.example' } }, error: null })
   mailCustomer.mockResolvedValue(true)
-  hasAdminSession.mockResolvedValue(true)
+  requireAdmin.mockResolvedValue(ADMIN_OK)
 })
 
 /** Runs an action and returns where it redirected, or null if it did not. */
@@ -129,7 +130,7 @@ describe('deleteLead', () => {
   })
 
   it('REFUSES without an admin session, and touches nothing', async () => {
-    hasAdminSession.mockResolvedValue(false)
+    requireAdmin.mockResolvedValue(NO_SESSION)
     const to = await run(deleteLead, form({ id: 'abc-123' }))
     expect(to).toBe('/admin')
     // The important half: not merely redirected, but no delete was issued.
@@ -159,7 +160,7 @@ describe('deleteLead', () => {
 
 describe('moveJob: the guard', () => {
   it('REFUSES without an admin session, and writes nothing', async () => {
-    hasAdminSession.mockResolvedValue(false)
+    requireAdmin.mockResolvedValue(NO_SESSION)
     const to = await run(moveJob, form({ id: 'job-1', from: 'submitted', to: 'approved' }))
     expect(to).toBe('/admin')
     expect(from).not.toHaveBeenCalled()
@@ -283,7 +284,7 @@ describe('requeueJob', () => {
   })
 
   it('REFUSES without an admin session, and writes nothing', async () => {
-    hasAdminSession.mockResolvedValue(false)
+    requireAdmin.mockResolvedValue(NO_SESSION)
     const to = await run(requeueJob, form({ id: 'job-1', from: 'rejected' }))
     expect(to).toBe('/admin')
     expect(update).not.toHaveBeenCalled()

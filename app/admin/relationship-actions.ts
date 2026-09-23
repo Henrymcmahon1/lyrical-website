@@ -3,7 +3,8 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { addNote, addTask, RELATIONSHIP_STATUSES, setRelationshipStatus, type RelationshipStatus } from '@/lib/crm'
-import { hasAdminSession } from '@/lib/admin-session'
+import { adminEmail } from '@/lib/admin-identity'
+import { requireAdmin } from '@/lib/admin-session'
 
 /**
  * The Relationships tab's write actions: status/owner on an enquiry, plus the same note and
@@ -18,7 +19,8 @@ function isRelationshipStatus(value: string): value is RelationshipStatus {
 }
 
 export async function updateRelationship(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const enquiryId = String(formData.get('enquiryId') ?? '')
   const status = String(formData.get('relStatus') ?? '')
@@ -28,12 +30,14 @@ export async function updateRelationship(formData: FormData) {
     return
   }
 
-  await setRelationshipStatus(enquiryId, status, owner || undefined)
+  // A blank owner defaults to whoever saved it (undefined, i.e. unchanged, under break-glass).
+  await setRelationshipStatus(enquiryId, status, owner || adminEmail(admin))
   revalidatePath('/admin')
 }
 
 export async function addRelationshipNote(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const enquiryId = String(formData.get('enquiryId') ?? '')
   const body = String(formData.get('body') ?? '').trim()
@@ -42,12 +46,13 @@ export async function addRelationshipNote(formData: FormData) {
     return
   }
 
-  await addNote({ enquiryId, body })
+  await addNote({ enquiryId, body, author: adminEmail(admin) })
   revalidatePath('/admin')
 }
 
 export async function addRelationshipTask(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const enquiryId = String(formData.get('enquiryId') ?? '')
   const title = String(formData.get('title') ?? '').trim()
@@ -57,6 +62,6 @@ export async function addRelationshipTask(formData: FormData) {
   }
 
   const dueOn = String(formData.get('dueOn') ?? '').trim()
-  await addTask({ enquiryId, title, dueOn: dueOn || undefined })
+  await addTask({ enquiryId, title, dueOn: dueOn || undefined, owner: adminEmail(admin) })
   revalidatePath('/admin')
 }

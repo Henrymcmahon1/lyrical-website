@@ -1,5 +1,5 @@
 import { FEEDBACK_COLUMNS, FEEDBACK_SELECT, flattenFeedback, type FeedbackRow } from '@/app/admin/FeedbackTab'
-import { hasAdminSession } from '@/lib/admin-session'
+import { requireAdmin } from '@/lib/admin-session'
 import { toCsv } from '@/lib/csv'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
@@ -82,7 +82,7 @@ const VOICE_COLUMNS = [
 ]
 
 export async function GET(request: Request) {
-  if (!(await hasAdminSession())) {
+  if (!(await requireAdmin()).ok) {
     // 404 rather than 401: an unauthenticated caller learns nothing about what is here.
     return new Response('Not found', { status: 404 })
   }

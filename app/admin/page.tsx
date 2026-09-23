@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
-import { hasAdminSession } from '@/lib/admin-session'
+import { redirect } from 'next/navigation'
+import { breakGlassEnabled } from '@/lib/admin-identity'
+import { requireAdmin } from '@/lib/admin-session'
 import { EnquiriesTab } from './EnquiriesTab'
 import { FeedbackTab } from './FeedbackTab'
 import { IssuesTab } from './IssuesTab'
@@ -8,6 +10,7 @@ import { PeopleTab } from './PeopleTab'
 import { SongsTab } from './SongsTab'
 import { VoicesTab } from './VoicesTab'
 import { login, logout } from './actions'
+import { MfaRequired, NotAuthorized } from './Refused'
 
 /**
  * The internal console. Six tabs: People, Money, Work, Voice, Relationships, Issues.
@@ -22,11 +25,13 @@ import { login, logout } from './actions'
  * subscriptions/credits/Stripe events, Issues is `crm_issues` plus the worker heartbeat and the
  * storage figure.
  *
- * Shows real people's names, addresses, messages, recordings and account data, so: password
- * gated, `noindex`, disallowed in robots.txt, never static, never cached.
+ * Shows real people's names, addresses, messages, recordings and account data, so: gated,
+ * `noindex`, disallowed in robots.txt, never static, never cached.
  *
- * One password, `ADMIN_PASSWORD`, through the existing `lib/admin-auth.ts`. No second secret was
- * invented for this console.
+ * The gate (since 24 Sep 2026) is `requireAdmin()`: a Supabase identity on the `ADMIN_EMAILS`
+ * allowlist, signed in at `/admin/sign-in` with the studio's 6-digit email code. A signed-out
+ * visitor is sent there. The old `ADMIN_PASSWORD` form is drawn here ONLY while
+ * `ADMIN_BREAK_GLASS=on` (see `lib/admin-identity.ts`).
  */
 export const metadata: Metadata = {
   title: 'Admin',
@@ -54,13 +59,17 @@ function isTab(value: string | undefined): value is Tab {
   return Boolean(value) && (TAB_ORDER as string[]).includes(value as string)
 }
 
-function Login({ error }: { error?: string }) {
+/** The BREAK-GLASS password form. Only ever rendered while `breakGlassEnabled()`. */
+function BreakGlassLogin({ error }: { error?: string }) {
   return (
     <section className={`${SHELL} py-24`}>
       <h1 className="font-brand text-4xl tracking-tight">Admin</h1>
       <p className="mt-4 max-w-md text-graphite/70">
-        People, money, work, voice, relationships and issues. Password protected because this
-        console shows other people&rsquo;s contact details, accounts and recordings.
+        Break-glass sign-in is switched on. The normal way in is{' '}
+        <a href="/admin/sign-in" className="underline underline-offset-4">
+          signing in with your email
+        </a>
+        . Use the shared password only if that is unavailable.
       </p>
 
       <form action={login} className="mt-10 flex max-w-sm flex-col gap-4">
@@ -117,9 +126,14 @@ export default async function AdminPage({
     status?: string
   }>
 }) {
-  const [signedIn, params] = await Promise.all([hasAdminSession(), searchParams])
+  const [admin, params] = await Promise.all([requireAdmin(), searchParams])
 
-  if (!signedIn) return <Login error={params.error} />
+  if (!admin.ok) {
+    if (admin.reason === 'not-allowlisted') return <NotAuthorized />
+    if (admin.reason === 'mfa-required') return <MfaRequired />
+    if (breakGlassEnabled()) return <BreakGlassLogin error={params.error} />
+    redirect('/admin/sign-in')
+  }
 
   // Work is the default because it is the tab with a clock running on it.
   const tab: Tab = isTab(params.tab) ? params.tab : 'work'
@@ -132,7 +146,10 @@ export default async function AdminPage({
     <section className={`${SHELL} py-16`}>
       <div className="flex flex-wrap items-baseline justify-between gap-4">
         <h1 className="font-brand text-4xl tracking-tight">Admin</h1>
-        <form action={logout}>
+        <form action={logout} className="flex items-baseline gap-4">
+          <span className="text-sm text-graphite/55">
+            {admin.via === 'identity' ? admin.user.email : 'Break-glass session'}
+          </span>
           <button
             type="submit"
             className="inline-flex min-h-11 items-center text-sm text-graphite/55 underline underline-offset-4"

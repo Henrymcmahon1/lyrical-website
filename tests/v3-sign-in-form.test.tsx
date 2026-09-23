@@ -37,3 +37,16 @@ describe('SignInForm, initial render', () => {
     expect(html()).not.toContain('—')
   })
 })
+
+describe('SignInForm, google prop (admin sign-in reuses this form)', () => {
+  it('still offers Google by default, so /studio is unchanged', () => {
+    expect(renderToStaticMarkup(<SignInForm />)).toContain('Continue with Google')
+  })
+
+  it('drops Google, and the divider, when google={false}', () => {
+    const h = renderToStaticMarkup(<SignInForm next="/admin" google={false} />)
+    expect(h).not.toContain('Continue with Google')
+    expect(h).not.toMatch(/>or</)
+    expect(h).toContain('type="email"')
+  })
+})

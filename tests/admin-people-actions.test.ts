@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { ADMIN_OK, BREAK_GLASS_OK, NO_SESSION } from './admin-gate-fixtures'
 
 /**
  * The People tab's two write actions. Same guard discipline as every other `/admin` action:
@@ -13,9 +14,9 @@ vi.mock('@/lib/crm', () => ({
   addTask: (...a: unknown[]) => addTask(...a),
 }))
 
-const hasAdminSession = vi.fn()
+const requireAdmin = vi.fn()
 vi.mock('@/lib/admin-session', () => ({
-  hasAdminSession: () => hasAdminSession(),
+  requireAdmin: () => requireAdmin(),
 }))
 
 class RedirectError extends Error {
@@ -42,17 +43,21 @@ const form = (entries: Record<string, string>) => {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  hasAdminSession.mockResolvedValue(true)
+  requireAdmin.mockResolvedValue(ADMIN_OK)
 })
 
 describe('addPersonNote', () => {
   it('writes a note scoped to exactly the given user', async () => {
     await addPersonNote(form({ userId: 'u1', body: 'Called them back' }))
-    expect(addNote).toHaveBeenCalledWith({ userId: 'u1', body: 'Called them back' })
+    expect(addNote).toHaveBeenCalledWith({
+      userId: 'u1',
+      body: 'Called them back',
+      author: 'info@lyricalglobal.com',
+    })
   })
 
   it('REFUSES without an admin session, and writes nothing', async () => {
-    hasAdminSession.mockResolvedValue(false)
+    requireAdmin.mockResolvedValue(NO_SESSION)
     await expect(addPersonNote(form({ userId: 'u1', body: 'x' }))).rejects.toThrow('REDIRECT:/admin')
     expect(addNote).not.toHaveBeenCalled()
   })
@@ -66,11 +71,16 @@ describe('addPersonNote', () => {
 describe('addPersonTask', () => {
   it('writes a task scoped to exactly the given user', async () => {
     await addPersonTask(form({ userId: 'u1', title: 'Follow up', dueOn: '2026-10-01' }))
-    expect(addTask).toHaveBeenCalledWith({ userId: 'u1', title: 'Follow up', dueOn: '2026-10-01' })
+    expect(addTask).toHaveBeenCalledWith({
+      userId: 'u1',
+      title: 'Follow up',
+      dueOn: '2026-10-01',
+      owner: 'info@lyricalglobal.com',
+    })
   })
 
   it('REFUSES without an admin session, and writes nothing', async () => {
-    hasAdminSession.mockResolvedValue(false)
+    requireAdmin.mockResolvedValue(NO_SESSION)
     await expect(addPersonTask(form({ userId: 'u1', title: 'x' }))).rejects.toThrow('REDIRECT:/admin')
     expect(addTask).not.toHaveBeenCalled()
   })
@@ -78,5 +88,15 @@ describe('addPersonTask', () => {
   it('does nothing when the title is blank', async () => {
     await addPersonTask(form({ userId: 'u1', title: '' }))
     expect(addTask).not.toHaveBeenCalled()
+  })
+})
+
+describe('break-glass', () => {
+  it('stamps no author or owner, because there is no identity', async () => {
+    requireAdmin.mockResolvedValue(BREAK_GLASS_OK)
+    await addPersonNote(form({ userId: 'u1', body: 'x' }))
+    expect(addNote).toHaveBeenCalledWith({ userId: 'u1', body: 'x', author: undefined })
+    await addPersonTask(form({ userId: 'u1', title: 't' }))
+    expect(addTask).toHaveBeenCalledWith({ userId: 'u1', title: 't', dueOn: undefined, owner: undefined })
   })
 })

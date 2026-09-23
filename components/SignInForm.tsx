@@ -28,7 +28,11 @@ function safeNext(next: string | undefined): string {
   return next
 }
 
-export function SignInForm({ next }: { next?: string }) {
+/**
+ * `google` defaults to true, so `/studio/sign-in` is unchanged. `/admin/sign-in` passes false:
+ * the admin console is entered by the email code only (Henry's call, 24 Sep 2026).
+ */
+export function SignInForm({ next, google = true }: { next?: string; google?: boolean }) {
   const router = useRouter()
   const siteKey = turnstileSiteKey()
 
@@ -201,19 +205,23 @@ export function SignInForm({ next }: { next?: string }) {
         No password. We send a 6-digit code that works once and then stops working.
       </p>
 
-      <div className="my-1 flex items-center gap-3 text-xs text-graphite/40">
-        <span className="h-px flex-1 bg-graphite/15" />
-        or
-        <span className="h-px flex-1 bg-graphite/15" />
-      </div>
+      {google && (
+        <>
+          <div className="my-1 flex items-center gap-3 text-xs text-graphite/40">
+            <span className="h-px flex-1 bg-graphite/15" />
+            or
+            <span className="h-px flex-1 bg-graphite/15" />
+          </div>
 
-      <button
-        type="button"
-        onClick={continueWithGoogle}
-        className="rounded-card border border-graphite/20 bg-cream px-7 py-4 text-graphite transition-colors hover:border-graphite/40"
-      >
-        Continue with Google
-      </button>
+          <button
+            type="button"
+            onClick={continueWithGoogle}
+            className="rounded-card border border-graphite/20 bg-cream px-7 py-4 text-graphite transition-colors hover:border-graphite/40"
+          >
+            Continue with Google
+          </button>
+        </>
+      )}
     </form>
   )
 }
