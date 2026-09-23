@@ -285,6 +285,7 @@ Order: Bot 0 alone → A, B, C, D, F in parallel → merge in the order A, C, B,
   24 h); the 24-hour rating-reminder email IS in scope for v3 (product email, opt-out, one product
   email per person per day). v3 build is five parallel bots (Auth+emails, Studio account, Website
   design, Admin CRM, Copyright); briefs under `docs/bots/v3/`.
+- **2026-09-24 later (Henry):** the Door 1 DASHBOARD stays LOCAL on the OptiPlex (the full local dashboard, craft tools included); no web port of it. The web `/admin/door1` console that was built and deployed today (create job, track, 24-bit FLAC downloads) stays live as an extra, optional way to queue and fetch Door 1 jobs. The admin sign-in upgrade (Supabase identity, `ADMIN_EMAILS=henry@lyricalglobal.com`) stays: it protects the CRM.
 - **2026-09-24 (Henry):** revisiting decision 2 (Door-1 dashboard stays on the render PC): the CRAFT
   tools stay local, but the Door-1 MANAGEMENT surface moves to the web as a SEPARATE, admin-only
   dashboard on omega (create/track/deliver Door-1 jobs + CRM), distinct from the Door-2 customer
