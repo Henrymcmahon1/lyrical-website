@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { logIssue, setIssueStatus, type CrmIssueKind, type CrmIssueStatus } from '@/lib/crm'
-import { hasAdminSession } from '@/lib/admin-session'
+import { requireAdmin } from '@/lib/admin-session'
 
 const ISSUE_KINDS: readonly CrmIssueKind[] = ['failed_job', 'refund', 'complaint', 'other']
 const ISSUE_STATUSES: readonly CrmIssueStatus[] = ['open', 'ack', 'resolved']
@@ -17,7 +17,8 @@ function isIssueStatus(value: string): value is CrmIssueStatus {
 }
 
 export async function createIssue(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const kind = String(formData.get('kind') ?? '')
   if (!isIssueKind(kind)) {
@@ -34,7 +35,8 @@ export async function createIssue(formData: FormData) {
 }
 
 export async function changeIssueStatus(formData: FormData) {
-  if (!(await hasAdminSession())) redirect('/admin')
+  const admin = await requireAdmin()
+  if (!admin.ok) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
   const status = String(formData.get('status') ?? '')

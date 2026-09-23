@@ -7,7 +7,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
  *
  * Service-role only, by construction: every function takes the admin client (or defaults to one),
  * never the customer's own session. `/admin` is the only caller, and it has already checked
- * `hasAdminSession()` before any of these run. Every write is zod-validated at the boundary, the
+ * `requireAdmin()` before any of these run. Every write is zod-validated at the boundary, the
  * same discipline the rest of the codebase uses for customer input, applied here to staff input
  * because a note or a task title still ends up on a page and in a CSV.
  */

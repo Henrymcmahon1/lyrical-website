@@ -1,3 +1,5 @@
+import type { AdminCheck } from './admin-session'
+
 /**
  * Who may open `/admin`. Pure, env-driven, and every function FAILS CLOSED.
  *
@@ -59,4 +61,9 @@ export function requiredAal(): Aal {
  */
 export function breakGlassEnabled(): boolean {
   return process.env.ADMIN_BREAK_GLASS === 'on' && Boolean(process.env.ADMIN_PASSWORD)
+}
+
+/** The email to stamp on CRM `author`/`owner` fields, or undefined for a break-glass session. */
+export function adminEmail(check: AdminCheck): string | undefined {
+  return check.ok && check.via === 'identity' ? check.user.email : undefined
 }
