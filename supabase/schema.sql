@@ -716,3 +716,17 @@ alter table public.song_job_deliveries add column if not exists purged_at timest
 -- but the server (a 60 second signed URL minted after requireAdmin) can read it.
 insert into storage.buckets (id, name, public) values ('door1', 'door1', false)
   on conflict (id) do nothing;
+
+-- 008: customers may only create a MANUAL submission (column insert grant + status check).
+revoke insert on public.song_jobs from anon, authenticated;
+-- Row security never applies to TRUNCATE, so no browser role should hold it.
+revoke truncate on public.song_jobs from anon, authenticated;
+grant insert (
+  id, user_id, title, primary_artist, source_language, target_language, notes, lyrics,
+  voice_id, voice_preference, rights_terms_version, status
+) on public.song_jobs to authenticated;
+
+drop policy if exists song_jobs_own_insert on public.song_jobs;
+create policy song_jobs_own_insert on public.song_jobs
+  for insert to authenticated
+  with check (auth.uid() = user_id and status = 'submitted');
