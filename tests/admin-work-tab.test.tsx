@@ -207,6 +207,7 @@ describe('Door 1 rows', () => {
     expect(html).not.toContain('name="to"')
     expect(html).not.toContain('No lyrics')
     expect(html).not.toContain('No files attached')
+    expect(html).not.toContain('Time left')
   })
 
   it('a Door 2 row carries no Door 1 label (control)', async () => {

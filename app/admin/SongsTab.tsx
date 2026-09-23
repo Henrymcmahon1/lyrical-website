@@ -175,6 +175,8 @@ function JobRow({
   // Door 1 rows are listed here for the full picture but managed at /admin/door1: no move
   // buttons (a move here could email info@ as if it were a customer), lyrics and files optional.
   const door1 = job.delivery_profile === 'door1'
+  // No turnaround promise runs on a Door 1 job (it has a due date instead, on its own page).
+  const shownClock = door1 ? null : clock
 
   return (
     <li className={`border-b border-graphite/12 py-7 ${isChild ? 'pl-6' : ''}`}>
@@ -240,10 +242,10 @@ function JobRow({
             )}
           </dd>
         </div>
-        {clock && (
+        {shownClock && (
           <div>
             <dt className="sr-only">Time left</dt>
-            <dd className={clock.late ? 'text-ember' : 'text-graphite/50'}>{clock.text}</dd>
+            <dd className={shownClock.late ? 'text-ember' : 'text-graphite/50'}>{shownClock.text}</dd>
           </div>
         )}
       </dl>
