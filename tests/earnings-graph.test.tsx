@@ -72,17 +72,16 @@ describe('EarningsGraph (cumulative line)', () => {
     for (const n of [...cx, ...cy]) expect(n).toBeGreaterThanOrEqual(0)
   })
 
-  it('scales as inputs change: more streams climbs higher (smaller final y pixel)', () => {
+  it('auto-scales the axis to the input: bigger inputs show a higher top gridline and total', () => {
     const small = { ...input, monthlyStreams: 10_000 }
     const big = { ...input, monthlyStreams: 500_000 }
     const htmlSmall = renderToStaticMarkup(<EarningsGraph input={small} />)
     const htmlBig = renderToStaticMarkup(<EarningsGraph input={big} />)
-    const lastY = (html: string) => {
-      const m = html.match(/<path[^>]*d="([^"]+)"[^>]*class="[^"]*line[^"]*"/)
-      const pts = [...(m?.[1] ?? '').matchAll(/(-?[\d.]+)[ ,](-?[\d.]+)/g)]
-      return Number(pts.at(-1)?.[2])
-    }
-    expect(lastY(htmlBig)).toBeLessThan(lastY(htmlSmall))
+    // The line fills the chart at any size, so magnitude lives in the axis labels + total, not
+    // in the pixel height. The largest dollar figure rendered must grow with the input.
+    const topFigure = (html: string) =>
+      Math.max(...[...html.matchAll(/\$([\d,]+)/g)].map((m) => Number(m[1].replace(/,/g, ''))))
+    expect(topFigure(htmlBig)).toBeGreaterThan(topFigure(htmlSmall))
   })
 
   it('has no em dash anywhere in its labels', () => {

@@ -10,16 +10,21 @@ const PLOT_H = AXIS_Y - MARGIN_TOP
 const PLOT_W = WIDTH - MARGIN_LEFT - MARGIN_RIGHT
 
 /**
- * A fixed reference scale for the Y axis, instead of normalising to each render's own total.
- *
- * The model is linear (cumulative = annualGross * year), so a chart auto-scaled to its own
- * total always draws the exact same shape no matter the input: year 1 is always 1/5 of the
- * height, year 5 is always the full height. Anchoring the scale to a fixed ceiling instead
- * means a bigger total genuinely climbs higher and reads as a steeper line, which is the
- * point of the graph. A total beyond the ceiling simply extends the scale to fit it, so the
- * line never clips off the top.
+ * The Y axis auto-scales to each render's own 5-year total, rounded up to a clean number, so the
+ * line fills the chart and reads as a satisfying climb at ANY size: a small artist and a large one
+ * both get a curve that rises across the plot, and the magnitude lives where it belongs, in the
+ * axis labels and the 5-year total beneath. (A fixed ceiling was tried first and made a typical
+ * artist's line hug the bottom, which read as "this earns nothing".) `niceCeil` rounds up to 1, 2
+ * or 5 times a power of ten for tidy gridline labels; a zero estimate falls back to a small scale
+ * so the axis still renders a flat, honest line at zero.
  */
-const REFERENCE_5YR_CEILING = 200_000
+function niceCeil(value: number): number {
+  if (value <= 0) return 1000
+  const mag = Math.pow(10, Math.floor(Math.log10(value)))
+  const n = value / mag
+  const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10
+  return step * mag
+}
 
 /**
  * The cumulative earnings line graph: the running total of GROSS annual new-language receipts,
@@ -42,7 +47,7 @@ const REFERENCE_5YR_CEILING = 200_000
 export function EarningsGraph({ input }: { input: EarningsInput }) {
   const rows = cumulativeByYear(input, 5)
   const total = fiveYearTotal(input)
-  const maxValue = Math.max(total, REFERENCE_5YR_CEILING)
+  const maxValue = niceCeil(total)
   const signature = `${input.monthlyStreams}:${input.songs}:${input.languages}:${input.audienceShare}`
 
   const xFor = (year: number) => MARGIN_LEFT + ((year - 1) / (rows.length - 1)) * PLOT_W
