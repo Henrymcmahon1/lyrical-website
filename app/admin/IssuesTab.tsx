@@ -1,5 +1,5 @@
-import { clockNow } from '@/lib/job-transitions'
-import { listIssues, type CrmIssue, type CrmIssueStatus } from '@/lib/crm'
+import { clockNow } from '@/lib/jobs/states'
+import { listIssues, type CrmIssueStatus } from '@/lib/crm'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { changeIssueStatus, createIssue } from './issue-actions'
 
@@ -22,8 +22,6 @@ const KIND_LABEL: Record<string, string> = {
   complaint: 'Complaint',
   other: 'Other',
 }
-
-type Heartbeat = { worker: string; seen_at: string; version: string | null }
 
 /**
  * How stale is too stale. The poller upserts every loop; the design spec's watchdog trigger
@@ -55,7 +53,7 @@ export async function IssuesTab({ status }: { status?: CrmIssueStatus } = {}) {
   ])
 
   const nowMs = clockNow()
-  const heartbeats = (heartbeatResult.data ?? []) as Heartbeat[]
+  const heartbeats = heartbeatResult.data ?? []
 
   const base = '/admin?tab=issues'
   const statusHref = (s?: CrmIssueStatus) => `${base}${s ? `&status=${s}` : ''}`
@@ -124,7 +122,7 @@ export async function IssuesTab({ status }: { status?: CrmIssueStatus } = {}) {
           <p className="mt-6 text-graphite/60">Nothing to show.</p>
         ) : (
           <ol className="mt-2">
-            {(issues as CrmIssue[]).map((i) => (
+            {issues.map((i) => (
               <li key={i.id} className="border-b border-graphite/12 py-6">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-graphite/50">

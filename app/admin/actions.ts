@@ -11,7 +11,7 @@ import {
 } from '@/lib/admin-auth'
 import { breakGlassEnabled } from '@/lib/admin-identity'
 import { requireAdmin } from '@/lib/admin-session'
-import { canMove, MOVES_THAT_EMAIL, stampsFor } from '@/lib/job-transitions'
+import { canMove, isJobStatus, MOVES_THAT_EMAIL, stampsFor } from '@/lib/jobs/states'
 import { mailCustomer } from '@/lib/mailer'
 import { clientKey, consume } from '@/lib/rate-limit'
 import {
@@ -23,7 +23,6 @@ import {
   jobDeliveredText,
   type SongJobEmailFields,
 } from '@/lib/song-job-email'
-import type { JobStatus } from '@/lib/song-job-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { supabaseServer } from '@/lib/supabase-server'
 
@@ -196,13 +195,14 @@ export async function moveJob(formData: FormData) {
   if (!admin.ok) redirect('/admin')
 
   const id = String(formData.get('id') ?? '')
-  const to = String(formData.get('to') ?? '') as JobStatus
+  const to = String(formData.get('to') ?? '')
   const from = String(formData.get('from') ?? '')
   if (!id) return
 
   // Checked against the same table the buttons are drawn from, because a form post does not
   // have to have come from a page we rendered.
-  if (!canMove(from, to)) redirect('/admin?error=move')
+  // `isJobStatus` repeats what canMove already checks; it is here so `to` is typed as a status.
+  if (!isJobStatus(to) || !canMove(from, to)) redirect('/admin?error=move')
 
   const db = supabaseAdmin()
   const nowIso = new Date().toISOString()

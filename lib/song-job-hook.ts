@@ -1,3 +1,4 @@
+import type { Tables } from './db/database.types'
 import { deliveredHtml, deliveredSubject, deliveredText } from './delivered-email'
 import { isDoor1 } from './door1-schema'
 import type { EmailSlug } from './email-log'
@@ -12,18 +13,16 @@ import { rerollDeliveredHtml, rerollDeliveredSubject, rerollDeliveredText } from
  * wires it to a real Supabase client and a real mailer.
  */
 
-export type SongJobRecord = {
-  id: string
-  user_id: string
-  title: string
-  target_language: string
-  status: string
-  parent_job_id: string | null
-  reroll_index: number
-  /** Present on a real webhook (the full row). `door1` rows never earn a customer email. */
-  delivery_profile?: string | null
-  route?: string | null
-}
+/**
+ * The `song_jobs` row as the Database Webhook sends it (the full row). The columns this file
+ * reads are required; `delivery_profile` and `route` are optional here only so a hand-built
+ * record in a test can leave them out. `door1` rows never earn a customer email.
+ */
+export type SongJobRecord = Pick<
+  Tables<'song_jobs'>,
+  'id' | 'user_id' | 'title' | 'target_language' | 'status' | 'parent_job_id' | 'reroll_index'
+> &
+  Partial<Pick<Tables<'song_jobs'>, 'delivery_profile' | 'route'>>
 
 export type SongJobWebhookPayload = {
   type: string

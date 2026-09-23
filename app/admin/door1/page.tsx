@@ -4,7 +4,8 @@ import { requireAdmin } from '@/lib/admin-session'
 import { DOOR1 } from '@/lib/door1-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requeueJob } from '../actions'
-import { Door1Head, SHELL, day, languageName, refusedView, stateLabel, when } from './shared'
+import { stateLabel } from '@/lib/jobs/states'
+import { Door1Head, SHELL, day, languageName, refusedView, when } from './shared'
 
 /**
  * `/admin/door1`: every Door 1 job, newest first. Door 1 rows only (`delivery_profile='door1'`).
@@ -19,35 +20,9 @@ export const metadata: Metadata = {
 }
 export const dynamic = 'force-dynamic'
 
-const DOOR1_LIST_COLUMNS = [
-  'id',
-  'created_at',
-  'title',
-  'primary_artist',
-  'source_language',
-  'target_language',
-  'pipeline_voice_model',
-  'door1_due_on',
-  'status',
-  'pipeline_state',
-  'pipeline_error',
-  'delivered_at',
-].join(', ')
-
-type Row = {
-  id: string
-  created_at: string
-  title: string
-  primary_artist: string
-  source_language: string
-  target_language: string
-  pipeline_voice_model: string | null
-  door1_due_on: string | null
-  status: string
-  pipeline_state: string | null
-  pipeline_error: string | null
-  delivered_at: string | null
-}
+/** Explicit columns, one string literal so the typed client infers the row shape from it. */
+const DOOR1_LIST_COLUMNS =
+  'id, created_at, title, primary_artist, source_language, target_language, pipeline_voice_model, door1_due_on, status, pipeline_state, pipeline_error, delivered_at'
 
 export default async function Door1Jobs({
   searchParams,
@@ -65,7 +40,7 @@ export default async function Door1Jobs({
     .order('created_at', { ascending: false })
     .limit(200)
 
-  const jobs = (data ?? []) as unknown as Row[]
+  const jobs = data ?? []
 
   return (
     <section className={`${SHELL} py-16`}>

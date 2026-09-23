@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import type { Database } from './db/database.types'
 
 /**
  * The browser client, running as the SIGNED IN USER.
@@ -26,5 +27,5 @@ export function supabaseBrowser() {
         'is inlined into the client bundle.',
     )
   }
-  return createBrowserClient(url, key)
+  return createBrowserClient<Database>(url, key)
 }

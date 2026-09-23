@@ -21,14 +21,6 @@ export const metadata = {
   robots: { index: false, follow: false },
 }
 
-type Voice = {
-  id: string
-  artist_name: string
-  status: string
-  created_at: string
-  notes: string | null
-}
-
 /** What the customer is told each state means. Blunter wording lives in `/queue`. */
 const STATE: Record<VoiceStatus, string> = {
   collecting: 'With us. Waiting on us to check it over.',
@@ -73,11 +65,11 @@ export default async function Voices({
   // Totalled here rather than in SQL: the set is small, and a sum in the query would need a
   // view or an RPC to get past PostgREST, which is more moving parts than this earns.
   const secondsByVoice = new Map<string, number>()
-  for (const s of (samples ?? []) as { voice_id: string; seconds: number | null }[]) {
+  for (const s of samples ?? []) {
     secondsByVoice.set(s.voice_id, (secondsByVoice.get(s.voice_id) ?? 0) + (s.seconds ?? 0))
   }
 
-  const list = (voices ?? []) as Voice[]
+  const list = voices ?? []
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">

@@ -6,7 +6,7 @@ import {
   canMove,
   stampsFor,
   timeLeft,
-} from '@/lib/job-transitions'
+} from '@/lib/jobs/states'
 import { TURNAROUND_HOURS } from '@/lib/language-pairs'
 import { JOB_STATUSES } from '@/lib/song-job-schema'
 

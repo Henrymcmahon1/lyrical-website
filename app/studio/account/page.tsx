@@ -59,9 +59,9 @@ export default async function Account() {
     getEmailPreferences(admin, user.id),
   ])
 
-  const profile = profileRow as { name: string | null; licence_terms_version: string | null } | null
-  const rightsDate = day((rightsRow as { rights_warranted_at?: string } | null)?.rights_warranted_at)
-  const licenceDate = day((licenceRow as { created_at?: string } | null)?.created_at)
+  const profile = profileRow
+  const rightsDate = day(rightsRow?.rights_warranted_at)
+  const licenceDate = day(licenceRow?.created_at)
   const licenceVersion = profile?.licence_terms_version ?? null
 
   const plan = billing.entitlement.ok ? planById(billing.entitlement.plan) : null

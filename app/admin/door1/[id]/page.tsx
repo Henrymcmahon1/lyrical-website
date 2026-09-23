@@ -7,10 +7,13 @@ import {
   DOOR1_FORMAT_LABEL,
   DOOR1_KIND_LABEL,
   type Door1DeliveryKind,
+  readDoor1Settings,
 } from '@/lib/door1-schema'
+import type { Tables } from '@/lib/db/database.types'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requeueJob } from '../../actions'
-import { Door1Head, SHELL, day, formatBytes, languageName, refusedView, stateLabel, when } from '../shared'
+import { stateLabel } from '@/lib/jobs/states'
+import { Door1Head, SHELL, day, formatBytes, languageName, refusedView, when } from '../shared'
 
 /**
  * One Door 1 job: its details, its source, and the three delivered stems.
@@ -26,53 +29,11 @@ export const metadata: Metadata = {
 }
 export const dynamic = 'force-dynamic'
 
-const JOB_COLUMNS = [
-  'id',
-  'created_at',
-  'title',
-  'primary_artist',
-  'source_language',
-  'target_language',
-  'lyrics',
-  'notes',
-  'status',
-  'approved_at',
-  'delivered_at',
-  'pipeline_state',
-  'pipeline_error',
-  'pipeline_voice_model',
-  'delivery_profile',
-  'door1_enquiry_id',
-  'door1_source_url',
-  'door1_settings',
-  'door1_due_on',
-].join(', ')
+/** Explicit columns, one string literal so the typed client infers the row shape from it. */
+const JOB_COLUMNS =
+  'id, created_at, title, primary_artist, source_language, target_language, lyrics, notes, status, approved_at, delivered_at, pipeline_state, pipeline_error, pipeline_voice_model, delivery_profile, door1_enquiry_id, door1_source_url, door1_settings, door1_due_on'
 
-type Job = {
-  id: string
-  created_at: string
-  title: string
-  primary_artist: string
-  source_language: string
-  target_language: string
-  lyrics: string | null
-  notes: string | null
-  status: string
-  approved_at: string | null
-  delivered_at: string | null
-  pipeline_state: string | null
-  pipeline_error: string | null
-  pipeline_voice_model: string | null
-  delivery_profile: string
-  door1_enquiry_id: string | null
-  door1_source_url: string | null
-  door1_settings: { vocal_denoise?: boolean; restore_mode?: string } | null
-  door1_due_on: string | null
-}
-
-type Delivery = { id: string; kind: string; filename: string; bytes: number; created_at: string; purged_at: string | null }
-type Asset = { id: string; filename: string; bytes: number; purged_at: string | null }
-type Enquiry = { id: string; name: string; company: string | null; rel_status: string | null }
+type Delivery = Pick<Tables<'song_job_deliveries'>, 'id' | 'kind' | 'filename' | 'bytes' | 'created_at' | 'purged_at'>
 
 export default async function Door1Job({
   params,
@@ -89,7 +50,7 @@ export default async function Door1Job({
 
   const db = supabaseAdmin()
   const { data: jobData } = await db.from('song_jobs').select(JOB_COLUMNS).eq('id', id).maybeSingle()
-  const job = jobData as unknown as Job | null
+  const job = jobData
   // Door 1 only: a Door 2 job id shows nothing here.
   if (!job || job.delivery_profile !== DOOR1) notFound()
 
@@ -103,15 +64,15 @@ export default async function Door1Job({
       ? db.from('enquiries').select('id, name, company, rel_status').eq('id', job.door1_enquiry_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
-  const deliveries = (deliveryResult.data ?? []) as Delivery[]
-  const assets = (assetResult.data ?? []) as Asset[]
-  const enquiry = enquiryResult.data as Enquiry | null
+  const deliveries = deliveryResult.data ?? []
+  const assets = assetResult.data ?? []
+  const enquiry = enquiryResult.data
 
   const byKind = new Map<string, Delivery>()
   for (const d of deliveries) byKind.set(d.kind, d)
 
   const state = stateLabel(job.status, job.pipeline_state)
-  const settings = job.door1_settings ?? {}
+  const settings = readDoor1Settings(job.door1_settings)
 
   return (
     <section className={`${SHELL} py-16`}>

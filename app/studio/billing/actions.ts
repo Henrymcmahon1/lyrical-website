@@ -17,7 +17,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 async function customerIdFor(user: { id: string; email?: string }): Promise<string> {
   const admin = supabaseAdmin()
   const { data } = await admin.from('profiles').select('stripe_customer_id').eq('id', user.id).maybeSingle()
-  if (data?.stripe_customer_id) return data.stripe_customer_id as string
+  if (data?.stripe_customer_id) return data.stripe_customer_id
   const customer = await stripe().customers.create({ email: user.email, metadata: { user_id: user.id } })
   const { error } = await admin
     .from('profiles')

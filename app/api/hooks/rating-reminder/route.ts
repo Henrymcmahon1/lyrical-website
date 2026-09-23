@@ -45,7 +45,7 @@ export async function GET(request: Request) {
           .lt('delivered_at', to)
         if (error) throw new Error(error.message)
 
-        const jobs = (rows ?? []) as DueJob[]
+        const jobs: DueJob[] = rows ?? []
         if (!jobs.length) return []
 
         const { data: rated, error: feedbackError } = await admin
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
           )
         if (feedbackError) throw new Error(feedbackError.message)
 
-        const ratedIds = new Set((rated ?? []).map((r) => (r as { job_id: string }).job_id))
+        const ratedIds = new Set((rated ?? []).map((r) => r.job_id))
         return jobs.filter((j) => !ratedIds.has(j.id))
       },
       alreadyReminded: (jobId) => alreadySentForJob(admin, jobId, 'rating-reminder'),

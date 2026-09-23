@@ -53,16 +53,6 @@ export function formatBytes(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`
 }
 
-/** Staff wording for where a Door 1 job is. `pipeline_state` wins once the poller has it. */
-export function stateLabel(status: string, pipelineState: string | null): { label: string; className: string } {
-  if (pipelineState === 'failed' || status === 'rejected') return { label: 'Failed', className: 'text-ember' }
-  if (status === 'delivered' || pipelineState === 'delivered') return { label: 'Delivered', className: 'text-indigo' }
-  if (pipelineState === 'queued') return { label: 'Queued', className: 'text-graphite/60' }
-  if (pipelineState === 'claimed' || status === 'in_progress') return { label: 'Rendering', className: 'text-indigo' }
-  if (pipelineState === 'rendered_local') return { label: 'Uploading', className: 'text-indigo' }
-  return { label: pipelineState ?? status, className: 'text-graphite/60' }
-}
-
 /** The small header every Door 1 page shares: back to the console, and the Door 1 home. */
 export function Door1Head({ title, lead }: { title: string; lead?: React.ReactNode }) {
   return (

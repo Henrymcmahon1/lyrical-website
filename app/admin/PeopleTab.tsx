@@ -1,3 +1,4 @@
+import type { Tables } from '@/lib/db/database.types'
 import { listNotes, listTasks, type CrmNote, type CrmTask } from '@/lib/crm'
 import { getBillingSummary } from '@/lib/entitlement-db'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -13,14 +14,10 @@ import { addPersonNote, addPersonTask } from './people-actions'
  * an email address.
  */
 
-type Profile = {
-  id: string
-  name: string | null
-  company: string | null
-  role: string | null
-  stripe_customer_id: string | null
-  licence_terms_version: string | null
-}
+type Profile = Pick<
+  Tables<'profiles'>,
+  'id' | 'name' | 'company' | 'role' | 'stripe_customer_id' | 'licence_terms_version'
+>
 
 function signInMethod(identities: { provider: string }[] | undefined): string {
   if (!identities?.length) return 'unknown'
@@ -60,7 +57,7 @@ export async function PeopleTab() {
   }
 
   const profileById = new Map<string, Profile>()
-  for (const p of (profilesResult.data ?? []) as Profile[]) profileById.set(p.id, p)
+  for (const p of profilesResult.data ?? []) profileById.set(p.id, p)
 
   const users = usersResult.data.users
 
@@ -72,8 +69,8 @@ export async function PeopleTab() {
     users.map(async (u) => {
       const [billing, notes, tasks] = await Promise.all([
         getBillingSummary(u.id, db).catch(() => null),
-        listNotes({ userId: u.id }, db).catch(() => [] as CrmNote[]),
-        listTasks({ userId: u.id, openOnly: true }, db).catch(() => [] as CrmTask[]),
+        listNotes({ userId: u.id }, db).catch((): CrmNote[] => []),
+        listTasks({ userId: u.id, openOnly: true }, db).catch((): CrmTask[] => []),
       ])
       return { user: u, profile: profileById.get(u.id) ?? null, billing, notes, tasks }
     }),

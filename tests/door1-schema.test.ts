@@ -11,6 +11,7 @@ import {
   door1Settings,
   isQobuzUrl,
   isDoor1,
+  readDoor1Settings,
 } from '@/lib/door1-schema'
 
 const JOB_ID = '22222222-2222-4222-8222-222222222222'
@@ -270,5 +271,23 @@ describe('labels and the isolation predicate', () => {
     expect(isDoor1({ route: 'door1' })).toBe(true)
     expect(isDoor1({ delivery_profile: 'door2', route: 'auto' })).toBe(false)
     expect(isDoor1({})).toBe(false)
+  })
+})
+
+describe('readDoor1Settings: the stored door1_settings JSON, read back for the console', () => {
+  it('reads what door1Settings writes', () => {
+    expect(readDoor1Settings({ vocal_denoise: false, restore_mode: 'zeroshot' })).toEqual({
+      vocal_denoise: false,
+      restore_mode: 'zeroshot',
+    })
+  })
+
+  it('reads nothing from null, a non-object or an array', () => {
+    for (const v of [null, 'x', 3, true, [1, 2]]) expect(readDoor1Settings(v)).toEqual({})
+  })
+
+  it('leaves out a key that is missing or the wrong type', () => {
+    expect(readDoor1Settings({ vocal_denoise: 'yes', restore_mode: 7 })).toEqual({})
+    expect(readDoor1Settings({ restore_mode: 'cascade' })).toEqual({ restore_mode: 'cascade' })
   })
 })

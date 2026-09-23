@@ -1,3 +1,4 @@
+import type { Tables } from '@/lib/db/database.types'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 /**
@@ -6,9 +7,8 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
  * No emails and no user ids in the markup or the CSV: the note is the data, the job link is how
  * you find the person.
  */
-export type FeedbackRow = {
-  id: string; created_at: string; job_id: string; rating: 'up' | 'down'; tags: string[]; note: string | null
-  song_jobs: { title: string; primary_artist: string; source_language: string; target_language: string; reroll_index: number } | null
+export type FeedbackRow = Pick<Tables<'job_feedback'>, 'id' | 'created_at' | 'job_id' | 'rating' | 'tags' | 'note'> & {
+  song_jobs: Pick<Tables<'song_jobs'>, 'title' | 'primary_artist' | 'source_language' | 'target_language' | 'reroll_index'> | null
 }
 export const FEEDBACK_SELECT =
   'id, created_at, job_id, rating, tags, note, song_jobs(title, primary_artist, source_language, target_language, reroll_index)'
@@ -53,7 +53,7 @@ export async function FeedbackTab({
   if (error) {
     return <p className="mt-12 max-w-xl text-graphite/70">The feedback table cannot be read. Apply migration 002 and reload. <span className="mt-3 block font-mono text-xs text-graphite/50">{error.message}</span></p>
   }
-  const rows = (data ?? []) as unknown as FeedbackRow[]
+  const rows: FeedbackRow[] = data ?? []
 
   const base = '/admin?tab=voice'
   const ratingHref = (r?: 'up' | 'down') => `${base}${r ? `&rating=${r}` : ''}${tag ? `&tag=${tag}` : ''}`

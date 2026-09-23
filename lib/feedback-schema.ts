@@ -7,13 +7,20 @@ import { z } from 'zod'
  */
 export const FEEDBACK_TAGS = ['timing', 'pronunciation', 'voice', 'meaning', 'mix', 'other'] as const
 export type FeedbackTag = (typeof FEEDBACK_TAGS)[number]
+export const FEEDBACK_RATINGS = ['up', 'down'] as const
+export type FeedbackRating = (typeof FEEDBACK_RATINGS)[number]
+
+/** `job_feedback.rating` is text + CHECK in the database; this narrows it without a cast. */
+export function isFeedbackRating(value: string): value is FeedbackRating {
+  return FEEDBACK_RATINGS.some((r) => r === value)
+}
 export const MIN_DOWN_NOTE_CHARS = 20
 export const DOWN_NOTE_MESSAGE = 'Tell us what is wrong in at least 20 characters, so the re-roll can fix it.'
 
 export const FeedbackSchema = z
   .object({
     jobId: z.string().regex(/^[0-9a-f-]{36}$/i),
-    rating: z.enum(['up', 'down']),
+    rating: z.enum(FEEDBACK_RATINGS),
     note: z.string().trim().max(4000).optional(),
     tags: z.array(z.enum(FEEDBACK_TAGS)).max(FEEDBACK_TAGS.length).default([]),
   })

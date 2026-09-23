@@ -6,6 +6,7 @@ import { CoverPlayer } from '@/components/CoverPlayer'
 import { FeedbackBar, type ExistingFeedback } from '@/components/FeedbackBar'
 import { StatChip, eyebrow } from '@/components/studio/ui'
 import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
+import type { Tables } from '@/lib/db/database.types'
 
 /**
  * One song, collapsed by default: a real <details>/<summary> so it opens and closes without any
@@ -14,19 +15,20 @@ import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
  * nested takes were previously drawn straight into app/studio/page.tsx (see git history); they
  * moved here so the list of songs on the studio home stops reading as one long wall of takes.
  */
-export type SongJob = {
-  id: string
-  title: string
-  primary_artist: string
-  source_language: string
-  target_language: string
-  status: string
-  created_at: string
-  lyrics: string | null
-  parent_job_id: string | null
-  reroll_index: number
-  licence_terms_version: string | null
-}
+export type SongJob = Pick<
+  Tables<'song_jobs'>,
+  | 'id'
+  | 'title'
+  | 'primary_artist'
+  | 'source_language'
+  | 'target_language'
+  | 'status'
+  | 'created_at'
+  | 'lyrics'
+  | 'parent_job_id'
+  | 'reroll_index'
+  | 'licence_terms_version'
+>
 
 const LICENCE_LINE = 'Personal use only. Not for release or sale. lyrical may carry an inaudible provenance mark.'
 const REROLL_CLOSED = 'The re-roll window for this song has closed. Make it again to start fresh.'

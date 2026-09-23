@@ -1,3 +1,4 @@
+import type { Tables } from './db/database.types'
 import { renderEmailHtml, renderEmailText, type EmailDoc } from './email-shell'
 import { TURNAROUND_HOURS, isGuaranteed } from './language-pairs'
 import { languageByCode } from './languages'
@@ -24,11 +25,14 @@ import { SITE_URL } from './site'
  * queue, behind the admin session, and the customer already knows what they sent.
  */
 
+type SongJobRow = Tables<'song_jobs'>
+
+/** The job's own fields are typed from the `song_jobs` row; the rest are form facts. */
 export type SongJobEmailFields = {
-  title: string
-  primaryArtist: string
-  sourceLanguage: string
-  targetLanguage: string
+  title: SongJobRow['title']
+  primaryArtist: SongJobRow['primary_artist']
+  sourceLanguage: SongJobRow['source_language']
+  targetLanguage: SongJobRow['target_language']
   fileCount: number
   featureNames: string[]
   notes?: string

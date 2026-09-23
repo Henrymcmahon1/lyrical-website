@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from './db/database.types'
 
 /**
  * Server-only Supabase client using the service role key, which bypasses RLS.
@@ -11,5 +12,5 @@ export function supabaseAdmin() {
   if (!url || !key) {
     throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set')
   }
-  return createClient(url, key, { auth: { persistSession: false } })
+  return createClient<Database>(url, key, { auth: { persistSession: false } })
 }

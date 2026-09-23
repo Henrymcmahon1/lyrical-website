@@ -13,7 +13,7 @@ export type CreditReason = 'purchase_single' | 'refund' | 'grant'
 export async function creditBalance(admin: Admin, userId: string): Promise<number> {
   const { data, error } = await admin.from('song_credits').select('delta').eq('user_id', userId)
   if (error) throw new Error(error.message)
-  return (data ?? []).reduce((sum, row) => sum + (row.delta as number), 0)
+  return (data ?? []).reduce((sum, row) => sum + row.delta, 0)
 }
 
 export async function addCredit(

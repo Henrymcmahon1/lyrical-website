@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Json, TablesInsert } from './db/database.types'
 import { isSubmittable } from './language-pairs'
 import { LANGUAGE_CODES, languageByCode } from './languages'
 import { MAX_LYRICS_CHARS } from './lyrics'
@@ -195,12 +196,28 @@ export function door1Settings(input: Door1JobInput): Door1Settings {
 }
 
 /**
+ * `door1_settings` read back from the database, where it is untyped JSON. Only keys of the right
+ * type are kept, so the console shows what `door1Settings` wrote and never guesses at anything
+ * else. The restore mode stays a string: this is for display, not for driving the pipeline.
+ */
+export function readDoor1Settings(value: Json | null): { vocal_denoise?: boolean; restore_mode?: string } {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  const out: { vocal_denoise?: boolean; restore_mode?: string } = {}
+  if (typeof value.vocal_denoise === 'boolean') out.vocal_denoise = value.vocal_denoise
+  if (typeof value.restore_mode === 'string') out.restore_mode = value.restore_mode
+  return out
+}
+
+/**
  * THE Door 1 `song_jobs` insert (README contract, "A Door 1 row"). Same shape as the Door 2
  * self-serve insert in `app/studio/self-serve-actions.ts`, with the Door 1 differences:
  * route and profile `door1`, NO quota stamp ever, no licence or rights terms (the artist's
  * signed agreement covers it), and the staff-only `door1_*` columns.
  */
-export function door1JobRow(input: Door1JobInput, ctx: { userId: string; nowIso: string }) {
+export function door1JobRow(
+  input: Door1JobInput,
+  ctx: { userId: string; nowIso: string },
+): TablesInsert<'song_jobs'> {
   return {
     id: input.jobId,
     user_id: ctx.userId,
@@ -227,7 +244,7 @@ export function door1JobRow(input: Door1JobInput, ctx: { userId: string; nowIso:
 }
 
 /** The one `full_mix` asset row for an uploaded source, or null for a Qobuz job. */
-export function door1AssetRow(input: Door1JobInput, userId: string) {
+export function door1AssetRow(input: Door1JobInput, userId: string): TablesInsert<'song_job_assets'> | null {
   if (!input.asset) return null
   return {
     job_id: input.jobId,

@@ -18,8 +18,6 @@ export const metadata: Metadata = {
 }
 export const dynamic = 'force-dynamic'
 
-type EnquiryRow = { id: string; name: string; company: string | null; rel_status: string | null }
-
 export default async function NewDoor1Job() {
   const admin = await requireAdmin()
   const refused = refusedView(admin)
@@ -49,7 +47,7 @@ export default async function NewDoor1Job() {
   ])
 
   // Signed artists first (the usual case), then everyone else, each newest first.
-  const rows = (enquiryResult.data ?? []) as EnquiryRow[]
+  const rows = enquiryResult.data ?? []
   const enquiries: EnquiryOption[] = [
     ...rows.filter((r) => r.rel_status === 'signed'),
     ...rows.filter((r) => r.rel_status !== 'signed'),
@@ -62,7 +60,7 @@ export default async function NewDoor1Job() {
 
   const voices = [
     ...new Set(
-      ((voiceResult.data ?? []) as { pipeline_voice_model: string | null }[])
+      (voiceResult.data ?? [])
         .map((v) => v.pipeline_voice_model)
         .filter((v): v is string => Boolean(v)),
     ),
