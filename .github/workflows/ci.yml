@@ -20,7 +20,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      # npm ci fails on Linux with a lockfile written on Windows (npm/cli#4828: optional
+      # platform deps like @emnapi/* are missing). npm install tolerates it. Phase 2 moves to pnpm.
+      - run: npm install --no-audit --no-fund
       - run: npx eslint app lib components tests
       - run: npm test
       - run: npm run build
