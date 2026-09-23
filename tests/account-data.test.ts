@@ -33,6 +33,8 @@ const {
   setEmailPreference,
   exportAccountData,
   retireAccount,
+  updateName,
+  MAX_NAME_LENGTH,
 } = await import('@/lib/account-data')
 
 const MISSING_COLUMN = { code: '42703', message: 'column profiles.product_emails does not exist' }
@@ -126,6 +128,34 @@ describe('exportAccountData', () => {
     creditsQ.order.mockResolvedValue({ data: [], error: null })
     deliveriesQ.order.mockResolvedValue({ data: [], error: null })
     await expect(exportAccountData(admin as never, 'u1')).rejects.toThrow('jobs read failed')
+  })
+})
+
+describe('updateName', () => {
+  it('trims and saves the name, scoped to the caller', async () => {
+    profilesQ.update.mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    const r = await updateName(admin as never, 'u1', '  Jamie Rivers  ')
+    expect(profilesQ.update).toHaveBeenCalledWith({ name: 'Jamie Rivers' })
+    const eqCall = (profilesQ.update as ReturnType<typeof vi.fn>).mock.results[0].value.eq as ReturnType<typeof vi.fn>
+    expect(eqCall).toHaveBeenCalledWith('id', 'u1')
+    expect(r).toEqual({ ok: true, name: 'Jamie Rivers' })
+  })
+
+  it('refuses an empty or whitespace-only name without writing', async () => {
+    const r = await updateName(admin as never, 'u1', '   ')
+    expect(r.ok).toBe(false)
+    expect(profilesQ.update).not.toHaveBeenCalled()
+  })
+
+  it(`refuses a name over ${MAX_NAME_LENGTH} characters without writing`, async () => {
+    const r = await updateName(admin as never, 'u1', 'x'.repeat(MAX_NAME_LENGTH + 1))
+    expect(r.ok).toBe(false)
+    expect(profilesQ.update).not.toHaveBeenCalled()
+  })
+
+  it('still throws on a real failure', async () => {
+    profilesQ.update.mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: OTHER_ERROR }) })
+    await expect(updateName(admin as never, 'u1', 'Jamie')).rejects.toThrow('connection reset')
   })
 })
 

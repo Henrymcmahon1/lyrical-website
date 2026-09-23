@@ -1,17 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { PLANS } from '@/lib/plans'
 
 /**
  * The Door-2 studio home, rendered. Every read is the user's client (mocked as thenable
- * chains here), the entitlement helper is mocked, and the child components are stubs so the
- * assertions are about THIS page: the plan card, the nesting of takes, the licence line, the
- * closed-window copy on a rejected child and the heartbeat line.
+ * chains here), and the child components are stubs so the assertions are about THIS page: the
+ * nesting of takes, the licence line, the closed-window copy on a rejected child and the
+ * in-progress indicator. The plan card lives on /studio/new now (tests/plan-card.test.tsx,
+ * tests/studio-new-page.test.tsx), so this page no longer reads entitlement at all.
  */
-const entitlement = vi.fn()
 const tables: Record<string, unknown[]> = {}
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
-vi.mock('@/lib/entitlement-db', () => ({ getEntitlementFor: () => entitlement() }))
 vi.mock('@/app/studio/actions', () => ({ signOut: vi.fn() }))
 vi.mock('@/components/FeedbackBar', () => ({ FeedbackBar: (p: { jobId: string; rerollsLeft: number }) => <div data-bar={p.jobId}>bar {p.rerollsLeft}</div> }))
 vi.mock('@/components/CoverPlayer', () => ({ CoverPlayer: (p: { jobId: string }) => <div data-player={p.jobId} /> }))
@@ -38,19 +36,22 @@ const render = async () => renderToStaticMarkup(await Studio({ searchParams: Pro
 
 beforeEach(() => {
   for (const k of Object.keys(tables)) delete tables[k]
-  entitlement.mockResolvedValue({ ok: true, source: 'subscription', plan: 'fan', tracksLeft: 3, renewsAt: '2026-10-01T00:00:00Z' })
 })
 
 describe('studio home', () => {
-  it('shows the plan card as stat chips with tracks left and the billing link, or the empty state with the deck copy', async () => {
-    // The plan name is read from lib/plans.ts, never typed here: Henry renames plans there.
+  it('never shows the plan card: that moved to /studio/new', async () => {
+    const h = await render()
+    expect(h).not.toContain('Your plan')
+    expect(h).not.toContain('No plan yet')
+    expect(h).not.toContain('Tracks left')
+  })
+  it('always offers the make-a-track CTA, whatever the song list looks like', async () => {
     let h = await render()
-    expect(h).toContain(`>${PLANS.fan.name}<`); expect(h).toContain('Tracks left'); expect(h).toMatch(/Tracks left<\/span><span[^>]*>3</); expect(h).toContain('href="/studio/billing"')
-    entitlement.mockResolvedValue({ ok: false, reason: 'no_plan' })
+    expect(h).toContain('href="/studio/new"')
+    expect(h).toContain('Make your first track')
+    tables.song_jobs = [job({})]
     h = await render()
-    expect(h).toContain('No plan yet')
-    expect(h).toContain('Nothing here yet. Pick a plan and make your first track.')
-    expect(h).toContain('href="/pricing"')
+    expect(h).toContain('Make another track')
   })
   it('nests re-rolls under their original as Take 2, each with a player, a bar and the licence line', async () => {
     tables.song_jobs = [job({}), job({ id: 'j2', parent_job_id: 'j1', reroll_index: 1 })]
@@ -60,13 +61,21 @@ describe('studio home', () => {
     expect(h).toContain('data-bar="j1"'); expect(h).toContain('bar 1')
     expect(h).toContain('Personal use only. Not for release or sale.')
   })
-  it('shows the closed-window copy on a rejected child and reads the heartbeat', async () => {
+  it('shows the closed-window copy on a rejected child', async () => {
     tables.song_jobs = [job({}), job({ id: 'j2', parent_job_id: 'j1', reroll_index: 1, status: 'rejected' })]
-    tables.worker_heartbeat = [{ worker: 'optiplex', seen_at: new Date().toISOString() }]
     const h = await render()
     expect(h).toContain('The re-roll window for this song has closed.')
-    expect(h).toContain('Renders are running')
     expect(h).not.toContain('We could not make this one.')
+  })
+  it('shows "Your song is being made now" only when a job of the signed-in user is in_progress, and never reads worker_heartbeat', async () => {
+    tables.song_jobs = [job({ status: 'delivered' })]
+    let h = await render()
+    expect(h).not.toContain('Your song is being made now')
+    expect(h).not.toContain('Renders are running')
+    expect(h).not.toContain('Renders are paused')
+    tables.song_jobs = [job({ status: 'in_progress' })]
+    h = await render()
+    expect(h).toContain('Your song is being made now')
   })
   it('a rejected self-serve original reads "Not made" and says it did not count, with no player and no bar', async () => {
     // Self-serve = carries licence_terms_version (route is not customer-readable). Original = no parent.
@@ -85,5 +94,18 @@ describe('studio home', () => {
     expect(h).toContain('Not taken on this time.')
     expect(h).not.toContain('Not made')
     expect(h).not.toContain('We could not make this one.')
+  })
+  it('draws each song as a collapsible SongCard, open only on the most recent one', async () => {
+    tables.song_jobs = [
+      job({ id: 'newer', title: 'Newer Song', created_at: '2026-09-22T00:00:00Z' }),
+      job({ id: 'older', title: 'Older Song', created_at: '2026-09-01T00:00:00Z' }),
+    ]
+    const h = await render()
+    // The query orders newest first, so "newer" appears before "older" in the markup: the first
+    // <details> is the one that should carry the open attribute.
+    const cards = h.match(/<details[^>]*>/g) ?? []
+    expect(cards).toHaveLength(2)
+    expect(cards[0]).toMatch(/\bopen(=""|\s|>)/)
+    expect(cards[1]).not.toMatch(/\bopen(=""|\s|>)/)
   })
 })

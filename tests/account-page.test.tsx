@@ -37,10 +37,12 @@ vi.mock('@/lib/entitlement-db', () => ({ getBillingSummary: (...a: unknown[]) =>
 vi.mock('@/lib/account-data', () => ({
   getEmailPreferences: (...a: unknown[]) => getEmailPreferences(...a),
   DELETE_CONFIRM_TEXT: 'DELETE',
+  MAX_NAME_LENGTH: 80,
 }))
 vi.mock('@/app/studio/account/actions', () => ({
   saveEmailPreferencesForm: vi.fn(),
   deleteAccountForm: vi.fn(),
+  updateNameForm: vi.fn(),
 }))
 
 const { default: Account } = await import('@/app/studio/account/page')
@@ -80,6 +82,12 @@ describe('/studio/account', () => {
     expect(html).toContain('Jamie Rivers')
     expect(html).toContain('a@b.example')
     expect(html).toContain('Email code')
+  })
+
+  it('offers the name in an editable, pre-filled field with a save control', async () => {
+    const html = await render()
+    expect(html).toMatch(/<input[^>]*name="name"[^>]*value="Jamie Rivers"/)
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>[^<]*Save/)
   })
 
   it('reads the sign-in method off a Google identity', async () => {

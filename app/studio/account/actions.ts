@@ -3,15 +3,29 @@
 import { revalidatePath } from 'next/cache'
 import { currentUser } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { DELETE_CONFIRM_TEXT, retireAccount, setEmailPreference } from '@/lib/account-data'
+import { DELETE_CONFIRM_TEXT, retireAccount, setEmailPreference, updateName } from '@/lib/account-data'
 import { signOut } from '@/app/studio/actions'
 
 /**
- * The account page's two writes. Both run privileged (service role) after `currentUser()`
+ * The account page's writes. All run privileged (service role) after `currentUser()`
  * confirms who is asking, scoped to that id the whole way down through lib/account-data.ts.
  * `useActionState` shape throughout, matching feedback-actions.ts and reroll-actions.ts, so the
  * page's forms post with or without JavaScript.
  */
+
+export type UpdateNameResult = { ok: true; name: string } | { ok: false; error: string }
+
+export async function updateNameForm(
+  _prev: UpdateNameResult | null,
+  formData: FormData,
+): Promise<UpdateNameResult> {
+  const user = await currentUser()
+  if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
+
+  const result = await updateName(supabaseAdmin(), user.id, String(formData.get('name') ?? ''))
+  if (result.ok) revalidatePath('/studio/account')
+  return result
+}
 
 export type EmailPreferencesResult = { ok: true } | { ok: false; error: string }
 

@@ -15,6 +15,7 @@ import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
 import { PageHead, Panel, StatChip, link, button } from '@/components/studio/ui'
 import { EmailPreferencesForm } from './EmailPreferencesForm'
 import { DeleteAccountForm } from './DeleteAccountForm'
+import { NameForm } from './NameForm'
 
 /**
  * A proper account page: who is signed in and how, the plan, the turnaround promise, what was
@@ -70,9 +71,11 @@ export default async function Account() {
 
       <Panel title="You">
         <div className="flex flex-wrap gap-2">
-          <StatChip label="Name" value={profile?.name?.trim() || 'Not set'} />
           <StatChip label="Email" value={user.email} />
           <StatChip label="Signed in with" value={signInMethod} />
+        </div>
+        <div className="mt-4">
+          <NameForm name={profile?.name?.trim() ?? ''} />
         </div>
       </Panel>
 

@@ -79,6 +79,22 @@ export async function setEmailPreference(
   return { ok: true }
 }
 
+/** Longest name the account page will save. Enforced both in the form (maxLength) and here. */
+export const MAX_NAME_LENGTH = 80
+
+export type UpdateNameResult = { ok: true; name: string } | { ok: false; error: string }
+
+/** Saves the caller's display name, scoped to their own row. Trims, and refuses empty or overlong. */
+export async function updateName(admin: Admin, userId: string, name: string): Promise<UpdateNameResult> {
+  const trimmed = name.trim()
+  if (!trimmed) return { ok: false, error: 'Enter a name.' }
+  if (trimmed.length > MAX_NAME_LENGTH) return { ok: false, error: `Keep your name under ${MAX_NAME_LENGTH} characters.` }
+
+  const { error } = await admin.from('profiles').update({ name: trimmed }).eq('id', userId)
+  if (error) throw new Error(error.message)
+  return { ok: true, name: trimmed }
+}
+
 export type AccountExport = {
   exportedAt: string
   jobs: Record<string, unknown>[]
