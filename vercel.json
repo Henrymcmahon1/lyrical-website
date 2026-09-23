@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/hooks/rating-reminder",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
