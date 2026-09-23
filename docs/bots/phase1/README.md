@@ -17,8 +17,9 @@ the contract, and both sides use types generated from it.
 Every bot: its own worktree under `C:\Users\User\CascadeProjects\wt\`, commits on its branch, does
 NOT push (a lyrical-website branch push builds a preview on the live lyricalglobal Vercel project).
 The orchestrator reviews the branch diff and merges. No bot touches production Supabase, deploys, or
-touches the OptiPlex. They work against the LOCAL Supabase stack (Docker) and the `lyrical-test`
-project only.
+touches the OptiPlex. They work against the LOCAL Supabase stack (Docker) only. There is no hosted
+test project (decided 24 Sep: the free tier allows 2 projects, both in use; revisit when there is
+a team).
 
 ## The contract (decided; bots implement it, do not redesign it)
 
@@ -83,7 +84,7 @@ the trigger rejects. Unchanged values (same state written again) are always allo
   their object paths, the claim function. It replaces every scattered description.
 
 ### Rollout (orchestrator, after review)
-1. Apply A's migrations to `lyrical-test`, run both test suites against it.
+1. Apply A's migrations to a fresh local stack, run both test suites against it.
 2. Apply the contract migration to production (additive + constraints only, current code keeps
    working: same string values, same flows). Verify.
 3. Merge and deploy B (website) and C (poller to the OptiPlex), then a proof run.

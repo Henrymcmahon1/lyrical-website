@@ -36,4 +36,4 @@ Docker Desktop running; `npx supabase` logged in; the repo linked to production
 ## Done when
 Baseline + contract apply cleanly to a fresh local stack; pgTAP green; `npm test && npm run build`
 green; PR lists: the production distinct-values result, the writer-to-transition table, exact test
-counts, and the exact SQL the orchestrator applies to `lyrical-test` then production.
+counts, and the exact SQL the orchestrator applies to production after the local proof.
