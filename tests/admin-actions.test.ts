@@ -306,4 +306,23 @@ describe('requeueJob', () => {
     const to = await run(requeueJob, form({ id: 'job-1', from: 'rejected' }))
     expect(to).toBe('/admin?tab=work&moved=requeued')
   })
+
+  it('returns to the Door 1 console when posted from it (back=door1)', async () => {
+    expect(await run(requeueJob, form({ id: 'job-1', from: 'rejected', back: 'door1' }))).toBe(
+      '/admin/door1?moved=requeued',
+    )
+    expect(update).toHaveBeenCalledWith({ pipeline_state: 'queued' })
+    selectAfterUpdate.mockResolvedValue({ data: [], error: null })
+    expect(await run(requeueJob, form({ id: 'job-1', from: 'rejected', back: 'door1' }))).toBe(
+      '/admin/door1?error=stale',
+    )
+    expect(await run(requeueJob, form({ id: 'job-1', from: 'delivered', back: 'door1' }))).toBe(
+      '/admin/door1?error=move',
+    )
+  })
+
+  it('ignores any other back value (no open redirect)', async () => {
+    const to = await run(requeueJob, form({ id: 'job-1', from: 'rejected', back: 'https://evil.example' }))
+    expect(to).toBe('/admin?tab=work&moved=requeued')
+  })
 })
