@@ -64,6 +64,8 @@ const peopleActions = await import('@/app/admin/people-actions')
 const relationshipActions = await import('@/app/admin/relationship-actions')
 const exportRoute = await import('@/app/admin/export/route')
 const audioRoute = await import('@/app/admin/audio/route')
+const door1Actions = await import('@/app/admin/door1/actions')
+const door1Download = await import('@/app/admin/door1/download/route')
 
 const UUID = '11111111-1111-4111-8111-111111111111'
 
@@ -105,6 +107,8 @@ const GATED_ACTIONS: Record<string, (fd: FormData) => Promise<unknown>> = {
   updateRelationship: relationshipActions.updateRelationship,
   addRelationshipNote: relationshipActions.addRelationshipNote,
   addRelationshipTask: relationshipActions.addRelationshipTask,
+  createDoor1Job: door1Actions.createDoor1Job,
+  door1UploadTicket: (fd) => door1Actions.door1UploadTicket(fd as never),
 }
 
 beforeEach(() => {
@@ -139,13 +143,19 @@ describe.each(REFUSALS)('refused: %s', (_label, check) => {
     }
     expect(touched).not.toHaveBeenCalled()
   })
+
+  it('GET /admin/door1/download is a 404 and signs nothing', async () => {
+    const res = await door1Download.GET(new Request(`https://x.test/admin/door1/download?delivery=${UUID}`))
+    expect(res.status).toBe(404)
+    expect(touched).not.toHaveBeenCalled()
+  })
 })
 
 describe('coverage', () => {
   it('lists every gated server action exported from app/admin', () => {
     // login and logout are the only ungated exports: login is the break-glass entry point
     // (tested separately) and logout only clears the caller's own session.
-    const exported = [actions, issueActions, peopleActions, relationshipActions]
+    const exported = [actions, issueActions, peopleActions, relationshipActions, door1Actions]
       .flatMap((m) => Object.keys(m))
       .filter((k) => k !== 'login' && k !== 'logout')
       .sort()

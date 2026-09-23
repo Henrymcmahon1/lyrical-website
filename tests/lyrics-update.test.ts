@@ -46,6 +46,10 @@ beforeEach(() => {
       eqChain(...a)
       return chain
     },
+    neq: (...a: unknown[]) => {
+      eqChain('neq', ...a)
+      return chain
+    },
     select: (...a: unknown[]) => selectAfter(...a),
   }
   update.mockReturnValue(chain)
@@ -96,6 +100,7 @@ describe('what is written', () => {
     await updateLyrics(form({ jobId: JOB, lyrics: 'hello' }))
     expect(eqChain).toHaveBeenCalledWith('id', JOB)
     expect(eqChain).toHaveBeenCalledWith('status', 'submitted')
+    expect(eqChain).toHaveBeenCalledWith('neq', 'delivery_profile', 'door1')
   })
 
   it('refuses a sheet longer than the ceiling', async () => {

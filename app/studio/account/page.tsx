@@ -39,11 +39,18 @@ export default async function Account() {
   const [{ data: profileRow }, { data: rightsRow }, { data: licenceRow }, billing, prefs] = await Promise.all([
     supabase.from('profiles').select('name, licence_terms_version').eq('id', user.id).maybeSingle(),
     // Most recent agreement: the rights warranty is re-agreed on every submission.
-    supabase.from('song_jobs').select('rights_warranted_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase
+      .from('song_jobs')
+      .select('rights_warranted_at')
+      .neq('delivery_profile', 'door1')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
     // First self-serve submission: when the personal-use licence was first accepted.
     supabase
       .from('song_jobs')
       .select('created_at')
+      .neq('delivery_profile', 'door1')
       .not('licence_terms_version', 'is', null)
       .order('created_at', { ascending: true })
       .limit(1)

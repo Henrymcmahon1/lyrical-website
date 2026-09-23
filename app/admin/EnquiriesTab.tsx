@@ -140,7 +140,7 @@ export async function EnquiriesTab({
       ) : (
         <ol className="mt-2">
           {leads.map((l) => (
-            <li key={l.id} className="border-b border-graphite/12 py-6">
+            <li key={l.id} id={`enquiry-${l.id}`} className="scroll-mt-6 border-b border-graphite/12 py-6">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <h3 className="font-brand text-2xl tracking-tight">{l.name}</h3>
                 <a

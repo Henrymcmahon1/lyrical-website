@@ -26,6 +26,7 @@ async function somethingRendering(): Promise<boolean> {
   const { data } = await supabase
     .from('song_jobs')
     .select('id')
+    .neq('delivery_profile', 'door1')
     .not('status', 'in', '(delivered,rejected)')
     .limit(1)
   return (data?.length ?? 0) > 0

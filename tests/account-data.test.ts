@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
  */
 
 const profilesQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle: vi.fn(), update: vi.fn().mockReturnThis() }
-const jobsQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn() }
+const jobsQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), neq: vi.fn().mockReturnThis(), order: vi.fn() }
 const feedbackQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn() }
 const creditsQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn() }
 const deliveriesQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order: vi.fn() }
@@ -46,6 +46,7 @@ beforeEach(() => {
     ;(q.select as ReturnType<typeof vi.fn>).mockReturnThis()
     ;(q.eq as ReturnType<typeof vi.fn>).mockReturnThis()
   }
+  jobsQ.neq.mockReturnThis()
   profilesQ.update.mockReturnThis()
   voiceModelsQ.update.mockReturnThis()
   voiceModelsQ.eq.mockReturnThis()

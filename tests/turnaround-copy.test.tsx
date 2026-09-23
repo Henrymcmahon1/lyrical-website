@@ -25,7 +25,7 @@ vi.mock('@/lib/supabase-server', () => ({
   currentUser: async () => ({ id: 'user-1', email: 'a@b.example' }),
   supabaseServer: async () => ({
     from: (t: string) => {
-      const c = { select: () => c, order: () => c, limit: () => c, then: (r: (v: unknown) => void) => r({ data: tables[t] ?? [], error: null }) }
+      const c = { select: () => c, neq: () => c, order: () => c, limit: () => c, then: (r: (v: unknown) => void) => r({ data: tables[t] ?? [], error: null }) }
       return c
     },
   }),

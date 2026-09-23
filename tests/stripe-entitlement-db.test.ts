@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const subQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle: vi.fn() }
-const jobsQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), gte: vi.fn(), not: vi.fn() }
+const jobsQ = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), neq: vi.fn().mockReturnThis(), gte: vi.fn(), not: vi.fn() }
 const creditsQ = { select: vi.fn().mockReturnThis(), eq: vi.fn() }
 const admin = {
   from: (t: string) => (t === 'subscriptions' ? subQ : t === 'song_jobs' ? jobsQ : creditsQ),
@@ -22,6 +22,7 @@ beforeEach(() => {
   subQ.eq.mockReturnThis()
   jobsQ.select.mockReturnThis()
   jobsQ.eq.mockReturnThis()
+  jobsQ.neq.mockReturnThis()
   creditsQ.select.mockReturnThis()
   jobsQ.gte.mockResolvedValue({ count: 2, error: null })
   jobsQ.not.mockResolvedValue({ count: 4, error: null })
@@ -36,6 +37,8 @@ describe('entitlement-db', () => {
     expect(subQ.eq).toHaveBeenCalledWith('user_id', 'u1')
     expect(jobsQ.eq).toHaveBeenCalledWith('user_id', 'u1')
     expect(jobsQ.eq).toHaveBeenCalledWith('reroll_index', 0)
+    // Door 1 never counts against info@'s own plan.
+    expect(jobsQ.neq).toHaveBeenCalledWith('delivery_profile', 'door1')
     expect(jobsQ.gte).toHaveBeenCalledWith('quota_consumed_at', fan.current_period_start)
     expect(jobsQ.not).not.toHaveBeenCalled()
     expect(s).toMatchObject({

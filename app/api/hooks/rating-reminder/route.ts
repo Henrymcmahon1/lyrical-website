@@ -37,8 +37,10 @@ export async function GET(request: Request) {
 
         const { data: rows, error } = await admin
           .from('song_jobs')
-          .select('id, user_id, title')
+          .select('id, user_id, title, delivery_profile')
           .eq('status', 'delivered')
+          // Door 1 is staff-made for a signed artist: no rating reminder, ever.
+          .neq('delivery_profile', 'door1')
           .gte('delivered_at', from)
           .lt('delivered_at', to)
         if (error) throw new Error(error.message)

@@ -52,6 +52,7 @@ const JOB_COLUMNS = [
   'pipeline_error',
   'parent_job_id',
   'reroll_index',
+  'delivery_profile',
 ].join(', ')
 
 type Job = {
@@ -74,6 +75,8 @@ type Job = {
   pipeline_error: string | null
   parent_job_id: string | null
   reroll_index: number
+  /** `door1` for a staff-made Door 1 job (managed at /admin/door1); `door2` otherwise. */
+  delivery_profile?: string | null
 }
 
 const VOICE_PREFERENCE_LABEL: Record<string, string> = {
@@ -169,6 +172,11 @@ function JobRow({
   // server-side in requeueJob. A job still mid-pipeline (pipeline_state failed but status not
   // yet flipped) is not offered the button: the poller or a human moves it to rejected first.
   const canRequeue = job.status === 'rejected'
+  // Door 1 rows are listed here for the full picture but managed at /admin/door1: no move
+  // buttons (a move here could email info@ as if it were a customer), lyrics and files optional.
+  const door1 = job.delivery_profile === 'door1'
+  // No turnaround promise runs on a Door 1 job (it has a due date instead, on its own page).
+  const shownClock = door1 ? null : clock
 
   return (
     <li className={`border-b border-graphite/12 py-7 ${isChild ? 'pl-6' : ''}`}>
@@ -178,6 +186,14 @@ function JobRow({
           {job.title}
         </h3>
         <span className="text-graphite/60">{job.primary_artist}</span>
+        {door1 && (
+          <a
+            href={`/admin/door1/${job.id}`}
+            className="rounded-card border border-indigo/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-indigo"
+          >
+            Door 1
+          </a>
+        )}
         <span className={`font-mono text-[10px] uppercase tracking-[0.16em] ${state.className}`}>
           {state.label}
         </span>
@@ -226,10 +242,10 @@ function JobRow({
             )}
           </dd>
         </div>
-        {clock && (
+        {shownClock && (
           <div>
             <dt className="sr-only">Time left</dt>
-            <dd className={clock.late ? 'text-ember' : 'text-graphite/50'}>{clock.text}</dd>
+            <dd className={shownClock.late ? 'text-ember' : 'text-graphite/50'}>{shownClock.text}</dd>
           </div>
         )}
       </dl>
@@ -265,7 +281,7 @@ function JobRow({
             {job.lyrics}
           </pre>
         </details>
-      ) : !isChild ? (
+      ) : !isChild && !door1 ? (
         /*
           Said plainly rather than left blank, on a root job only: a re-roll never carries its
           own lyrics (it reuses the parent's), so a bare child would otherwise show a false
@@ -310,7 +326,7 @@ function JobRow({
             )}
           </li>
         ))}
-        {!assets.length && !isChild && (
+        {!assets.length && !isChild && !door1 && (
           <li className="text-sm text-ember">No files attached. Do not accept this one.</li>
         )}
       </ul>
@@ -352,7 +368,16 @@ function JobRow({
         </button>
       </form>
 
-      {confirming === job.id ? (
+      {door1 ? (
+        <p className="mt-4">
+          <a
+            href={`/admin/door1/${job.id}`}
+            className="inline-flex min-h-11 items-center font-mono text-[11px] uppercase tracking-[0.14em] text-indigo underline underline-offset-4"
+          >
+            Manage in Door 1
+          </a>
+        </p>
+      ) : confirming === job.id ? (
         <div className="mt-4 rounded-card border border-ember/40 p-4">
           {canRequeue ? (
             <>

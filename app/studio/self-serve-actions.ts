@@ -45,6 +45,7 @@ export async function getDeliveredCoverUrl(jobId: string): Promise<string | null
     .select('id')
     .eq('id', jobId)
     .eq('user_id', user.id)
+    .neq('delivery_profile', 'door1')
     .maybeSingle()
   if (!owned) return null
   const { data: deliveries } = await admin

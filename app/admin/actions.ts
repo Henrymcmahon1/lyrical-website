@@ -220,7 +220,7 @@ export async function moveJob(formData: FormData) {
     .update({ status: to, ...stampsFor(to, nowIso) })
     .eq('id', id)
     .eq('status', from)
-    .select('id, title, primary_artist, source_language, target_language, user_id')
+    .select('id, title, primary_artist, source_language, target_language, user_id, delivery_profile')
 
   if (error || !data?.length) {
     // No row matched means somebody else moved it first. Not an error worth a scary page.
@@ -230,7 +230,8 @@ export async function moveJob(formData: FormData) {
 
   const job = data[0]
 
-  if (MOVES_THAT_EMAIL.includes(to)) {
+  // A Door 1 job belongs to info@'s uid and is for a signed artist: never a customer email.
+  if (MOVES_THAT_EMAIL.includes(to) && job.delivery_profile !== 'door1') {
     const email = await submitterEmail(job.user_id)
     if (email) {
       const fields: SongJobEmailFields = {
@@ -321,7 +322,11 @@ export async function requeueJob(formData: FormData) {
 
   const id = String(formData.get('id') ?? '')
   const from = String(formData.get('from') ?? '')
-  if (!id || from !== 'rejected') redirect('/admin?tab=work&error=move')
+  // The Door 1 console reuses this action. `back` is matched against one literal, never used as
+  // a URL, so it cannot become an open redirect.
+  const door1 = formData.get('back') === 'door1'
+  const done = (outcome: string) => (door1 ? `/admin/door1?${outcome}` : `/admin?tab=work&${outcome}`)
+  if (!id || from !== 'rejected') redirect(done('error=move'))
 
   const { data, error } = await supabaseAdmin()
     .from('song_jobs')
@@ -332,11 +337,13 @@ export async function requeueJob(formData: FormData) {
 
   if (error || !data?.length) {
     revalidatePath('/admin')
-    redirect('/admin?tab=work&error=stale')
+    if (door1) revalidatePath('/admin/door1')
+    redirect(done('error=stale'))
   }
 
   revalidatePath('/admin')
-  redirect('/admin?tab=work&moved=requeued')
+  if (door1) revalidatePath('/admin/door1')
+  redirect(done('moved=requeued'))
 }
 
 // ── Voices ────────────────────────────────────────────────────────────────────

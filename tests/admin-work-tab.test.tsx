@@ -167,3 +167,51 @@ describe('re-queue', () => {
     expect(html).toContain('Yes, re-queue it')
   })
 })
+
+describe('Door 1 rows', () => {
+  const DOOR1_ROW = {
+    ...PARENT,
+    id: 'job-door1',
+    title: 'Door One Song',
+    status: 'approved',
+    pipeline_state: 'queued',
+    lyrics: null,
+    delivery_profile: 'door1',
+  }
+
+  it('reads delivery_profile so the tab can tell', async () => {
+    const selects: unknown[] = []
+    withJobs([DOOR1_ROW])
+    const original = from.getMockImplementation()!
+    from.mockImplementation((table: string) => {
+      const q = original(table)
+      if (table === 'song_jobs') {
+        const sel = q.select
+        q.select = (...a: unknown[]) => {
+          selects.push(a[0])
+          return sel(...a)
+        }
+      }
+      return q
+    })
+    await render({ showAll: true })
+    expect(String(selects[0])).toContain('delivery_profile')
+  })
+
+  it('labels a Door 1 row "Door 1", links to its console, and draws no move buttons', async () => {
+    withJobs([DOOR1_ROW])
+    const html = await render({ showAll: true })
+    expect(html).toContain('>Door 1<')
+    expect(html).toContain('href="/admin/door1/job-door1"')
+    expect(html).toContain('Manage in Door 1')
+    expect(html).not.toContain('name="to"')
+    expect(html).not.toContain('No lyrics')
+    expect(html).not.toContain('No files attached')
+    expect(html).not.toContain('Time left')
+  })
+
+  it('a Door 2 row carries no Door 1 label (control)', async () => {
+    withJobs([PARENT])
+    expect(await render({ showAll: true })).not.toContain('>Door 1<')
+  })
+})

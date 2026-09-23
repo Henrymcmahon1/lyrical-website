@@ -1,4 +1,5 @@
 import { deliveredHtml, deliveredSubject, deliveredText } from './delivered-email'
+import { isDoor1 } from './door1-schema'
 import type { EmailSlug } from './email-log'
 import { rerollsLeft } from './entitlement'
 import { notMadeHtml, notMadeSubject, notMadeText } from './not-made-email'
@@ -19,6 +20,9 @@ export type SongJobRecord = {
   status: string
   parent_job_id: string | null
   reroll_index: number
+  /** Present on a real webhook (the full row). `door1` rows never earn a customer email. */
+  delivery_profile?: string | null
+  route?: string | null
 }
 
 export type SongJobWebhookPayload = {
@@ -38,6 +42,9 @@ export function classifySlug(
   record: SongJobRecord,
   oldRecord: SongJobRecord | null | undefined,
 ): EmailSlug | null {
+  // Door 1 is staff-made for a signed artist under info@'s uid: no customer email on delivered
+  // or rejected, ever. Either marker is enough.
+  if (isDoor1(record)) return null
   if (record.status === oldRecord?.status) return null
   if (record.status === 'delivered') {
     return record.parent_job_id ? 'reroll-delivered' : 'track-delivered'

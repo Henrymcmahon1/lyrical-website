@@ -12,6 +12,8 @@ export type DueJob = {
   id: string
   user_id: string
   title: string
+  /** Door 1 rows are excluded by the route's query; also skipped here, belt and braces. */
+  delivery_profile?: string | null
 }
 
 export type EmailPrefs = { email: string | null; productEmails: boolean; ratingReminders: boolean }
@@ -41,6 +43,7 @@ export async function runRatingReminders(deps: RatingReminderDeps): Promise<Rati
   const sent: string[] = []
 
   for (const job of jobs) {
+    if (job.delivery_profile === 'door1') continue
     // Never more than one product email per person per day, and never more than one per run
     // either: a person with two unrated tracks in the window gets one nudge, not two.
     if (remindedUsers.has(job.user_id)) continue
