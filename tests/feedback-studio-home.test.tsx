@@ -94,4 +94,17 @@ describe('studio home', () => {
     expect(h).not.toContain('Not made')
     expect(h).not.toContain('We could not make this one.')
   })
+  it('draws each song as a collapsible SongCard, open only on the most recent one', async () => {
+    tables.song_jobs = [
+      job({ id: 'newer', title: 'Newer Song', created_at: '2026-09-22T00:00:00Z' }),
+      job({ id: 'older', title: 'Older Song', created_at: '2026-09-01T00:00:00Z' }),
+    ]
+    const h = await render()
+    // The query orders newest first, so "newer" appears before "older" in the markup: the first
+    // <details> is the one that should carry the open attribute.
+    const cards = h.match(/<details[^>]*>/g) ?? []
+    expect(cards).toHaveLength(2)
+    expect(cards[0]).toMatch(/\bopen(=""|\s|>)/)
+    expect(cards[1]).not.toMatch(/\bopen(=""|\s|>)/)
+  })
 })

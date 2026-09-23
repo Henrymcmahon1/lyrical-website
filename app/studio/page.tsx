@@ -1,11 +1,9 @@
 import { redirect } from 'next/navigation'
-import { JobStatus } from '@/components/JobStatus'
-import { LyricsEditor } from '@/components/LyricsEditor'
 import { Scorecard } from '@/components/Scorecard'
-import { CoverPlayer } from '@/components/CoverPlayer'
-import { FeedbackBar, type ExistingFeedback } from '@/components/FeedbackBar'
+import { type ExistingFeedback } from '@/components/FeedbackBar'
 import { StudioAutoRefresh } from '@/components/StudioAutoRefresh'
-import { Notice, PageHead, Panel, StatChip, button, eyebrow, link } from '@/components/studio/ui'
+import { SongCard, type SongJob } from '@/components/studio/SongCard'
+import { Notice, PageHead, Panel, StatChip, button, link } from '@/components/studio/ui'
 import { rerollsLeft } from '@/lib/entitlement'
 import { getEntitlementFor } from '@/lib/entitlement-db'
 import { planById } from '@/lib/plans'
@@ -18,34 +16,21 @@ import { TURNAROUND_BUSY, TURNAROUND_PROMISE } from '@/lib/turnaround'
  * so the select lists are explicit and never `*`. A child's `pipeline_error` is service-role
  * only; the closed-window copy keys off `status='rejected'` on a child instead.
  *
- * A rejected ORIGINAL is one of two things. `route` is not customer-readable either, so the
- * page tells them apart by `licence_terms_version`: a self-serve job carries it (the customer
- * agreed the licence at submit), a manual-funnel job does not. Self-serve and rejected means
- * the render failed at our end (the worker sets `rejected`, clears `quota_consumed_at` and
- * refunds a credit), so it reads "Not made" and says it did not count. Manual and rejected
- * keeps the funnel's declined wording from JobStatus.
+ * Each song is a collapsible SongCard (components/studio/SongCard.tsx): the summary that stays
+ * visible is title, artist, language pair, status and date, so a customer checking on their
+ * songs is not confronted with a wall of every take's player and feedback bar at once.
  *
  * Drawn in the dashboard's panel language (components/studio/ui.tsx): the plan is a row of
- * StatChips, each song a Panel with its takes nested as inner cards. Sign out lives in the
- * shell's rail (app/studio/layout.tsx), so it is not repeated here. Plan names come from
- * lib/plans.ts and are never typed here.
+ * StatChips, each song a SongCard. Sign out lives in the shell's rail (app/studio/layout.tsx),
+ * so it is not repeated here. Plan names come from lib/plans.ts and are never typed here.
  */
 export const metadata = { title: 'The studio', robots: { index: false, follow: false } }
 
-type Job = {
-  id: string; title: string; primary_artist: string; source_language: string; target_language: string
-  status: string; created_at: string; lyrics: string | null; parent_job_id: string | null
-  reroll_index: number; licence_terms_version: string | null
-}
+type Job = SongJob
 type Feedback = { job_id: string; rating: 'up' | 'down'; note: string | null; tags: string[] }
 
-const LICENCE_LINE = 'Personal use only. Not for release or sale. lyrical may carry an inaudible provenance mark.'
-const REROLL_CLOSED = 'The re-roll window for this song has closed. Make it again to start fresh.'
-const NOT_MADE = 'We could not make this one. It has not counted against your tracks. Make it again to start fresh.'
 const OUT_OF_TRACKS = 'You are out of tracks for this period. Upgrade, buy a Single, or wait for it to renew.'
 const EMPTY = 'Nothing here yet. Pick a plan and make your first track.'
-/** Statuses that are still moving, the ones JobStatus pulses. Everything else has an ending. */
-const LIVE_STATUSES = new Set(['submitted', 'approved', 'in_progress'])
 
 export default async function Studio({ searchParams }: { searchParams: Promise<{ submitted?: string; paid?: string }> }) {
   const [user, params] = await Promise.all([currentUser(), searchParams])
@@ -75,30 +60,6 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   const renews = entitlement.ok && entitlement.renewsAt
     ? new Date(entitlement.renewsAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
     : null
-
-  /** A self-serve original that failed at our end: not a child, and it carries the licence version. */
-  const notMade = (j: Job) => j.status === 'rejected' && !j.parent_job_id && j.reroll_index === 0 && !!j.licence_terms_version
-
-  const take = (j: Job, left: number, n?: number) => (
-    <div key={j.id} className={n ? 'mt-4 rounded-card border border-dark-ink/10 bg-dark-ink/3 p-4' : ''}>
-      {n ? <span className={eyebrow}>Take {n}</span> : null}
-      <div className={n ? 'mt-3' : ''}><JobStatus status={j.status} rejectedAs={notMade(j) ? 'not-made' : 'declined'} /></div>
-      {LIVE_STATUSES.has(j.status) && (
-        <p className="mt-2 font-product text-xs text-dark-ink/55">
-          {TURNAROUND_PROMISE}, {TURNAROUND_BUSY}.
-        </p>
-      )}
-      {j.status === 'delivered' && (
-        <>
-          <CoverPlayer jobId={j.id} />
-          <p className="mt-3 font-product text-xs leading-relaxed text-dark-ink/55">{LICENCE_LINE}</p>
-          <FeedbackBar jobId={j.id} existing={existing(j.id)} rerollsLeft={left} canReroll />
-        </>
-      )}
-      {n && j.status === 'rejected' ? <p className="mt-3 font-product text-sm text-dark-ink/70">{REROLL_CLOSED}</p> : null}
-      {notMade(j) ? <p className="mt-3 font-product text-sm text-dark-ink/70">{NOT_MADE}</p> : null}
-    </div>
-  )
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -151,17 +112,15 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
       {originals.length > 0 && (
         <ul className="flex flex-col gap-4">
           <StudioAutoRefresh active={jobs.some((j) => j.status !== 'delivered' && j.status !== 'rejected')} />
-          {originals.map((j) => {
+          {/* originals is sorted newest first (the query orders by created_at descending), so
+              index 0 is the most recent song: the one convenient to leave open. */}
+          {originals.map((j, i) => {
             const kids = childrenOf(j.id)
             const left = rerollsLeft(kids.length)
             return (
-              <Panel as="li" key={j.id}>
-                <h2 className="font-brand text-lg font-semibold leading-tight text-dark-ink">{j.title}</h2>
-                <p className="mt-1 font-product text-xs text-dark-ink/55">{j.primary_artist} &middot; {j.source_language} to {j.target_language}</p>
-                <div className="mt-4">{take(j, left)}</div>
-                {kids.map((k) => take(k, left, k.reroll_index + 1))}
-                <LyricsEditor jobId={j.id} initial={j.lyrics ?? ''} locked={j.status !== 'submitted'} />
-              </Panel>
+              <li key={j.id}>
+                <SongCard original={j} kids={kids} left={left} existing={existing} defaultOpen={i === 0} />
+              </li>
             )
           })}
         </ul>
