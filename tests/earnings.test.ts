@@ -8,7 +8,9 @@ import {
   WORKED_EXAMPLE,
   clampAudienceShare,
   clampLanguages,
+  cumulativeByYear,
   estimateEarnings,
+  fiveYearTotal,
   usd,
 } from '@/lib/earnings'
 
@@ -62,5 +64,52 @@ describe('estimateEarnings', () => {
         .grossAnnualReceipts,
     ).toBe(47.39)
     expect([usd(7680), usd(0), usd(3839.6)]).toEqual(['$7,680', '$0', '$3,840'])
+  })
+})
+
+describe('cumulativeByYear', () => {
+  const base = { monthlyStreams: 100_000, songs: 12, languages: 2, audienceShare: 0.8 }
+  // annual gross = 7680, so cumulative is 7680, 15360, 23040, 30720, 38400 for years 1..5
+
+  it('is linear: cumulative at year N equals the annual gross times N', () => {
+    const rows = cumulativeByYear(base)
+    expect(rows).toEqual([
+      { year: 1, cumulative: 7680 },
+      { year: 2, cumulative: 15360 },
+      { year: 3, cumulative: 23040 },
+      { year: 4, cumulative: 30720 },
+      { year: 5, cumulative: 38400 },
+    ])
+  })
+
+  it('scales with streams and languages, not with songs', () => {
+    const flat = { monthlyStreams: 50_000, songs: 1, languages: 1, audienceShare: 0.8 }
+    const flatTotal = cumulativeByYear(flat).at(-1)!.cumulative
+    expect(cumulativeByYear({ ...flat, monthlyStreams: 100_000 }).at(-1)!.cumulative).toBeGreaterThan(
+      flatTotal,
+    )
+    expect(cumulativeByYear({ ...flat, languages: 4 }).at(-1)!.cumulative).toBeGreaterThan(flatTotal)
+    expect(cumulativeByYear({ ...flat, songs: 40 }).at(-1)!.cumulative).toBe(flatTotal)
+  })
+
+  it('clamps languages to 1..8 and audience share to 0.1..1, same as estimateEarnings', () => {
+    // languages clamp to 8, audienceShare clamp to 1: annual = 1000 * 12 * 1 * 8 * 0.004 = 384
+    const rows = cumulativeByYear({ monthlyStreams: 1000, songs: 1, languages: 20, audienceShare: 9 })
+    expect(rows[0].cumulative).toBe(384)
+    expect(rows[4].cumulative).toBe(1920)
+  })
+
+  it('defaults to 5 years, and fiveYearTotal matches the last row', () => {
+    const rows = cumulativeByYear(WORKED_EXAMPLE)
+    expect(rows).toHaveLength(5)
+    expect(rows.map((r) => r.year)).toEqual([1, 2, 3, 4, 5])
+    expect(fiveYearTotal(WORKED_EXAMPLE)).toBe(rows[4].cumulative)
+    expect(fiveYearTotal(WORKED_EXAMPLE)).toBe(38400)
+  })
+
+  it('supports a custom horizon', () => {
+    const rows = cumulativeByYear(base, 3)
+    expect(rows.map((r) => r.year)).toEqual([1, 2, 3])
+    expect(rows.at(-1)!.cumulative).toBe(23040)
   })
 })
