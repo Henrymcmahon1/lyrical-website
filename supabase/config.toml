@@ -1,0 +1,46 @@
+# Supabase CLI config for the LOCAL stack only (the test environment; there is no hosted test
+# project). Kept minimal on purpose: anything not listed uses the CLI default.
+# Production is linked with `npx supabase link --project-ref hikvjnpkvnxibfzdnpig` and is never
+# written to from here. See docs/CONTRACT.md.
+project_id = "lyrical-website"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = false
+
+[local_smtp]
+enabled = false
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false

@@ -1,5 +1,9 @@
-// Verifies the v2 schema landed on the live project, using only the public anon key.
+// Verifies the schema landed on the live project, using only the public anon key.
 // Run: npx tsx scripts/verify-schema.ts
+//
+// The schema is defined by supabase/migrations (Supabase CLI) and proven on the local stack by
+// pgTAP (supabase/tests). This script is the remaining check against PRODUCTION after the
+// orchestrator applies a migration there; it is read-only.
 //
 // Method: PostgREST answers `select=<column>&limit=0` with 200 when the column exists (rows
 // are filtered by RLS, so nothing leaks), 400 when the column does not exist, and 401 when
@@ -37,6 +41,10 @@ const HIDDEN: Record<string, string[]> = {
     'door1_source_url',
     'door1_settings',
     'door1_due_on',
+    // The job contract (docs/CONTRACT.md): worker-only.
+    'contract_version',
+    'claimed_by',
+    'claimed_at',
   ],
 }
 

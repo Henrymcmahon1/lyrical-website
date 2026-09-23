@@ -280,13 +280,13 @@ export async function moveJob(formData: FormData) {
 /**
  * Save a staff note against a job.
  *
- * ⚠️ `supabase/schema.sql` claimed this column was "never selectable by the customer: see the
+ * ⚠️ `supabase/schema.sql` (now `supabase/legacy/`) claimed this column was "never selectable by the customer: see the
  * policy below, which lists columns rather than granting the whole row". That comment was
  * WRONG, and it was wrong in the dangerous direction. A Postgres RLS policy cannot restrict
  * columns; `song_jobs_own_select` grants the whole row to its owner, and a customer holding
  * their own session could read `internal_notes` straight off the REST API.
  *
- * The actual control is a column-level GRANT, which is now in `schema.sql` and applied to the
+ * The actual control is a column-level GRANT, which is in the baseline under `supabase/migrations` and applied to the
  * live database: `revoke select (internal_notes) on public.song_jobs from anon, authenticated`.
  * Found while wiring this action, 2026-08-11.
  */

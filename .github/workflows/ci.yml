@@ -25,6 +25,9 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npx eslint app lib components tests
       - run: npm test
+      # The DB contract checks need the local Supabase stack (Docker), which CI does not start:
+      # pgTAP (`npx supabase test db`) and the generated-types drift test are skipped here.
+      - run: echo "::notice title=DB contract not checked in CI::pgTAP and the generated-types drift test need the local Supabase stack. Run npx supabase start, npx supabase test db, npm test locally before merging a migration."
       - run: npm run build
         env:
           # Placeholders only: the build prerenders pages that construct a Supabase client.

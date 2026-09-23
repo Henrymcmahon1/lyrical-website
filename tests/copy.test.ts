@@ -126,7 +126,7 @@ describe('no secret ever reaches the browser', () => {
     //   SITE_URL    the origin. Public by definition.
     //   SUPABASE_URL   the project endpoint. Discoverable from any request the browser makes.
     //   SUPABASE_ANON_KEY   designed to ship in the browser. It carries the `anon` role and
-    //     can only reach what the RLS policies in supabase/schema.sql permit.
+    //     can only reach what the RLS policies in supabase/migrations permit.
     //
     // ⚠️ SUPABASE_SERVICE_ROLE_KEY must NEVER appear here. It bypasses every policy, and with
     // this prefix it would be published in the bundle rather than kept on the server. The

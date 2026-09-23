@@ -6,7 +6,7 @@ import { createBrowserClient } from '@supabase/ssr'
  * This is a different animal from `lib/supabase-admin.ts` and the difference is the whole
  * security model of the portal. The admin client holds the service role key, bypasses every
  * RLS policy, and must never reach the browser. This one holds the anon key, which is designed
- * to be public, and can therefore only ever see what the policies in `supabase/schema.sql`
+ * to be public, and can therefore only ever see what the policies in `supabase/migrations`
  * allow the current user to see.
  *
  * It exists because uploads cannot go through the server. A WAV is 40 to 70MB and Vercel caps

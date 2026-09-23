@@ -68,3 +68,7 @@ leads-e2e.mjs
 # private `listen` bucket in Supabase Storage, because anything under public/ is world
 # readable and is only on production for as long as somebody deploys from the machine
 # holding it. See lib/listen-audio.ts.
+
+# Python bytecode (supabase/generated/contract.py is imported when checked)
+__pycache__/
+*.pyc
