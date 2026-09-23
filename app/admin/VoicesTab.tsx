@@ -83,9 +83,9 @@ export async function VoicesTab({ showAll }: { showAll: boolean }) {
   if (error) {
     return (
       <p className="mt-12 max-w-xl text-graphite/70">
-        The voice models table cannot be read yet. Run{' '}
-        <code className="font-mono text-sm">supabase/schema.sql</code> in the Supabase SQL
-        editor and reload.
+        The voice models table cannot be read yet. Apply{' '}
+        <code className="font-mono text-sm">supabase/migrations</code> to the
+        database and reload.
         <span className="mt-3 block font-mono text-xs text-graphite/50">{error.message}</span>
       </p>
     )

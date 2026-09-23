@@ -3,7 +3,7 @@ import type { AssetKind } from './song-job-schema'
 /**
  * Where an uploaded file lives, and what we accept.
  *
- * The path shape is load bearing, not cosmetic. The storage policies in `supabase/schema.sql`
+ * The path shape is load bearing, not cosmetic. The storage policies in `supabase/migrations`
  * compare the FIRST PATH SEGMENT to `auth.uid()`, so `{user}/{job}/{file}` is what stops a
  * signed in customer writing into, or reading out of, another label's folder. Change the shape
  * here and you silently remove that protection.

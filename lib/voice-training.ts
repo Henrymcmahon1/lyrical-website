@@ -28,7 +28,7 @@
  * between seven artists fitting in the free tier and three.
  */
 
-/** The private bucket. Created by `supabase/schema.sql`, no public read policy. */
+/** The private bucket. Created by the baseline in `supabase/migrations`, no public read policy. */
 export const VOICE_BUCKET = 'voice-training'
 
 /**

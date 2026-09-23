@@ -21,7 +21,7 @@ import { supabaseAdmin } from './supabase-admin'
  * past the password.
  */
 
-/** The bucket, created by `supabase/schema.sql`. Private: there is no public read policy. */
+/** The bucket, created by the baseline in `supabase/migrations`. Private: there is no public read policy. */
 export const LISTEN_BUCKET = 'listen'
 
 /**
