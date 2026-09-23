@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin-session'
 import { DOOR1 } from '@/lib/door1-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -74,12 +75,12 @@ export default async function Door1Jobs({
       />
 
       <p className="mt-6">
-        <a
+        <Link
           href="/admin/door1/new"
           className="nudge inline-flex min-h-11 items-center rounded-card bg-indigo px-6 text-cream"
         >
           New Door 1 job
-        </a>
+        </Link>
       </p>
 
       {params.moved === 'requeued' && (

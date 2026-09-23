@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { breakGlassEnabled } from '@/lib/admin-identity'
 import type { AdminCheck } from '@/lib/admin-session'
@@ -70,12 +71,12 @@ export function Door1Head({ title, lead }: { title: string; lead?: React.ReactNo
         <a href="/admin" className="text-graphite/45 hover:text-indigo">
           Admin
         </a>
-        <a href="/admin/door1" className="text-graphite/45 hover:text-indigo">
+        <Link href="/admin/door1" className="text-graphite/45 hover:text-indigo">
           Door 1 jobs
-        </a>
-        <a href="/admin/door1/new" className="text-graphite/45 hover:text-indigo">
+        </Link>
+        <Link href="/admin/door1/new" className="text-graphite/45 hover:text-indigo">
           New job
-        </a>
+        </Link>
       </nav>
       <h1 className="mt-6 font-brand text-4xl tracking-tight">{title}</h1>
       {lead && <p className="mt-3 max-w-2xl text-graphite/70">{lead}</p>}
