@@ -16,11 +16,11 @@ const render = async (eoi?: string) =>
 describe('/artists', () => {
   it('renders the worked example numbers without JavaScript', async () => {
     const html = await render()
-    // 100000 * 12 * 0.8 * 2 * 0.004 = 7680 gross a year, 3840 per language.
-    for (const s of ['$7,680', '$3,840', '$0 upfront', 'default 80%', 'an assumption']) {
+    // 8000 * 12 songs * 12 * 0.8 * 2 * 0.004 = 7372.80 gross a year, 3686.40 per language.
+    for (const s of ['$7,373', '$3,686', '$0 upfront', 'default 80%', 'an assumption']) {
       expect(html).toContain(s)
     }
-    expect(html).toContain('100,000 monthly streams, 12 songs, two languages and an 80%')
+    expect(html).toContain('8,000 monthly streams per song, 12 songs, two languages and an 80%')
   })
 
   it('shows the gross estimate only: no share figures, no royalty figure, terms as prose', async () => {
