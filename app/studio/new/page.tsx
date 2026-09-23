@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { SongSubmitForm } from '@/components/SongSubmitForm'
 import { PageHead, Panel } from '@/components/studio/ui'
+import { PlanCard } from '@/components/studio/PlanCard'
 import { getEntitlementFor } from '@/lib/entitlement-db'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
 
@@ -52,6 +53,12 @@ export default async function NewSong() {
         title="Make your song multilingual."
         lead="Upload your stems, pick a language, and hear it re-sung in the same voice. Personal use only."
       />
+
+      {/* Prominent and first: this is the moment a customer is about to spend a track, so how
+          many they have left needs to be unmissable, not a line they have to go back to the
+          studio home to find. The redirect above already keeps a no-plan customer off this page
+          entirely, so PlanCard only ever renders its "ok" state here in practice. */}
+      <PlanCard entitlement={entitlement} />
 
       <Panel className="sm:p-6">
         {/* v2: the automated self-serve path. Queues the job for the render worker rather than
