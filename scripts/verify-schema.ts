@@ -23,11 +23,22 @@ const EXISTS: Record<string, string[]> = {
   worker_heartbeat: ['worker', 'seen_at'],
   song_jobs: ['parent_job_id', 'reroll_index', 'licence_terms_version', 'delivery_profile'],
   song_job_assets: ['purged_at'],
-  song_job_deliveries: ['watermark_id'],
+  song_job_deliveries: ['watermark_id', 'purged_at'],
   profiles: ['stripe_customer_id', 'licence_terms_version'],
 }
 // Exist, but must NOT be readable by customers (column grant on song_jobs).
-const HIDDEN: Record<string, string[]> = { song_jobs: ['seed', 'pipeline_error'] }
+// The Door 1 columns (migration 007) are staff-only too, so they are asserted HIDDEN, which
+// also proves they exist (a missing column answers 400, not 401).
+const HIDDEN: Record<string, string[]> = {
+  song_jobs: [
+    'seed',
+    'pipeline_error',
+    'door1_enquiry_id',
+    'door1_source_url',
+    'door1_settings',
+    'door1_due_on',
+  ],
+}
 
 async function main() {
   const url = env('NEXT_PUBLIC_SUPABASE_URL')
