@@ -48,12 +48,11 @@ export default function About() {
 
         <p className="mt-10 text-lg leading-relaxed text-graphite/75">
           lyrical exists because a song&rsquo;s audience should be decided by whether it
-          moves them, not by which language they speak. That belief did not start as a
-          music company. Jordan and Henry were building technology together when a
-          reinterpretation of a song Jordan loved showed how differently the same song can
-          land in a different voice, and Henry watched a stadium sing along to an artist
-          performing in a language most of the crowd did not speak. The audience was
-          already there. Only the words were missing.
+          moves them, not by which language they speak. It did not start as a music company.
+          Jordan and Henry were building technology together and kept returning to the same
+          idea: some of the best songs ever recorded never reach most of the people who would
+          love them, held back only by the language they were written in. The audience is
+          already there. The words are the only thing missing.
         </p>
 
         <p className="mt-6 text-lg leading-relaxed text-graphite/75">
