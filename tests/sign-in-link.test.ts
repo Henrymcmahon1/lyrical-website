@@ -61,7 +61,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   pinnedIp = null
   generateLink.mockResolvedValue({
-    data: { properties: { hashed_token: 'HASH123' } },
+    data: { properties: { hashed_token: 'HASH123', verification_type: 'magiclink' } },
     error: null,
   })
   createUser.mockResolvedValue({ error: null })
@@ -117,13 +117,63 @@ describe('accounts', () => {
   it('creates one on first sight, then mints the link', async () => {
     generateLink
       .mockResolvedValueOnce({ data: null, error: { message: 'User not found' } })
-      .mockResolvedValueOnce({ data: { properties: { hashed_token: 'NEW' } }, error: null })
+      .mockResolvedValueOnce({
+        data: { properties: { hashed_token: 'NEW', verification_type: 'magiclink' } },
+        error: null,
+      })
 
     const result = await requestSignInLink('new@label.example')
 
     expect(createUser).toHaveBeenCalledWith({ email: 'new@label.example', email_confirm: true })
     expect(result.ok).toBe(true)
     expect(sentLink()).toContain('token_hash=NEW')
+  })
+
+  it('sends a SIGNUP link when Supabase made the account itself (issue #384)', async () => {
+    /**
+     * What Supabase really does for an address it has never seen. `generateLink` with type
+     * `magiclink` does not fail: it quietly creates the account and returns a SIGNUP token
+     * (`verification_type: 'signup'`, see `internal/api/mail.go` in supabase/auth). That token
+     * only verifies as `signup`. The link used to say `magiclink` regardless, so every brand new
+     * account's first link read as "expired", from 2026-08-11 until this test existed.
+     */
+    generateLink.mockResolvedValueOnce({
+      data: { properties: { hashed_token: 'FIRST', verification_type: 'signup' } },
+      error: null,
+    })
+
+    const result = await requestSignInLink('new@label.example')
+
+    expect(result.ok).toBe(true)
+    expect(createUser).not.toHaveBeenCalled()
+    expect(sentLink()).toContain('token_hash=FIRST')
+    expect(sentLink()).toContain('type=signup')
+    expect(sentLink()).not.toContain('type=magiclink')
+  })
+
+  it('greets a Supabase-created account as new, not as a returning one', async () => {
+    generateLink.mockResolvedValueOnce({
+      data: { properties: { hashed_token: 'FIRST', verification_type: 'signup' } },
+      error: null,
+    })
+    await requestSignInLink('new@label.example')
+    const [mail] = mailCustomer.mock.calls[0]
+    expect(mail.text).toContain('This link creates your studio')
+  })
+
+  it('FAILS LOUD on a token type the callback cannot verify, rather than mailing a dead link', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    generateLink.mockResolvedValueOnce({
+      data: { properties: { hashed_token: 'ODD', verification_type: 'recovery' } },
+      error: null,
+    })
+
+    const result = await requestSignInLink('artist@label.example')
+
+    expect(result.ok).toBe(false)
+    expect(mailCustomer).not.toHaveBeenCalled()
+    expect(error.mock.calls.flat().join(' ')).toContain('recovery')
+    error.mockRestore()
   })
 
   it('gives up rather than looping when the second attempt also fails', async () => {
