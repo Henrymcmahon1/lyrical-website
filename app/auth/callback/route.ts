@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { mailCustomer } from '@/lib/mailer'
 import { supabaseServer } from '@/lib/supabase-server'
+import { isSignInLinkType } from '@/lib/sign-in-link-type'
 import { SITE_URL } from '@/lib/site'
 import { welcomeHtml, welcomeSubject, welcomeText } from '@/lib/welcome-email'
 
@@ -37,10 +38,22 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const tokenHash = url.searchParams.get('token_hash')
   const code = url.searchParams.get('code')
+  const type = url.searchParams.get('type')
   const next = safePath(url.searchParams.get('next'))
 
   if (!tokenHash && !code) {
     return NextResponse.redirect(`${SITE_URL}/studio/sign-in?error=missing`)
+  }
+
+  /**
+   * The link names its own token type, and it has to: a new account's first link carries a
+   * SIGNUP token, a returning one a magic link token, and each only verifies as its own type
+   * (`lib/sign-in-link-type.ts`, issue #384). Anything else was not minted by us, so it is
+   * refused before Supabase is asked.
+   */
+  if (tokenHash && !isSignInLinkType(type)) {
+    console.error('[auth] sign in link with a type we do not mint', type)
+    return NextResponse.redirect(`${SITE_URL}/studio/sign-in?error=link`)
   }
 
   const supabase = await supabaseServer()
@@ -58,10 +71,17 @@ export async function GET(request: Request) {
    * is an hour after this deploys, but the cost of leaving it is four lines.
    */
   const { data, error } = tokenHash
-    ? await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' })
+    ? await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as 'magiclink' | 'signup' })
     : await supabase.auth.exchangeCodeForSession(code!)
 
   if (error) {
+    // Logged so the next "my link says expired" report comes with a reason. Never the hash:
+    // until it is used, that is a working credential.
+    console.error('[auth] sign in link did not verify', {
+      type: tokenHash ? type : 'pkce',
+      code: error.code,
+      message: error.message,
+    })
     // Most often an expired or already-used link. The sign-in page says so in plain words
     // rather than showing the raw message, which tends to be about PKCE and helps nobody.
     return NextResponse.redirect(`${SITE_URL}/studio/sign-in?error=link`)

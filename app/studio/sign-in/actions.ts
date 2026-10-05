@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { mailCustomer } from '@/lib/mailer'
 import { clientKey, consume } from '@/lib/rate-limit'
 import { signInHtml, signInSubject, signInText } from '@/lib/sign-in-email'
+import { isSignInLinkType, type SignInLinkType } from '@/lib/sign-in-link-type'
 import { SITE_URL } from '@/lib/site'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { verifyTurnstile } from '@/lib/turnstile'
@@ -97,6 +98,7 @@ export async function requestSignInLink(
    */
   let created = false
   let hashedToken = ''
+  let linkType: SignInLinkType = 'magiclink'
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const { data, error } = await db.auth.admin.generateLink({
@@ -105,7 +107,19 @@ export async function requestSignInLink(
     })
 
     if (!error && data?.properties?.hashed_token) {
+      /**
+       * The link must say what Supabase actually minted. For a new address that is a SIGNUP
+       * token, not a magic link, even though we asked for `magiclink` (see
+       * `lib/sign-in-link-type.ts`, issue #384). Anything else is a token the callback cannot
+       * verify, so it fails here rather than mailing somebody a link that is dead on arrival.
+       */
+      const kind = data.properties.verification_type
+      if (!isSignInLinkType(kind)) {
+        console.error('[sign-in] generateLink returned a token type we cannot verify', kind)
+        return { ok: false, error: 'We could not send a link just now. Try again in a moment.' }
+      }
       hashedToken = data.properties.hashed_token
+      linkType = kind
       break
     }
 
@@ -134,16 +148,19 @@ export async function requestSignInLink(
    */
   const url = new URL('/auth/callback', SITE_URL)
   url.searchParams.set('token_hash', hashedToken)
-  url.searchParams.set('type', 'magiclink')
+  url.searchParams.set('type', linkType)
   url.searchParams.set('next', safeNext(next))
   const link = url.toString()
+
+  // A signup token means Supabase created the account just now, so this person is new.
+  const isNew = created || linkType === 'signup'
 
   const sent = await mailCustomer(
     {
       to: address,
       subject: signInSubject(),
-      text: signInText(link, created),
-      html: signInHtml(link, created),
+      text: signInText(link, isNew),
+      html: signInHtml(link, isNew),
     },
     'sign-in-link',
   )
