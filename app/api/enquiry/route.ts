@@ -13,6 +13,7 @@ import {
 import { EnquirySchema, MIN_ELAPSED_MS, resolveName } from '@/lib/enquiry-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { clientKey, consume } from '@/lib/rate-limit'
+import { callerIp, TURNSTILE_ACTIONS, turnstileMessage, turnstileTokenFrom, verifyTurnstile } from '@/lib/turnstile'
 
 export const runtime = 'nodejs'
 
@@ -54,9 +55,12 @@ export async function POST(request: Request) {
   const isFormPost = !contentType.includes('application/json')
 
   let raw: unknown
+  let turnstileToken = ''
   if (isFormPost) {
-    // No-JS path: a native <form method="post"> submission.
+    // No-JS path: a native <form method="post"> submission. Without JavaScript there is no
+    // Turnstile widget and so no token, which the check below refuses (issue #392, fail closed).
     const fd = await request.formData()
+    turnstileToken = turnstileTokenFrom(fd)
     raw = {
       ...Object.fromEntries(fd.entries()),
       target_languages: fd.getAll('target_languages').map(String),
@@ -68,6 +72,8 @@ export async function POST(request: Request) {
     }
   } else {
     raw = await request.json().catch(() => null)
+    const t = (raw as { turnstileToken?: unknown } | null)?.turnstileToken
+    turnstileToken = typeof t === 'string' ? t : ''
   }
 
   const parsed = EnquirySchema.safeParse(raw)
@@ -89,6 +95,21 @@ export async function POST(request: Request) {
   if (d.website || d.elapsed_ms < MIN_ELAPSED_MS) {
     if (isFormPost) return Response.redirect(new URL('/?enquiry=sent', request.url), 303)
     return json({ ok: true }, 200)
+  }
+
+  /**
+   * The bot challenge, failing closed (issue #392, lib/turnstile.ts). Checked before anything is
+   * stored or any email is sent. A refusal we caused (Cloudflare down, or no key in production)
+   * is a 503, so the form offers its email-us fallback; a failed check is a 403.
+   */
+  const challenge = await verifyTurnstile(turnstileToken, {
+    action: TURNSTILE_ACTIONS.enquiry,
+    remoteip: callerIp(request.headers),
+  })
+  if (!challenge.ok) {
+    if (isFormPost) return Response.redirect(new URL('/?enquiry=error', request.url), 303)
+    const ours = challenge.reason === 'error' || challenge.reason === 'unconfigured'
+    return json({ error: turnstileMessage(challenge.reason) }, ours ? 503 : 403)
   }
 
   /**

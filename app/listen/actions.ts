@@ -4,6 +4,8 @@ import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { DEMO_COOKIE, DEMO_MAX_AGE_MS, checkDemoPassword, signDemoSession } from '@/lib/demo-auth'
 import { clientKey, consume } from '@/lib/rate-limit'
+import { guardForm } from '@/lib/form-guard'
+import { TURNSTILE_ACTIONS } from '@/lib/turnstile'
 
 /**
  * Scoped to `/listen`, so this cookie is never sent with a request for the marketing site or
@@ -18,6 +20,7 @@ const COOKIE_OPTIONS = {
 
 const ATTEMPTS = 5
 const WINDOW_MS = 10 * 60 * 1000
+const MAX_PASSWORD_CHARS = 200
 
 export async function unlock(formData: FormData) {
   /**
@@ -33,10 +36,17 @@ export async function unlock(formData: FormData) {
    * rate limit is the weakest thing on the site, which is exactly why this page holds nothing
    * but audio and why the session is four hours rather than twelve.
    */
-  const limit = consume(clientKey(await headers(), 'listen'), ATTEMPTS, WINDOW_MS, Date.now())
+  const requestHeaders = await headers()
+  const limit = consume(clientKey(requestHeaders, 'listen'), ATTEMPTS, WINDOW_MS, Date.now())
   if (!limit.allowed) redirect('/listen?error=rate')
 
-  if (!checkDemoPassword(String(formData.get('password') ?? ''))) {
+  // Honeypot and Turnstile, both failing closed (issue #392).
+  const guard = await guardForm(formData, TURNSTILE_ACTIONS.listen, requestHeaders)
+  if (!guard.ok) redirect(`/listen?error=${guard.code}`)
+
+  // A password is short. Anything past this is not a person typing one.
+  const password = String(formData.get('password') ?? '')
+  if (password.length > MAX_PASSWORD_CHARS || !checkDemoPassword(password)) {
     // Costs wall-clock time on every attempt regardless of which instance serves it, which
     // is the half of the throttling that actually works here.
     await new Promise((resolve) => setTimeout(resolve, 500))

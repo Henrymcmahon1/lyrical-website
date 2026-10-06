@@ -5,6 +5,8 @@ import { supabaseBrowser } from '@/lib/supabase-client'
 import { addVoiceTakes, submitVoiceModel } from '@/app/studio/voices/actions'
 import type { VoiceSampleInput } from '@/lib/voice-schema'
 import { RightsWarranty } from '@/components/RightsWarranty'
+import { Turnstile } from '@/components/Turnstile'
+import { TURNSTILE_ACTIONS, turnstileSiteKey } from '@/lib/turnstile'
 import { VOICE_CONSENT_INTRO, VOICE_CONSENT_POINTS, VOICE_CONSENT_PREFACE } from '@/lib/terms'
 import {
   MAX_UPLOAD_BYTES,
@@ -74,6 +76,8 @@ export function VoiceUploadForm({
   const [stage, setStage] = useState<Stage>('idle')
   const [error, setError] = useState('')
   const [progress, setProgress] = useState('')
+  const siteKey = turnstileSiteKey()
+  const [turnstileToken, setTurnstileToken] = useState('')
 
   const busy = stage === 'reading' || stage === 'uploading' || stage === 'saving'
   const total = picked.reduce((sum, p) => sum + (p.seconds ?? 0), 0)
@@ -151,6 +155,12 @@ export function VoiceUploadForm({
       return
     }
 
+    // Widget shown but not solved yet: wait rather than upload files the server will refuse.
+    if (siteKey && !turnstileToken) {
+      setError('Give the check a moment to finish, then try again.')
+      return
+    }
+
     const supabase = supabaseBrowser()
     const { data: auth } = await supabase.auth.getUser()
     if (!auth.user) {
@@ -204,8 +214,9 @@ export function VoiceUploadForm({
       setProgress('')
 
       const result = isAdd
-        ? await addVoiceTakes({ voiceId, samples: uploaded })
+        ? await addVoiceTakes({ voiceId, samples: uploaded, turnstileToken })
         : await submitVoiceModel({
+            turnstileToken,
             voiceId,
             artistName: artistName.trim(),
             notes: notes.trim() || undefined,
@@ -366,6 +377,14 @@ export function VoiceUploadForm({
           onChange={setConsent}
         />
       )}
+
+      {/* Bot check (issue #392). Renders nothing when Turnstile is not configured. */}
+      <Turnstile
+        siteKey={siteKey}
+        action={TURNSTILE_ACTIONS.voiceUpload}
+        onVerify={setTurnstileToken}
+        onExpire={() => setTurnstileToken('')}
+      />
 
       {error && (
         <p role="alert" className="text-sm leading-relaxed text-ember">

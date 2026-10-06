@@ -24,6 +24,8 @@ import {
 } from '@/lib/song-job-email'
 import type { JobStatus } from '@/lib/song-job-schema'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { guardForm } from '@/lib/form-guard'
+import { TURNSTILE_ACTIONS } from '@/lib/turnstile'
 
 /**
  * Everything `/queue` can do, for both tabs.
@@ -54,6 +56,7 @@ const COOKIE_OPTIONS = {
 /** Five attempts per ten minutes per IP. Generous for a human, useless for a script. */
 const LOGIN_ATTEMPTS = 5
 const LOGIN_WINDOW_MS = 10 * 60 * 1000
+const MAX_PASSWORD_CHARS = 200
 
 export async function login(formData: FormData) {
   /**
@@ -68,19 +71,25 @@ export async function login(formData: FormData) {
    * limiting ever needs to be real it has to live somewhere shared, in Redis or in Postgres,
    * rather than in a process Vercel may replace between two requests.
    */
+  const requestHeaders = await headers()
   const limit = consume(
-    clientKey(await headers(), 'queue-login'),
+    clientKey(requestHeaders, 'queue-login'),
     LOGIN_ATTEMPTS,
     LOGIN_WINDOW_MS,
     Date.now(),
   )
   if (!limit.allowed) redirect('/queue?error=rate')
 
+  // Honeypot and Turnstile, both failing closed (issue #392).
+  const guard = await guardForm(formData, TURNSTILE_ACTIONS.staffLogin, requestHeaders)
+  if (!guard.ok) redirect(`/queue?error=${guard.code}`)
+
   const supplied = String(formData.get('password') ?? '')
 
   // `checkAdminPassword` fails closed when ADMIN_PASSWORD is unset, so an unconfigured
-  // deployment refuses everybody rather than admitting everybody.
-  if (!checkAdminPassword(supplied)) {
+  // deployment refuses everybody rather than admitting everybody. A password is short, so
+  // anything past the cap is refused without being compared.
+  if (supplied.length > MAX_PASSWORD_CHARS || !checkAdminPassword(supplied)) {
     // Deliberate delay, and only on failure. Unlike the counter above this works regardless of
     // which instance serves the request, because it costs wall-clock time every attempt.
     await new Promise((resolve) => setTimeout(resolve, 500))

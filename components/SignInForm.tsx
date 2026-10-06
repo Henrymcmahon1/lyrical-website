@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { requestSignInLink } from '@/app/studio/sign-in/actions'
 import { Turnstile } from '@/components/Turnstile'
-import { turnstileSiteKey } from '@/lib/turnstile'
+import { TURNSTILE_ACTIONS, turnstileSiteKey } from '@/lib/turnstile'
 
 /**
  * Magic link sign in.
@@ -29,6 +29,7 @@ const field =
 export function SignInForm({ next }: { next?: string }) {
   const siteKey = turnstileSiteKey()
   const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('')
   const [token, setToken] = useState('')
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [message, setMessage] = useState('')
@@ -46,7 +47,7 @@ export function SignInForm({ next }: { next?: string }) {
     setState('sending')
 
     try {
-      const result = await requestSignInLink(email, next, token || undefined)
+      const result = await requestSignInLink(email, next, token || undefined, website || undefined)
 
       if (!result.ok) {
         setState('error')
@@ -74,6 +75,13 @@ export function SignInForm({ next }: { next?: string }) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+      {/* Honeypot (issue #392): invisible and out of the tab order, so only a bot fills it. */}
+      <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden opacity-0">
+        <label>
+          Website
+          <input name="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+        </label>
+      </div>
       <label className="flex flex-col gap-2">
         <span className="text-sm">Email</span>
         <input
@@ -90,7 +98,7 @@ export function SignInForm({ next }: { next?: string }) {
       {/* Renders nothing when Turnstile is not configured, so this is inert until the keys land. */}
       <Turnstile
         siteKey={siteKey}
-        action="sign-in"
+        action={TURNSTILE_ACTIONS.signIn}
         onVerify={setToken}
         onExpire={() => setToken('')}
       />

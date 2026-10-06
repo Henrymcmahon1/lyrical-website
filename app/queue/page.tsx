@@ -1,3 +1,6 @@
+import { FormGuard } from '@/components/FormGuard'
+import { GUARD_MESSAGES, isGuardCode } from '@/lib/form-guard'
+import { TURNSTILE_ACTIONS } from '@/lib/turnstile'
 import type { Metadata } from 'next'
 import { hasAdminSession } from '@/lib/admin-session'
 import { EnquiriesTab } from './EnquiriesTab'
@@ -63,6 +66,12 @@ function Login({ error }: { error?: string }) {
             Too many attempts. Wait ten minutes and try again.
           </p>
         )}
+          {isGuardCode(error) && (
+            <p role="alert" className="text-sm text-ember">
+              {GUARD_MESSAGES[error]}
+            </p>
+          )}
+          <FormGuard action={TURNSTILE_ACTIONS.staffLogin} />
 
         <button
           type="submit"

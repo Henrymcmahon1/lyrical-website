@@ -7,7 +7,7 @@ import { signInHtml, signInSubject, signInText } from '@/lib/sign-in-email'
 import { isSignInLinkType, type SignInLinkType } from '@/lib/sign-in-link-type'
 import { SITE_URL } from '@/lib/site'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { verifyTurnstile } from '@/lib/turnstile'
+import { callerIp, TURNSTILE_ACTIONS, turnstileMessage, verifyTurnstile } from '@/lib/turnstile'
 
 /**
  * Ask for a sign in link.
@@ -29,6 +29,9 @@ import { verifyTurnstile } from '@/lib/turnstile'
 const LINK_ATTEMPTS = 3
 const LINK_WINDOW_MS = 10 * 60 * 1000
 
+/** RFC 5321's limit for a whole address. */
+const MAX_EMAIL_CHARS = 254
+
 export type SignInResult = { ok: boolean; error?: string }
 
 /**
@@ -47,7 +50,14 @@ export async function requestSignInLink(
   email: string,
   next?: string,
   turnstileToken?: string,
+  honeypot?: string,
 ): Promise<SignInResult> {
+  // Honeypot (issue #392): a person never fills it. Look successful to the bot, send nothing.
+  if (honeypot) return { ok: true }
+
+  // An address longer than the standard allows is not somebody signing in.
+  if (email.length > MAX_EMAIL_CHARS) return { ok: false, error: 'That does not look like an email address.' }
+
   const address = email.trim().toLowerCase()
   if (!address || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)) {
     return { ok: false, error: 'That does not look like an email address.' }
@@ -72,16 +82,14 @@ export async function requestSignInLink(
   }
 
   /**
-   * The bot challenge. Skipped entirely when Turnstile is not configured, so this is a no-op
-   * until the keys are set. Verified BEFORE any account is created or any mail is sent, because
-   * both of those are the abuse this exists to stop.
+   * The bot challenge, failing closed (issue #392, lib/turnstile.ts). Verified BEFORE any account
+   * is created or any mail is sent, because both of those are the abuse this exists to stop.
    */
   const challenge = await verifyTurnstile(turnstileToken ?? '', {
-    remoteip: requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim(),
+    action: TURNSTILE_ACTIONS.signIn,
+    remoteip: callerIp(requestHeaders),
   })
-  if (!challenge.ok) {
-    return { ok: false, error: 'That did not look human. Refresh the page and try again.' }
-  }
+  if (!challenge.ok) return { ok: false, error: turnstileMessage(challenge.reason) }
 
   const db = supabaseAdmin()
 

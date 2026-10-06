@@ -93,11 +93,15 @@ export function Turnstile({
   action,
 }: {
   siteKey: string | null
-  /** Called with a fresh token whenever the challenge is solved. */
-  onVerify: (token: string) => void
+  /**
+   * Called with a fresh token whenever the challenge is solved. Optional: inside a plain
+   * server-action `<form>` the widget's own hidden `cf-turnstile-response` field carries the
+   * token, so `components/FormGuard.tsx` passes none.
+   */
+  onVerify?: (token: string) => void
   /** Called when the current token expires, so the form can clear it. */
   onExpire?: () => void
-  /** Optional label Cloudflare shows in its analytics, e.g. "sign-in" or "submit". */
+  /** The form's name, checked by the server (`TURNSTILE_ACTIONS` in lib/turnstile.ts). */
   action?: string
 }) {
   const ref = useRef<HTMLDivElement | null>(null)
@@ -115,7 +119,7 @@ export function Turnstile({
         if (cancelled || !el) return
         widgetId = turnstile.render(el, {
           sitekey: siteKey,
-          callback: onVerify,
+          callback: (token: string) => onVerify?.(token),
           'expired-callback': () => onExpire?.(),
           'error-callback': () => onExpire?.(),
           'refresh-expired': 'auto',
@@ -123,8 +127,8 @@ export function Turnstile({
         })
       })
       .catch(() => {
-        // Script blocked or failed. The server verifier fails open on an unreachable Cloudflare,
-        // so a customer who cannot load the widget is not stuck: they just get no challenge.
+        // Script blocked or failed. The server fails CLOSED without a token (issue #392), so the
+        // form will be refused with a plain message rather than let through.
         if (!cancelled) onExpire?.()
       })
 

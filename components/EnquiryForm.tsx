@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { CONTACT_EMAIL, enquiryMailto } from '@/lib/enquiry-email'
+import { Turnstile } from '@/components/Turnstile'
+import { TURNSTILE_ACTIONS, turnstileSiteKey } from '@/lib/turnstile'
 import { ROLES } from '@/lib/enquiry-schema'
 import { LANGUAGES } from '@/lib/languages'
 
@@ -59,9 +61,17 @@ export function EnquiryForm({
    * carry the answers with it. A 400 is a field they can fix, and gets no fallback.
    */
   const [fallbackHref, setFallbackHref] = useState('')
+  const siteKey = turnstileSiteKey()
+  const [turnstileToken, setTurnstileToken] = useState('')
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    // Widget shown but not solved yet: wait rather than send a request the server will refuse.
+    if (siteKey && !turnstileToken) {
+      setState('error')
+      setError('Give the check a moment to finish, then try again.')
+      return
+    }
     setState('sending')
     setError('')
     setFallbackHref('')
@@ -85,6 +95,7 @@ export function EnquiryForm({
       website: String(fd.get('website') ?? ''),
       // If the ref somehow never initialised, don't let a real person be treated as a bot.
       elapsed_ms: mountedAt.current ? Date.now() - mountedAt.current : 10_000,
+      turnstileToken,
     }
 
     try {
@@ -256,6 +267,14 @@ export function EnquiryForm({
           </div>
         </details>
       }
+
+      {/* Bot check (issue #392). Its token is single use, so a refused send needs a fresh one. */}
+      <Turnstile
+        siteKey={siteKey}
+        action={TURNSTILE_ACTIONS.enquiry}
+        onVerify={setTurnstileToken}
+        onExpire={() => setTurnstileToken('')}
+      />
 
       {state === 'error' && (
         <div role="alert" className="flex flex-col gap-3">
