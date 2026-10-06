@@ -1,91 +1,120 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { verifyTurnstile } from '@/lib/turnstile'
+import { turnstileMessage, turnstileTokenFrom, verifyTurnstile } from '@/lib/turnstile'
 
 /**
- * The verifier is the load-bearing half: the widget only produces a token, this decides whether
- * to trust it. Two properties matter most and are easy to get wrong.
- *
- *   1. Unconfigured means OFF, not open-to-forgery. With no secret set the whole feature is
- *      skipped, so the forms behave exactly as they did before any of this existed.
- *   2. A Cloudflare outage must not lock real customers out. An error reaching siteverify fails
- *      OPEN, on Henry's call, while an explicit bot verdict fails closed.
+ * The verifier decides whether to trust a Turnstile token. Since issue #392 it FAILS CLOSED:
+ * a missing token, a bad token, a token minted for another form or another site, an outage at
+ * Cloudflare, and a production deploy with no secret key are all refusals. Only local
+ * development with no key configured is let through, so a developer can still use the forms.
  */
 
 const SITEVERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
-
-/** Matches the `FetchLike` the verifier accepts, so `mock.calls` stays typed with no unused args. */
 type FetchLike = (input: string, init: RequestInit) => Promise<Response>
+
+const reply = (body: Record<string, unknown>, status = 200) =>
+  vi.fn<FetchLike>(async () => new Response(JSON.stringify(body), { status }))
+const good = (over: Record<string, unknown> = {}) =>
+  reply({ success: true, action: 'sign-in', hostname: 'lyricalglobal.com', ...over })
+
+const base = { secret: 'sk', action: 'sign-in', production: true, hostnames: ['lyricalglobal.com', 'www.lyricalglobal.com'] }
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('when Turnstile is not configured', () => {
-  it('skips verification so the form works unchanged', async () => {
-    const fetchImpl = vi.fn()
-    const r = await verifyTurnstile('anything', { secret: undefined, fetchImpl })
-    expect(r.ok).toBe(true)
-    expect(r.skipped).toBe(true)
-    // The whole point: it never even calls Cloudflare when there is no secret.
-    expect(fetchImpl).not.toHaveBeenCalled()
-  })
-})
-
-describe('when Turnstile is configured', () => {
-  it('rejects a missing token rather than treating empty as valid', async () => {
-    const fetchImpl = vi.fn()
-    const r = await verifyTurnstile('', { secret: 'sk', fetchImpl })
-    expect(r.ok).toBe(false)
-    // No point asking Cloudflare about a token we do not have.
-    expect(fetchImpl).not.toHaveBeenCalled()
-  })
-
-  it('accepts a token Cloudflare confirms', async () => {
-    const fetchImpl = vi.fn<FetchLike>(async () =>
-      new Response(JSON.stringify({ success: true }), { status: 200 }),
-    )
-    const r = await verifyTurnstile('good-token', { secret: 'sk', fetchImpl })
-    expect(r.ok).toBe(true)
-    expect(r.skipped).toBeFalsy()
-    expect(fetchImpl).toHaveBeenCalledOnce()
+describe('verifyTurnstile', () => {
+  it('accepts a token Cloudflare confirms for this form on this site', async () => {
+    const fetchImpl = good()
+    expect(await verifyTurnstile('tok', { ...base, fetchImpl })).toEqual({ ok: true, reason: 'passed' })
     expect(fetchImpl.mock.calls[0][0]).toBe(SITEVERIFY)
   })
 
-  it('rejects a token Cloudflare calls a bot', async () => {
-    const fetchImpl = vi.fn<FetchLike>(async () =>
-      new Response(JSON.stringify({ success: false, 'error-codes': ['invalid-input-response'] }), {
-        status: 200,
-      }),
-    )
-    const r = await verifyTurnstile('bad-token', { secret: 'sk', fetchImpl })
-    expect(r.ok).toBe(false)
-    expect(r.skipped).toBeFalsy()
+  it('accepts the www hostname too', async () => {
+    expect((await verifyTurnstile('tok', { ...base, fetchImpl: good({ hostname: 'www.lyricalglobal.com' }) })).ok).toBe(true)
+  })
+
+  it('REFUSES a missing token without asking Cloudflare', async () => {
+    const fetchImpl = vi.fn<FetchLike>()
+    expect(await verifyTurnstile('', { ...base, fetchImpl })).toEqual({ ok: false, reason: 'missing-token' })
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it('REFUSES a bad token', async () => {
+    const r = await verifyTurnstile('tok', { ...base, fetchImpl: reply({ success: false, 'error-codes': ['invalid-input-response'] }) })
+    expect(r).toEqual({ ok: false, reason: 'failed' })
+  })
+
+  it('REFUSES a token solved on a different form', async () => {
+    const r = await verifyTurnstile('tok', { ...base, fetchImpl: good({ action: 'enquiry' }) })
+    expect(r).toEqual({ ok: false, reason: 'wrong-action' })
+  })
+
+  it('REFUSES a token solved on another site', async () => {
+    const r = await verifyTurnstile('tok', { ...base, fetchImpl: good({ hostname: 'evil.example' }) })
+    expect(r).toEqual({ ok: false, reason: 'wrong-hostname' })
+  })
+
+  it('REFUSES during a siteverify outage: network error', async () => {
+    const fetchImpl = vi.fn<FetchLike>(async () => {
+      throw new Error('network down')
+    })
+    expect(await verifyTurnstile('tok', { ...base, fetchImpl })).toEqual({ ok: false, reason: 'error' })
+  })
+
+  it('REFUSES during a siteverify outage: non-200', async () => {
+    expect(await verifyTurnstile('tok', { ...base, fetchImpl: reply({}, 502) })).toEqual({ ok: false, reason: 'error' })
+  })
+
+  it('REFUSES during a siteverify outage: a reply that is not JSON', async () => {
+    const fetchImpl = vi.fn<FetchLike>(async () => new Response('<html>', { status: 200 }))
+    expect(await verifyTurnstile('tok', { ...base, fetchImpl })).toEqual({ ok: false, reason: 'error' })
+  })
+
+  it('REFUSES in production when no secret key is configured, and says so loudly', async () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchImpl = vi.fn<FetchLike>()
+    const r = await verifyTurnstile('tok', { ...base, secret: '', fetchImpl })
+    expect(r).toEqual({ ok: false, reason: 'unconfigured' })
+    expect(fetchImpl).not.toHaveBeenCalled()
+    expect(JSON.stringify(err.mock.calls)).toContain('TURNSTILE_SECRET_KEY')
+  })
+
+  it('lets local development through when no key is configured', async () => {
+    const r = await verifyTurnstile('', { ...base, secret: '', production: false })
+    expect(r).toEqual({ ok: true, reason: 'dev-unconfigured' })
   })
 
   it('passes the secret, the token and the caller IP to Cloudflare', async () => {
-    const fetchImpl = vi.fn<FetchLike>(async () =>
-      new Response(JSON.stringify({ success: true }), { status: 200 }),
-    )
-    await verifyTurnstile('tok', { secret: 'sk', remoteip: '203.0.113.7', fetchImpl })
+    const fetchImpl = good()
+    await verifyTurnstile('tok', { ...base, remoteip: '203.0.113.7', fetchImpl })
     const body = fetchImpl.mock.calls[0][1]?.body as URLSearchParams
     expect(body.get('secret')).toBe('sk')
     expect(body.get('response')).toBe('tok')
     expect(body.get('remoteip')).toBe('203.0.113.7')
   })
 
-  it('fails open when siteverify throws, so an outage does not lock people out', async () => {
-    const fetchImpl = vi.fn<FetchLike>(async () => {
-      throw new Error('network down')
-    })
-    const r = await verifyTurnstile('tok', { secret: 'sk', fetchImpl })
-    expect(r.ok).toBe(true)
-    expect(r.skipped).toBe(true)
+  it('reads the expected hostnames from TURNSTILE_EXPECTED_HOSTNAMES when set', async () => {
+    vi.stubEnv('TURNSTILE_EXPECTED_HOSTNAMES', 'preview.example, lyricalglobal.com')
+    const { hostnames: _h, ...noList } = base
+    expect((await verifyTurnstile('tok', { ...noList, fetchImpl: good({ hostname: 'preview.example' }) })).ok).toBe(true)
+    vi.unstubAllEnvs()
   })
+})
 
-  it('fails open when siteverify returns a non-200, same reasoning', async () => {
-    const fetchImpl = vi.fn<FetchLike>(async () => new Response('gateway', { status: 502 }))
-    const r = await verifyTurnstile('tok', { secret: 'sk', fetchImpl })
-    expect(r.ok).toBe(true)
-    expect(r.skipped).toBe(true)
+describe('turnstileMessage', () => {
+  it('speaks plainly, and tells an outage apart from a failed check', () => {
+    expect(turnstileMessage('failed')).toBe('That did not look human. Refresh the page and try again.')
+    expect(turnstileMessage('missing-token')).toBe('That did not look human. Refresh the page and try again.')
+    expect(turnstileMessage('error')).toBe('We could not check that just now. Please try again in a minute.')
+    expect(turnstileMessage('unconfigured')).toBe('This form is not available right now. Please try again later.')
+  })
+})
+
+describe('turnstileTokenFrom', () => {
+  it('reads the token the widget puts in a native form', () => {
+    const fd = new FormData()
+    fd.set('cf-turnstile-response', 'tok')
+    expect(turnstileTokenFrom(fd)).toBe('tok')
+    expect(turnstileTokenFrom(new FormData())).toBe('')
   })
 })

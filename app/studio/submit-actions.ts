@@ -4,7 +4,8 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { mailCustomer, mailFounders } from '@/lib/mailer'
 import { SongJobSchema } from '@/lib/song-job-schema'
-import { verifyTurnstile } from '@/lib/turnstile'
+import { callerIp, TURNSTILE_ACTIONS, turnstileMessage, verifyTurnstile } from '@/lib/turnstile'
+import { consume } from '@/lib/rate-limit'
 import { RIGHTS_TERMS_VERSION } from '@/lib/terms'
 import {
   jobConfirmationHtml,
@@ -72,6 +73,10 @@ async function notify(fields: SongJobEmailFields): Promise<void> {
  */
 export type SubmitResult = { ok: false; error: string }
 
+/** Ten songs an hour per account. A real rights holder sends a handful. */
+const SUBMIT_ATTEMPTS = 10
+const SUBMIT_WINDOW_MS = 60 * 60 * 1000
+
 /**
  * Returns only on failure. The success path calls `redirect()`, which throws, so `void` in the
  * signature is the honest description rather than a fictional success object the caller would
@@ -87,19 +92,25 @@ export async function submitSongJob(raw: unknown): Promise<SubmitResult | void> 
     return { ok: false, error: 'That submission looks malformed. Reload and try again.' }
   }
 
+  // Per account, so one signed-in script cannot flood the queue and the founders' inbox.
+  // Best effort (in-memory, per instance), like every limiter on this site.
+  const limit = consume(`submit:${user.id}`, SUBMIT_ATTEMPTS, SUBMIT_WINDOW_MS, Date.now())
+  if (!limit.allowed) {
+    return { ok: false, error: 'That is a lot of songs in a short time. Wait an hour and try again.' }
+  }
+
   /**
-   * The bot challenge. A no-op until Turnstile is configured. The files are already in storage
-   * by the time this runs, but that upload needed a signed-in session, and the sign-in form
-   * carries the same challenge, so a bot cannot reach this point with an account it obtained by
-   * a script. This is the second layer, in front of the job row and the two founder emails.
+   * The bot challenge, failing closed (issue #392, lib/turnstile.ts). The files are already in
+   * storage by the time this runs, but that upload needed a signed-in session, and the sign-in
+   * form carries the same challenge. This is the second layer, in front of the job row and the
+   * two founder emails.
    */
   const token = typeof input?.turnstileToken === 'string' ? input.turnstileToken : ''
   const challenge = await verifyTurnstile(token, {
-    remoteip: (await headers()).get('x-forwarded-for')?.split(',')[0]?.trim(),
+    action: TURNSTILE_ACTIONS.submit,
+    remoteip: callerIp(await headers()),
   })
-  if (!challenge.ok) {
-    return { ok: false, error: 'That did not look human. Reload the page and try again.' }
-  }
+  if (!challenge.ok) return { ok: false, error: turnstileMessage(challenge.reason) }
 
   const parsed = SongJobSchema.safeParse(raw)
   if (!parsed.success) {

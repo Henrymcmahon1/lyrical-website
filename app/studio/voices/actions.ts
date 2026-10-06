@@ -9,6 +9,40 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { VoiceSubmitSchema, VoiceTakesSchema, totalSeconds } from '@/lib/voice-schema'
 import { VOICE_BUCKET, formatDuration, voicePathBelongsTo } from '@/lib/voice-training'
 import { VOICE_CONSENT_VERSION } from '@/lib/terms'
+import { headers } from 'next/headers'
+import { consume } from '@/lib/rate-limit'
+import { callerIp, TURNSTILE_ACTIONS, turnstileMessage, verifyTurnstile } from '@/lib/turnstile'
+
+/**
+ * Per-account limits (issue #392). Best effort, in-memory per instance, like every limiter on
+ * this site. Uploads are heavy and email the founders; edits are light.
+ */
+const UPLOAD_ATTEMPTS = 10
+const UPLOAD_WINDOW_MS = 60 * 60 * 1000
+const EDIT_ATTEMPTS = 30
+const EDIT_WINDOW_MS = 10 * 60 * 1000
+
+/**
+ * The checks every voice upload passes before anything is written: the account's rate limit,
+ * then Turnstile, failing closed (lib/turnstile.ts). Returns a refusal, or null to carry on.
+ */
+async function guardUpload(userId: string, raw: unknown): Promise<VoiceResult | null> {
+  const limit = consume(`voice-upload:${userId}`, UPLOAD_ATTEMPTS, UPLOAD_WINDOW_MS, Date.now())
+  if (!limit.allowed) {
+    return { ok: false, error: 'That is a lot of uploads in a short time. Wait an hour and try again.' }
+  }
+  const t = (raw as { turnstileToken?: unknown } | null)?.turnstileToken
+  const challenge = await verifyTurnstile(typeof t === 'string' ? t : '', {
+    action: TURNSTILE_ACTIONS.voiceUpload,
+    remoteip: callerIp(await headers()),
+  })
+  return challenge.ok ? null : { ok: false, error: turnstileMessage(challenge.reason) }
+}
+
+/** A light per-account limit on renames and retirements. Over it, back to the list with a note. */
+function editAllowed(userId: string): boolean {
+  return consume(`voice-edit:${userId}`, EDIT_ATTEMPTS, EDIT_WINDOW_MS, Date.now()).allowed
+}
 
 /**
  * Record a set of training vocals whose files are already in storage.
@@ -30,6 +64,9 @@ export type VoiceResult = { ok: false; error: string }
 export async function submitVoiceModel(raw: unknown): Promise<VoiceResult | void> {
   const user = await currentUser()
   if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
+
+  const refused = await guardUpload(user.id, raw)
+  if (refused) return refused
 
   const parsed = VoiceSubmitSchema.safeParse(raw)
   if (!parsed.success) {
@@ -147,6 +184,9 @@ export async function addVoiceTakes(raw: unknown): Promise<VoiceResult | void> {
   const user = await currentUser()
   if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
 
+  const refused = await guardUpload(user.id, raw)
+  if (refused) return refused
+
   const parsed = VoiceTakesSchema.safeParse(raw)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'Something is not right.' }
@@ -198,6 +238,8 @@ export async function renameVoice(formData: FormData): Promise<void> {
   const user = await currentUser()
   if (!user) redirect('/studio/sign-in?next=/studio/voices')
 
+  if (!editAllowed(user.id)) redirect('/studio/voices?error=rate')
+
   const id = String(formData.get('id') ?? '')
   const artistName = String(formData.get('artist_name') ?? '').trim()
   const notes = String(formData.get('notes') ?? '').trim()
@@ -232,6 +274,8 @@ export async function renameVoice(formData: FormData): Promise<void> {
 export async function retireVoice(formData: FormData): Promise<void> {
   const user = await currentUser()
   if (!user) redirect('/studio/sign-in?next=/studio/voices')
+
+  if (!editAllowed(user.id)) redirect('/studio/voices?error=rate')
 
   const id = String(formData.get('id') ?? '')
   if (!UUID.test(id)) redirect('/studio/voices')

@@ -41,7 +41,7 @@ const STATE: Record<VoiceStatus, string> = {
 export default async function Voices({
   searchParams,
 }: {
-  searchParams: Promise<{ added?: string }>
+  searchParams: Promise<{ added?: string; error?: string }>
 }) {
   const [user, params] = await Promise.all([currentUser(), searchParams])
   if (!user) redirect('/studio/sign-in?next=/studio/voices')
@@ -83,6 +83,12 @@ export default async function Voices({
         An artist&rsquo;s voice is learned once from their clean vocal, then reused by every
         song you send us for them.
       </p>
+
+      {params.error === 'rate' && (
+        <p role="alert" className="mt-8 rounded-card border-l-[3px] border-ember bg-ember/5 px-5 py-4 leading-relaxed">
+          That is a lot of changes in a short time. Wait ten minutes and try again.
+        </p>
+      )}
 
       {params.added && (
         <p

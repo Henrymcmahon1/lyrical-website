@@ -48,6 +48,16 @@ vi.mock('next/headers', () => ({
     new Headers({ 'x-forwarded-for': pinnedIp ?? `198.51.100.${++ipCounter % 250}` }),
 }))
 
+/**
+ * Turnstile passes in this file: the challenge itself is tested per endpoint in
+ * tests/turnstile-endpoints.test.ts. Without this, the tests that stub NODE_ENV to production
+ * would be refused for having no Turnstile key, which is correct but not what they test.
+ */
+vi.mock('@/lib/turnstile', async (orig) => ({
+  ...(await orig<typeof import('@/lib/turnstile')>()),
+  verifyTurnstile: async () => ({ ok: true, reason: 'passed' }),
+}))
+
 const { requestSignInLink } = await import('@/app/studio/sign-in/actions')
 
 /** The link the email was actually given. */

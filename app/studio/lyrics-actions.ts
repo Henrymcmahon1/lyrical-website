@@ -3,6 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { MAX_LYRICS_CHARS, normaliseLyrics } from '@/lib/lyrics'
 import { currentUser, supabaseServer } from '@/lib/supabase-server'
+import { consume } from '@/lib/rate-limit'
+
+/** Per account (issue #392). Best effort, in-memory per instance. A person saves a few times. */
+const SAVE_ATTEMPTS = 30
+const SAVE_WINDOW_MS = 10 * 60 * 1000
 
 /**
  * Let a customer correct their own lyric sheet, and nothing else.
@@ -35,6 +40,10 @@ export type LyricsResult = { ok: boolean; error?: string }
 export async function updateLyrics(formData: FormData): Promise<LyricsResult> {
   const user = await currentUser()
   if (!user) return { ok: false, error: 'Your session expired. Sign in and try again.' }
+
+  if (!consume(`lyrics:${user.id}`, SAVE_ATTEMPTS, SAVE_WINDOW_MS, Date.now()).allowed) {
+    return { ok: false, error: 'That is a lot of saves in a short time. Wait ten minutes and try again.' }
+  }
 
   const jobId = String(formData.get('jobId') ?? '')
   if (!/^[0-9a-f-]{36}$/i.test(jobId)) {

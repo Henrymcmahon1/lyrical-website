@@ -5,7 +5,7 @@ import { LANGUAGES, type LanguageCode } from '@/lib/languages'
 import { turnaroundNote } from '@/lib/language-pairs'
 import { detectLyrics, lyricsLanguageWarning } from '@/lib/lyrics-language'
 import { Turnstile } from '@/components/Turnstile'
-import { turnstileSiteKey } from '@/lib/turnstile'
+import { TURNSTILE_ACTIONS, turnstileSiteKey } from '@/lib/turnstile'
 import { RightsWarranty } from '@/components/RightsWarranty'
 import { RIGHTS_TERMS_INTRO, RIGHTS_TERMS_POINTS } from '@/lib/terms'
 import {
@@ -630,7 +630,7 @@ Second line`}
       {/* Renders nothing when Turnstile is not configured, so this is inert until the keys land. */}
       <Turnstile
         siteKey={siteKey}
-        action="submit"
+        action={TURNSTILE_ACTIONS.submit}
         onVerify={setTurnstileToken}
         onExpire={() => setTurnstileToken('')}
       />
